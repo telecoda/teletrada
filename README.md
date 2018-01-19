@@ -1,0 +1,2 @@
+# teletrada
+Crypto trading bot
