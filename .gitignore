@@ -1,0 +1,5 @@
+domain/testPriceHistory/*
+trada_client/trada_client
+trada_server/trada_server
+trada_server/trada_server/priceHistory
+trada_server/trada_server/priceHistory/*
