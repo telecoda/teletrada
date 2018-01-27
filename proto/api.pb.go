@@ -12,6 +12,9 @@ It has these top-level messages:
 	BalancesRequest
 	Balance
 	BalancesResponse
+	LogRequest
+	LogEntry
+	LogResponse
 */
 package proto
 
@@ -52,8 +55,13 @@ func (m *BalancesRequest) GetIgnoreSmall() bool {
 }
 
 type Balance struct {
-	Symbol string  `protobuf:"bytes,1,opt,name=symbol" json:"symbol,omitempty"`
-	Total  float32 `protobuf:"fixed32,2,opt,name=total" json:"total,omitempty"`
+	Symbol         string  `protobuf:"bytes,1,opt,name=symbol" json:"symbol,omitempty"`
+	Exchange       string  `protobuf:"bytes,2,opt,name=exchange" json:"exchange,omitempty"`
+	Free           float32 `protobuf:"fixed32,3,opt,name=free" json:"free,omitempty"`
+	Locked         float32 `protobuf:"fixed32,4,opt,name=locked" json:"locked,omitempty"`
+	Total          float32 `protobuf:"fixed32,5,opt,name=total" json:"total,omitempty"`
+	LatestUSDPrice float32 `protobuf:"fixed32,6,opt,name=latestUSDPrice" json:"latestUSDPrice,omitempty"`
+	LatestUSDValue float32 `protobuf:"fixed32,7,opt,name=latestUSDValue" json:"latestUSDValue,omitempty"`
 }
 
 func (m *Balance) Reset()                    { *m = Balance{} }
@@ -68,6 +76,27 @@ func (m *Balance) GetSymbol() string {
 	return ""
 }
 
+func (m *Balance) GetExchange() string {
+	if m != nil {
+		return m.Exchange
+	}
+	return ""
+}
+
+func (m *Balance) GetFree() float32 {
+	if m != nil {
+		return m.Free
+	}
+	return 0
+}
+
+func (m *Balance) GetLocked() float32 {
+	if m != nil {
+		return m.Locked
+	}
+	return 0
+}
+
 func (m *Balance) GetTotal() float32 {
 	if m != nil {
 		return m.Total
@@ -75,8 +104,22 @@ func (m *Balance) GetTotal() float32 {
 	return 0
 }
 
+func (m *Balance) GetLatestUSDPrice() float32 {
+	if m != nil {
+		return m.LatestUSDPrice
+	}
+	return 0
+}
+
+func (m *Balance) GetLatestUSDValue() float32 {
+	if m != nil {
+		return m.LatestUSDValue
+	}
+	return 0
+}
+
 type BalancesResponse struct {
-	Message string `protobuf:"bytes,1,opt,name=message" json:"message,omitempty"`
+	Balances []*Balance `protobuf:"bytes,1,rep,name=balances" json:"balances,omitempty"`
 }
 
 func (m *BalancesResponse) Reset()                    { *m = BalancesResponse{} }
@@ -84,17 +127,68 @@ func (m *BalancesResponse) String() string            { return proto1.CompactTex
 func (*BalancesResponse) ProtoMessage()               {}
 func (*BalancesResponse) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{2} }
 
-func (m *BalancesResponse) GetMessage() string {
+func (m *BalancesResponse) GetBalances() []*Balance {
 	if m != nil {
-		return m.Message
+		return m.Balances
+	}
+	return nil
+}
+
+type LogRequest struct {
+}
+
+func (m *LogRequest) Reset()                    { *m = LogRequest{} }
+func (m *LogRequest) String() string            { return proto1.CompactTextString(m) }
+func (*LogRequest) ProtoMessage()               {}
+func (*LogRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{3} }
+
+type LogEntry struct {
+	Time string `protobuf:"bytes,1,opt,name=time" json:"time,omitempty"`
+	Text string `protobuf:"bytes,2,opt,name=text" json:"text,omitempty"`
+}
+
+func (m *LogEntry) Reset()                    { *m = LogEntry{} }
+func (m *LogEntry) String() string            { return proto1.CompactTextString(m) }
+func (*LogEntry) ProtoMessage()               {}
+func (*LogEntry) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{4} }
+
+func (m *LogEntry) GetTime() string {
+	if m != nil {
+		return m.Time
 	}
 	return ""
+}
+
+func (m *LogEntry) GetText() string {
+	if m != nil {
+		return m.Text
+	}
+	return ""
+}
+
+type LogResponse struct {
+	Entries []*LogEntry `protobuf:"bytes,1,rep,name=entries" json:"entries,omitempty"`
+}
+
+func (m *LogResponse) Reset()                    { *m = LogResponse{} }
+func (m *LogResponse) String() string            { return proto1.CompactTextString(m) }
+func (*LogResponse) ProtoMessage()               {}
+func (*LogResponse) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{5} }
+
+func (m *LogResponse) GetEntries() []*LogEntry {
+	if m != nil {
+		return m.Entries
+	}
+	return nil
 }
 
 func init() {
 	proto1.RegisterType((*BalancesRequest)(nil), "proto.BalancesRequest")
 	proto1.RegisterType((*Balance)(nil), "proto.Balance")
 	proto1.RegisterType((*BalancesResponse)(nil), "proto.BalancesResponse")
+	proto1.RegisterType((*LogRequest)(nil), "proto.LogRequest")
+	proto1.RegisterType((*LogEntry)(nil), "proto.LogEntry")
+	proto1.RegisterType((*LogResponse)(nil), "proto.LogResponse")
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -105,66 +199,99 @@ var _ grpc.ClientConn
 // is compatible with the grpc package it is being compiled against.
 const _ = grpc.SupportPackageIsVersion4
 
-// Client API for Trader service
+// Client API for Teletrada service
 
-type TraderClient interface {
+type TeletradaClient interface {
 	// Get current balances
 	GetBalances(ctx context.Context, in *BalancesRequest, opts ...grpc.CallOption) (*BalancesResponse, error)
+	GetLog(ctx context.Context, in *LogRequest, opts ...grpc.CallOption) (*LogResponse, error)
 }
 
-type traderClient struct {
+type teletradaClient struct {
 	cc *grpc.ClientConn
 }
 
-func NewTraderClient(cc *grpc.ClientConn) TraderClient {
-	return &traderClient{cc}
+func NewTeletradaClient(cc *grpc.ClientConn) TeletradaClient {
+	return &teletradaClient{cc}
 }
 
-func (c *traderClient) GetBalances(ctx context.Context, in *BalancesRequest, opts ...grpc.CallOption) (*BalancesResponse, error) {
+func (c *teletradaClient) GetBalances(ctx context.Context, in *BalancesRequest, opts ...grpc.CallOption) (*BalancesResponse, error) {
 	out := new(BalancesResponse)
-	err := grpc.Invoke(ctx, "/proto.trader/GetBalances", in, out, c.cc, opts...)
+	err := grpc.Invoke(ctx, "/proto.teletrada/GetBalances", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-// Server API for Trader service
+func (c *teletradaClient) GetLog(ctx context.Context, in *LogRequest, opts ...grpc.CallOption) (*LogResponse, error) {
+	out := new(LogResponse)
+	err := grpc.Invoke(ctx, "/proto.teletrada/GetLog", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
 
-type TraderServer interface {
+// Server API for Teletrada service
+
+type TeletradaServer interface {
 	// Get current balances
 	GetBalances(context.Context, *BalancesRequest) (*BalancesResponse, error)
+	GetLog(context.Context, *LogRequest) (*LogResponse, error)
 }
 
-func RegisterTraderServer(s *grpc.Server, srv TraderServer) {
-	s.RegisterService(&_Trader_serviceDesc, srv)
+func RegisterTeletradaServer(s *grpc.Server, srv TeletradaServer) {
+	s.RegisterService(&_Teletrada_serviceDesc, srv)
 }
 
-func _Trader_GetBalances_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Teletrada_GetBalances_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(BalancesRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(TraderServer).GetBalances(ctx, in)
+		return srv.(TeletradaServer).GetBalances(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/proto.trader/GetBalances",
+		FullMethod: "/proto.teletrada/GetBalances",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(TraderServer).GetBalances(ctx, req.(*BalancesRequest))
+		return srv.(TeletradaServer).GetBalances(ctx, req.(*BalancesRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-var _Trader_serviceDesc = grpc.ServiceDesc{
-	ServiceName: "proto.trader",
-	HandlerType: (*TraderServer)(nil),
+func _Teletrada_GetLog_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(LogRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(TeletradaServer).GetLog(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.teletrada/GetLog",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(TeletradaServer).GetLog(ctx, req.(*LogRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+var _Teletrada_serviceDesc = grpc.ServiceDesc{
+	ServiceName: "proto.teletrada",
+	HandlerType: (*TeletradaServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
 			MethodName: "GetBalances",
-			Handler:    _Trader_GetBalances_Handler,
+			Handler:    _Teletrada_GetBalances_Handler,
+		},
+		{
+			MethodName: "GetLog",
+			Handler:    _Teletrada_GetLog_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -174,20 +301,29 @@ var _Trader_serviceDesc = grpc.ServiceDesc{
 func init() { proto1.RegisterFile("api.proto", fileDescriptor0) }
 
 var fileDescriptor0 = []byte{
-	// 226 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x09, 0x6e, 0x88, 0x02, 0xff, 0x64, 0x4f, 0xb1, 0x4e, 0xc3, 0x40,
-	0x0c, 0x25, 0x95, 0x9a, 0x52, 0x77, 0x28, 0x3a, 0xa1, 0x12, 0xc1, 0x52, 0x65, 0x62, 0x40, 0x27,
-	0x44, 0x07, 0x56, 0x94, 0x05, 0xc4, 0x54, 0x85, 0x81, 0xd9, 0x6d, 0xad, 0x10, 0xc9, 0x17, 0x1f,
-	0xe7, 0x43, 0xc0, 0xdf, 0x43, 0x7a, 0xa9, 0x40, 0x30, 0xf9, 0xbd, 0x27, 0xbf, 0xf7, 0x6c, 0x98,
-	0xa2, 0x6f, 0xad, 0x0f, 0x12, 0xc5, 0x8c, 0xf7, 0xa3, 0x5c, 0xc1, 0xbc, 0x42, 0xc6, 0x6e, 0x4b,
-	0x5a, 0xd3, 0xeb, 0x1b, 0x69, 0x34, 0x4b, 0x98, 0xb5, 0x4d, 0x27, 0x81, 0x9e, 0x1c, 0x32, 0x17,
-	0xd9, 0x32, 0xbb, 0x3c, 0xae, 0x7f, 0x4b, 0xe5, 0x2d, 0x4c, 0x06, 0x93, 0x59, 0x40, 0xae, 0x9f,
-	0x6e, 0x23, 0x69, 0x6f, 0x5a, 0x0f, 0xcc, 0x9c, 0xc2, 0x38, 0x4a, 0x44, 0x2e, 0x46, 0xdf, 0xf2,
-	0xa8, 0x4e, 0xa4, 0xbc, 0x82, 0x93, 0x9f, 0x36, 0xf5, 0xd2, 0x29, 0x99, 0x02, 0x26, 0x8e, 0x54,
-	0xb1, 0xa1, 0x21, 0xe2, 0x40, 0x6f, 0x1e, 0x21, 0x8f, 0x01, 0x77, 0x14, 0xcc, 0x1d, 0xcc, 0xee,
-	0x29, 0x1e, 0xac, 0x66, 0x91, 0x7e, 0xb0, 0x7f, 0x2e, 0x3f, 0x3f, 0xfb, 0xa7, 0xa7, 0x8e, 0xf2,
-	0xa8, 0xba, 0x86, 0x8b, 0x56, 0x6c, 0x13, 0xfc, 0xd6, 0xd2, 0x07, 0x3a, 0xcf, 0xa4, 0xf6, 0x85,
-	0x98, 0xe5, 0x5d, 0x02, 0xef, 0xaa, 0xf9, 0x43, 0x8f, 0x9f, 0x7b, 0xbc, 0xee, 0x23, 0xd6, 0xd9,
-	0x26, 0xdf, 0x67, 0xad, 0xbe, 0x02, 0x00, 0x00, 0xff, 0xff, 0x49, 0xaa, 0x83, 0x0c, 0x34, 0x01,
-	0x00, 0x00,
+	// 380 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x09, 0x6e, 0x88, 0x02, 0xff, 0x64, 0x91, 0x3b, 0x4f, 0xe3, 0x40,
+	0x10, 0xc7, 0xcf, 0x79, 0x38, 0xce, 0xf8, 0x94, 0xdc, 0xad, 0x4e, 0x39, 0x2b, 0x34, 0x91, 0x0b,
+	0x14, 0x28, 0x2c, 0x48, 0x1a, 0x2a, 0x84, 0x22, 0x10, 0x14, 0x14, 0x91, 0x23, 0xa0, 0xde, 0x38,
+	0x83, 0x63, 0xb1, 0xf6, 0x9a, 0xf5, 0x46, 0x24, 0x1d, 0xdf, 0x90, 0xaf, 0x84, 0xbd, 0x5e, 0xe7,
+	0x45, 0xe5, 0x99, 0xdf, 0x3c, 0xfe, 0x3b, 0x7f, 0x43, 0x9b, 0xa6, 0x91, 0x97, 0x0a, 0x2e, 0x39,
+	0x69, 0xaa, 0x8f, 0x3b, 0x86, 0xee, 0x84, 0x32, 0x9a, 0x04, 0x98, 0xf9, 0xf8, 0xbe, 0xc2, 0x4c,
+	0x92, 0x01, 0xd8, 0x51, 0x98, 0x70, 0x81, 0xb3, 0x98, 0x32, 0xe6, 0x18, 0x03, 0x63, 0x68, 0xf9,
+	0xfb, 0xc8, 0xfd, 0x32, 0xa0, 0xa5, 0xa7, 0x48, 0x0f, 0xcc, 0x6c, 0x13, 0xcf, 0x79, 0xd9, 0xd8,
+	0xf6, 0x75, 0x46, 0xfa, 0x60, 0xe1, 0x3a, 0x58, 0xd2, 0x24, 0x44, 0xa7, 0xa6, 0x2a, 0xdb, 0x9c,
+	0x10, 0x68, 0xbc, 0x0a, 0x44, 0xa7, 0x9e, 0xf3, 0x9a, 0xaf, 0xe2, 0x62, 0x0f, 0xe3, 0xc1, 0x1b,
+	0x2e, 0x9c, 0x86, 0xa2, 0x3a, 0x23, 0xff, 0xa0, 0x29, 0xb9, 0xa4, 0xcc, 0x69, 0x2a, 0x5c, 0x26,
+	0xe4, 0x14, 0x3a, 0x8c, 0xca, 0xfc, 0xb5, 0x4f, 0xb3, 0xdb, 0xa9, 0x88, 0x02, 0x74, 0x4c, 0x55,
+	0x3e, 0xa2, 0x07, 0x7d, 0xcf, 0x94, 0xad, 0xd0, 0x69, 0x1d, 0xf5, 0x29, 0xea, 0x5e, 0xc3, 0x9f,
+	0x9d, 0x0d, 0x59, 0xca, 0x93, 0x0c, 0xc9, 0x39, 0x58, 0x73, 0xcd, 0xf2, 0xdb, 0xea, 0x43, 0x7b,
+	0xd4, 0x29, 0xbd, 0xf3, 0x74, 0xab, 0xbf, 0xad, 0xbb, 0xbf, 0x01, 0x1e, 0x79, 0xa8, 0x1d, 0x74,
+	0x47, 0x60, 0xe5, 0xd9, 0x5d, 0x22, 0xc5, 0xa6, 0xb8, 0x55, 0x46, 0x31, 0x6a, 0x77, 0x54, 0xac,
+	0x18, 0xae, 0xa5, 0xf6, 0x45, 0xc5, 0xee, 0x15, 0xd8, 0x6a, 0x83, 0x16, 0x3f, 0x83, 0x16, 0xe6,
+	0xf3, 0xd1, 0x56, 0xbb, 0xab, 0xb5, 0xab, 0xc5, 0x7e, 0x55, 0x1f, 0x7d, 0x1a, 0xd0, 0x96, 0xc8,
+	0x50, 0x0a, 0xba, 0xa0, 0xe4, 0x06, 0xec, 0x7b, 0x94, 0xd5, 0x31, 0xa4, 0x77, 0xf8, 0xe4, 0xea,
+	0x27, 0xf7, 0xff, 0xff, 0xe0, 0xa5, 0xb0, 0xfb, 0x8b, 0x5c, 0x82, 0x99, 0x6f, 0xc8, 0x75, 0xc8,
+	0xdf, 0x9d, 0x66, 0x35, 0x47, 0xf6, 0x51, 0x35, 0x32, 0xb9, 0x80, 0x93, 0x88, 0x7b, 0xa1, 0x48,
+	0x03, 0x0f, 0xd7, 0x34, 0x4e, 0x19, 0x66, 0xde, 0x12, 0x19, 0xe3, 0x1f, 0x5c, 0xb0, 0xc5, 0xa4,
+	0xfb, 0x50, 0xc4, 0x2f, 0x45, 0x3c, 0x2d, 0xa6, 0xa7, 0xc6, 0xdc, 0x54, 0x6b, 0xc6, 0xdf, 0x01,
+	0x00, 0x00, 0xff, 0xff, 0xdc, 0x58, 0x66, 0x17, 0x92, 0x02, 0x00, 0x00,
 }

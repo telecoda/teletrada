@@ -6,10 +6,11 @@ option java_outer_classname = "HelloWorldProto";
 
 package proto;
 
-// The trader service definition.
-service trader {
+// The teletrader service definition.
+service teletrada {
   // Get current balances
   rpc GetBalances (BalancesRequest) returns (BalancesResponse) {}
+  rpc GetLog (LogRequest) returns (LogResponse) {}
 }
 
 message BalancesRequest {
@@ -17,10 +18,27 @@ message BalancesRequest {
 }
 
 message Balance {
-  string symbol = 1;
-  float total = 2;
+  string symbol        = 1;
+  string exchange      = 2;
+  float free           = 3;
+  float locked         = 4;
+  float total          = 5;
+  float latestUSDPrice = 6;
+  float latestUSDValue = 7;
 }
 
 message BalancesResponse {
-  string message = 1;
+  repeated Balance balances = 1;
+}
+
+message LogRequest {
+}
+
+message LogEntry {
+    string time = 1;
+    string text = 2;
+}
+
+message LogResponse {
+  repeated LogEntry entries = 1;
 }

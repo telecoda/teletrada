@@ -4,9 +4,7 @@ import (
 	"log"
 
 	"github.com/abiosoft/ishell"
-	"github.com/fatih/color"
 	"github.com/telecoda/teletrada/proto"
-	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 )
 
@@ -14,7 +12,7 @@ const (
 	address = "localhost:50051"
 )
 
-var client proto.TraderClient
+var client proto.TeletradaClient
 
 func main() {
 
@@ -24,34 +22,32 @@ func main() {
 		log.Fatalf("did not connect: %v", err)
 	}
 	defer conn.Close()
-	client = proto.NewTraderClient(conn)
+	client = proto.NewTeletradaClient(conn)
 
 	// create new shell.
 	// by default, new shell includes 'exit', 'help' and 'clear' commands.
 	shell := ishell.New()
 
 	// display welcome info.
-	shell.Println("Welcome to the TeleTrada client")
+	shell.Println(Paint(YellowText, "Welcome to the TeleTrada client"))
 
-	// register a function for "greet" command.
+	// register a function for "balances" command.
 	shell.AddCmd(&ishell.Cmd{
-		Name: "getbalances",
-		Help: "get current balances",
+		Name: "balances",
+		Help: "show current balances",
 		Func: getBalances,
 	})
+
+	// register a function for "log" command.
+	shell.AddCmd(&ishell.Cmd{
+		Name: "log",
+		Help: "show server logs",
+		Func: getLog,
+	})
+
 	// Read and write history to $HOME/.teletrada_history
 	shell.SetHomeHistoryPath(".teletrada_history")
 
 	// run shell
 	shell.Run()
-}
-
-func getBalances(c *ishell.Context) {
-	r, err := client.GetBalances(context.Background(), &proto.BalancesRequest{})
-	if err != nil {
-		red := color.New(color.FgRed).SprintFunc()
-		c.Printf(red("could not get balances: %v\n", err))
-		return
-	}
-	c.Printf("Balances: %s\n", r.Message)
 }
