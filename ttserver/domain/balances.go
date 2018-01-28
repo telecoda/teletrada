@@ -2,8 +2,8 @@ package domain
 
 import (
 	"context"
-	"fmt"
 	"sync"
+	"time"
 
 	"github.com/telecoda/teletrada/exchanges"
 	"github.com/telecoda/teletrada/proto"
@@ -12,19 +12,12 @@ import (
 type Balance struct {
 	sync.RWMutex
 	exchanges.ExchangeBalance
-	Symbol         Symbol
-	Total          float64
-	Value          float64
-	LatestUSDPrice float64
-	LatestUSDValue float64
+	Total float64
+	At    time.Time
 }
 
-// func (s *server) GetBalances() []*Balance {
-// 	return s.livePortfolio.balances
-// }
-
 // GetBalances returns current balances
-func (s *server) GetBalances(ctx context.Context, in *proto.BalancesRequest) (*proto.BalancesResponse, error) {
+func (s *server) GetBalances(ctx context.Context, req *proto.BalancesRequest) (*proto.BalancesResponse, error) {
 
 	resp := &proto.BalancesResponse{}
 
@@ -32,25 +25,26 @@ func (s *server) GetBalances(ctx context.Context, in *proto.BalancesRequest) (*p
 
 	resp.Balances = make([]*proto.Balance, len(balances))
 
+	var err error
 	for i, balance := range balances {
-		resp.Balances[i] = balance.toProto()
+		resp.Balances[i], err = balance.toProto()
+		if err != nil {
+			return nil, err
+		}
+
+		resp.Balances[i].As = req.As
+
+		// find latest price for trading pair
+		price, err := DefaultArchive.GetLatestPriceAs(SymbolType(balance.Symbol), SymbolType(req.As))
+		if err != nil {
+			return nil, err
+		}
+
+		// reprice balance
+		resp.Balances[i].AsPrice = float32(price.Price)
+		resp.Balances[i].AsValue = float32(price.Price * balance.Total)
+
 	}
 
 	return resp, nil
-}
-
-// reprice - updates latestUSDPrice with currency value based on most recent prices
-func (b *Balance) reprice() error {
-	b.Lock()
-	defer b.Unlock()
-
-	price, err := b.Symbol.GetLatestPriceAs(USDT)
-	if err != nil {
-		return fmt.Errorf("Failed to update value - %s", err)
-	}
-
-	b.LatestUSDPrice = price.Price
-	b.LatestUSDValue = b.LatestUSDPrice * b.Total
-
-	return nil
 }

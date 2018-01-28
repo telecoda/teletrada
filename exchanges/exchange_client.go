@@ -17,8 +17,8 @@ type ExchangeBalance struct {
 }
 
 type ExchangePrice struct {
-	Base  string
-	As    string
+	Base  string // This is the base symbol eg. NEO
+	As    string // This is trading pair symbol eg. BTC, ETH etc
 	Price float64
 	At    time.Time
 }

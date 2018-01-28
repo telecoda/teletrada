@@ -44,7 +44,7 @@ func registerCmds(shell *ishell.Shell) {
 	// register a function for "balances" command.
 	shell.AddCmd(&ishell.Cmd{
 		Name: "balances",
-		Help: "show current balances",
+		Help: "show current balances eg. balances BTC",
 		Func: getBalances,
 	})
 

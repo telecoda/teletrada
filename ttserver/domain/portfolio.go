@@ -3,6 +3,7 @@ package domain
 import (
 	"fmt"
 	"sync"
+	"time"
 )
 
 type portfolio struct {
@@ -28,18 +29,18 @@ func (s *server) updatePortfolios() error {
 	if err := s.livePortfolio.refreshBalances(); err != nil {
 		return err
 	}
-	s.log("Repricing live porfolio")
-	if err := s.livePortfolio.reprice(); err != nil {
-		return err
-	}
+	// s.log("Repricing live porfolio")
+	// if err := s.livePortfolio.reprice(); err != nil {
+	// 	return err
+	// }
 
-	s.log("Repricing simulated porfolios")
-	for _, simPort := range s.simPorts {
-		if err := simPort.reprice(); err != nil {
-			return err
-		}
+	// s.log("Repricing simulated porfolios")
+	// for _, simPort := range s.simPorts {
+	// 	if err := simPort.reprice(); err != nil {
+	// 		return err
+	// 	}
 
-	}
+	// }
 
 	return nil
 }
@@ -63,12 +64,7 @@ func (p *portfolio) refreshBalances() error {
 		b := &Balance{
 			ExchangeBalance: exchBalance,
 			Total:           exchBalance.Free + exchBalance.Locked,
-		}
-		// lookup symbol
-		if symbol, err := DefaultArchive.GetSymbol(SymbolType(exchBalance.Symbol)); err != nil {
-			return err
-		} else {
-			b.Symbol = symbol
+			At:              time.Now().UTC(),
 		}
 
 		p.balances = append(p.balances, b)
@@ -77,29 +73,29 @@ func (p *portfolio) refreshBalances() error {
 	return nil
 }
 
-// reprice - update balance prices
-func (p *portfolio) reprice() error {
-	fmt.Printf("Repricing portfolio\n")
-	p.Lock()
-	defer p.Unlock()
+// // reprice - update balance prices
+// func (p *portfolio) reprice() error {
+// 	fmt.Printf("Repricing portfolio\n")
+// 	p.Lock()
+// 	defer p.Unlock()
 
-	for _, balance := range p.balances {
-		if err := balance.reprice(); err != nil {
-			return err
-		}
-	}
-	return nil
-}
+// 	for _, balance := range p.balances {
+// 		if err := balance.reprice(); err != nil {
+// 			return err
+// 		}
+// 	}
+// 	return nil
+// }
 
-func (p *portfolio) ListBalances() {
-	fmt.Printf("Balances\n")
-	fmt.Printf("========\n")
+// func (p *portfolio) ListBalances() {
+// 	fmt.Printf("Balances\n")
+// 	fmt.Printf("========\n")
 
-	p.RLock()
-	defer p.RUnlock()
-	for _, b := range p.balances {
-		if b.Free != 0 {
-			fmt.Printf("Exch: %s Sym: %s Free: %f Locked: %f Total: %f USD price: %f USD value %f\n", b.Exchange, b.Symbol.GetType(), b.Free, b.Locked, b.Total, b.LatestUSDPrice, b.LatestUSDValue)
-		}
-	}
-}
+// 	p.RLock()
+// 	defer p.RUnlock()
+// 	for _, b := range p.balances {
+// 		if b.Free != 0 {
+// 			fmt.Printf("Exch: %s Sym: %s Free: %f Locked: %f Total: %f USD price: %f USD value %f\n", b.Exchange, b.Symbol.GetType(), b.Free, b.Locked, b.Total, b.LatestUSDPrice, b.LatestUSDValue)
+// 		}
+// 	}
+// }

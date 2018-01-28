@@ -31,7 +31,7 @@ func getLog(c *ishell.Context) {
 	for _, entry := range r.Entries {
 		timestamp, err := tspb.Timestamp(entry.Time)
 		if err != nil {
-			PaintErr(err)
+			c.Println(PaintErr(err))
 			continue
 		}
 		PrintRow(tw, FormatRow(timestamp.Format(DATE_FORMAT), entry.Text, ""))

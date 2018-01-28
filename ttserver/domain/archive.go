@@ -19,6 +19,7 @@ var DefaultArchive = NewSymbolsArchive()
 type SymbolsArchive interface {
 	AddSymbol(symbol Symbol) bool
 	GetSymbol(symbol SymbolType) (Symbol, error)
+	GetLatestPriceAs(symbol SymbolType, as SymbolType) (Price, error)
 	ListPrices(incHistory bool) // include historic prices
 	UpdatePrices() error
 	// Starts automatic price updater
@@ -77,6 +78,15 @@ func (sa *symbolsArchive) AddSymbol(symbol Symbol) bool {
 func (s *symbolsArchive) initPrices() {
 }
 
+func (sa *symbolsArchive) GetLatestPriceAs(symbol SymbolType, as SymbolType) (Price, error) {
+	// Get symbol
+	s, err := sa.GetSymbol(symbol)
+	if err != nil {
+		return Price{}, fmt.Errorf("No prices for symbol: %s", symbol)
+	}
+
+	return s.GetLatestPriceAs(as)
+}
 func (sa *symbolsArchive) UpdatePrices() error {
 	exPrices, err := DefaultClient.GetLatestPrices()
 	if err != nil {

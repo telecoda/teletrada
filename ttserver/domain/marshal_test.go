@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	google_protobuf "github.com/golang/protobuf/ptypes/timestamp"
+	tspb "github.com/golang/protobuf/ptypes"
 	"github.com/telecoda/teletrada/exchanges"
 	"github.com/telecoda/teletrada/proto"
 
@@ -12,6 +12,9 @@ import (
 )
 
 func TestMarshalBalance(t *testing.T) {
+	now := time.Now()
+	pbNow, _ := tspb.TimestampProto(now)
+
 	tests := []struct {
 		balance  *Balance
 		expProto *proto.Balance
@@ -24,28 +27,23 @@ func TestMarshalBalance(t *testing.T) {
 					Free:     10.0,
 					Locked:   20.0,
 				},
-				Symbol: &symbol{
-					SymbolType: SymbolType("symbol"),
-				},
-				Total:          30.0,
-				Value:          1234.56,
-				LatestUSDPrice: 1234.56,
-				LatestUSDValue: 30 * 1234.56,
+				Total: 30.0,
+				At:    now,
 			},
 			expProto: &proto.Balance{
-				Symbol:         "symbol",
-				Exchange:       "exchange",
-				Free:           10.0,
-				Locked:         20.0,
-				Total:          30.0,
-				LatestUSDPrice: 1234.56,
-				LatestUSDValue: 30 * 1234.56,
+				Symbol:   "symbol",
+				Exchange: "exchange",
+				Free:     10.0,
+				Locked:   20.0,
+				Total:    30.0,
+				At:       pbNow,
 			},
 		},
 	}
 
 	for _, test := range tests {
-		p := test.balance.toProto()
+		p, err := test.balance.toProto()
+		assert.NoError(t, err)
 		assert.Equal(t, test.expProto, p)
 	}
 }
@@ -53,6 +51,7 @@ func TestMarshalBalance(t *testing.T) {
 func TestMarshalLogEntry(t *testing.T) {
 
 	now := time.Now()
+	pbNow, _ := tspb.TimestampProto(now)
 
 	tests := []struct {
 		entry    *LogEntry
@@ -64,7 +63,7 @@ func TestMarshalLogEntry(t *testing.T) {
 				Message:   "log message",
 			},
 			expProto: &proto.LogEntry{
-				Time: &google_protobuf.Timestamp{Nanos: int32(now.Nanosecond())},
+				Time: pbNow,
 				Text: "log message",
 			},
 		},

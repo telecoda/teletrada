@@ -49,11 +49,22 @@ func (s *symbol) AddPrice(price Price) {
 	s.priceAs[price.As] = prices
 }
 
-func (s *symbol) GetPriceAs(symbol SymbolType, at time.Time) (Price, error) {
+func (s *symbol) GetPriceAs(as SymbolType, at time.Time) (Price, error) {
 	s.RLock()
 	defer s.RUnlock()
-	if prices, ok := s.priceAs[symbol]; !ok || len(prices) == 0 {
-		return Price{}, fmt.Errorf("Symbol: %s has no price information for: %s", s.SymbolType, symbol)
+
+	// base and as symbol are the same so price == 1
+	if s.SymbolType == as {
+		return Price{
+			Base:  s.SymbolType,
+			As:    as,
+			Price: 1.0,
+			At:    at,
+		}, nil
+	}
+
+	if prices, ok := s.priceAs[as]; !ok || len(prices) == 0 {
+		return Price{}, fmt.Errorf("Symbol: %s has no price information for: %s", s.SymbolType, as)
 	} else {
 		// return search for price with nearest date
 		var priceBefore Price
@@ -137,12 +148,21 @@ func (s *symbol) GetPriceAs(symbol SymbolType, at time.Time) (Price, error) {
 	}
 }
 
-func (s *symbol) GetLatestPriceAs(symbol SymbolType) (Price, error) {
+func (s *symbol) GetLatestPriceAs(as SymbolType) (Price, error) {
 	s.RLock()
 	defer s.RUnlock()
 
-	if prices, ok := s.priceAs[symbol]; !ok || len(prices) == 0 {
-		return Price{}, fmt.Errorf("Symbol: %s has no price information for: %s", s.SymbolType, symbol)
+	// base and as symbol are the same so price == 1
+	if s.SymbolType == as {
+		return Price{
+			Base:  s.SymbolType,
+			As:    as,
+			Price: 1.0,
+			At:    time.Now().UTC(),
+		}, nil
+	}
+	if prices, ok := s.priceAs[as]; !ok || len(prices) == 0 {
+		return Price{}, fmt.Errorf("Symbol: %s has no price information for: %s", s.SymbolType, as)
 	} else {
 		// return last price
 		return prices[len(prices)-1], nil

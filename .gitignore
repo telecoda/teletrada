@@ -1,4 +1,4 @@
-domain/testPriceHistory/*
+ttserver/domain/testPriceHistory/*
 ttclient/ttclient
 ttserver/ttserver
 ttserver/ttserver/priceHistory

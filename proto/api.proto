@@ -16,7 +16,8 @@ service teletrada {
 }
 
 message BalancesRequest {
-  bool ignoreSmall = 1;
+  string as        = 1;
+  bool ignoreSmall = 2;
 }
 
 message Balance {
@@ -25,8 +26,10 @@ message Balance {
   float free           = 3;
   float locked         = 4;
   float total          = 5;
-  float latestUSDPrice = 6;
-  float latestUSDValue = 7;
+  string as            = 6;
+  float asPrice        = 7;
+  float asValue        = 8;
+  google.protobuf.Timestamp at = 9;
 }
 
 message BalancesResponse {

@@ -74,9 +74,9 @@ func FormatRow(cols ...interface{}) []string {
 		} else {
 			if num, ok := col.(float32); ok {
 				if num < 0 {
-					formattedRow[i] = Paint(BrightRedText, fmt.Sprintf("%f", num))
+					formattedRow[i] = Paint(BrightRedText, fmt.Sprintf("%8.8f", num))
 				} else {
-					formattedRow[i] = Paint(BrightGreenText, fmt.Sprintf("%f", num))
+					formattedRow[i] = Paint(BrightGreenText, fmt.Sprintf("%8.8f", num))
 				}
 			} else {
 				formattedRow[i] = Paint(BrightYellowText, fmt.Sprintf("Unexpected type: %#v", col))

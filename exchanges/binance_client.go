@@ -76,7 +76,6 @@ func (b *binanceClient) GetBalances() ([]ExchangeBalance, error) {
 		if newBalance.Free != 0 || newBalance.Locked != 0 {
 			balances = append(balances, newBalance)
 		}
-
 	}
 
 	return balances, nil

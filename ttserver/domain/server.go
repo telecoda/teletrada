@@ -19,12 +19,7 @@ type Server interface {
 	Init() error
 
 	// status logging
-	//GetLog() []Log
 	log(msg string)
-
-	// balances
-	ListBalances()
-	//GetBalances() []*Balance
 }
 
 type server struct {
@@ -69,7 +64,6 @@ func NewTradaServer(config Config) (Server, error) {
 		return nil, err
 	}
 
-	server.ListBalances()
 	return server, nil
 }
 
@@ -111,14 +105,14 @@ func (s *server) isVerbose() bool {
 	return s.config.Verbose
 }
 
-func (s *server) ListBalances() {
-	fmt.Printf("Live Portfolio\n")
-	fmt.Printf("==============\n")
-	s.livePortfolio.ListBalances()
+// func (s *server) ListBalances() {
+// 	fmt.Printf("Live Portfolio\n")
+// 	fmt.Printf("==============\n")
+// 	s.livePortfolio.ListBalances()
 
-	fmt.Printf("Simulated Portfolios\n")
-	fmt.Printf("====================\n")
-	for _, p := range s.simPorts {
-		p.ListBalances()
-	}
-}
+// 	fmt.Printf("Simulated Portfolios\n")
+// 	fmt.Printf("====================\n")
+// 	for _, p := range s.simPorts {
+// 		p.ListBalances()
+// 	}
+// }
