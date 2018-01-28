@@ -7,8 +7,8 @@ import (
 	"net"
 	"time"
 
-	"github.com/telecoda/teletrada/domain"
 	"github.com/telecoda/teletrada/proto"
+	"github.com/telecoda/teletrada/ttserver/domain"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 )

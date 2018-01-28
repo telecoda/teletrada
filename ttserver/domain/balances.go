@@ -33,15 +33,7 @@ func (s *server) GetBalances(ctx context.Context, in *proto.BalancesRequest) (*p
 	resp.Balances = make([]*proto.Balance, len(balances))
 
 	for i, balance := range balances {
-		resp.Balances[i] = &proto.Balance{
-			Symbol:         string(balance.Symbol.GetType()),
-			Exchange:       balance.Exchange,
-			Free:           float32(balance.Free),
-			Locked:         float32(balance.Locked),
-			Total:          float32(balance.Total),
-			LatestUSDPrice: float32(balance.LatestUSDPrice),
-			LatestUSDValue: float32(balance.LatestUSDValue),
-		}
+		resp.Balances[i] = balance.toProto()
 	}
 
 	return resp, nil

@@ -4,6 +4,8 @@ option java_multiple_files = true;
 option java_package = "io.grpc.examples.helloworld";
 option java_outer_classname = "HelloWorldProto";
 
+import "google/protobuf/timestamp.proto";
+
 package proto;
 
 // The teletrader service definition.
@@ -35,7 +37,7 @@ message LogRequest {
 }
 
 message LogEntry {
-    string time = 1;
+    google.protobuf.Timestamp time = 1;
     string text = 2;
 }
 

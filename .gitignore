@@ -1,5 +1,5 @@
 domain/testPriceHistory/*
-teletrada_client/teletrada_client
-teletrada_server/teletrada_server
-teletrada_server/teletrada_server/priceHistory
-teletrada_server/teletrada_server/priceHistory/*
+ttclient/ttclient
+ttserver/ttserver
+ttserver/ttserver/priceHistory
+ttserver/ttserver/priceHistory/*

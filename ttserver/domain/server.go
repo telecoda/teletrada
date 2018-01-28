@@ -33,7 +33,7 @@ type server struct {
 	config        Config
 
 	// logging
-	statusLog []Log
+	statusLog []LogEntry
 	startTime time.Time
 }
 
@@ -110,8 +110,6 @@ func (s *server) Init() error {
 func (s *server) isVerbose() bool {
 	return s.config.Verbose
 }
-
-
 
 func (s *server) ListBalances() {
 	fmt.Printf("Live Portfolio\n")

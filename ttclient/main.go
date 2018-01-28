@@ -31,6 +31,16 @@ func main() {
 	// display welcome info.
 	shell.Println(Paint(YellowText, "Welcome to the TeleTrada client"))
 
+	registerCmds(shell)
+
+	// Read and write history to $HOME/.teletrada_history
+	shell.SetHomeHistoryPath(".teletrada_history")
+
+	// run shell
+	shell.Run()
+}
+
+func registerCmds(shell *ishell.Shell) {
 	// register a function for "balances" command.
 	shell.AddCmd(&ishell.Cmd{
 		Name: "balances",
@@ -45,9 +55,4 @@ func main() {
 		Func: getLog,
 	})
 
-	// Read and write history to $HOME/.teletrada_history
-	shell.SetHomeHistoryPath(".teletrada_history")
-
-	// run shell
-	shell.Run()
 }

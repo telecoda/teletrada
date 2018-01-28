@@ -6,9 +6,12 @@ import (
 	"text/tabwriter"
 
 	"github.com/abiosoft/ishell"
+	tspb "github.com/golang/protobuf/ptypes"
 	"github.com/telecoda/teletrada/proto"
 	"golang.org/x/net/context"
 )
+
+const DATE_FORMAT = "2006-01-02 03:04:05"
 
 func getLog(c *ishell.Context) {
 	r, err := client.GetLog(context.Background(), &proto.LogRequest{})
@@ -26,7 +29,12 @@ func getLog(c *ishell.Context) {
 	PrintRow(tw, PaintRowUniformly(GreenText, AnonymizeRow(header))) // header separator
 
 	for _, entry := range r.Entries {
-		PrintRow(tw, FormatRow(entry.Time, entry.Text, ""))
+		timestamp, err := tspb.Timestamp(entry.Time)
+		if err != nil {
+			PaintErr(err)
+			continue
+		}
+		PrintRow(tw, FormatRow(timestamp.Format(DATE_FORMAT), entry.Text, ""))
 	}
 	tw.Flush()
 	c.Printf("%s", buf.String())
