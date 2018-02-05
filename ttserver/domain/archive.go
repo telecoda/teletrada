@@ -16,10 +16,19 @@ import (
 
 var DefaultArchive = NewSymbolsArchive()
 
+const (
+	BTC  = "BTC"
+	BNB  = "BNB"
+	ETH  = "ETH"
+	LTC  = "LTC"
+	USDT = "USDT"
+)
+
 type SymbolsArchive interface {
 	AddSymbol(symbol Symbol) bool
 	GetSymbol(symbol SymbolType) (Symbol, error)
-	GetLatestPriceAs(symbol SymbolType, as SymbolType) (Price, error)
+	GetLatestPriceAs(base SymbolType, as SymbolType) (Price, error)
+	GetPriceAs(base SymbolType, as SymbolType, at time.Time) (Price, error)
 	ListPrices(incHistory bool) // include historic prices
 	UpdatePrices() error
 	// Starts automatic price updater
@@ -78,15 +87,112 @@ func (sa *symbolsArchive) AddSymbol(symbol Symbol) bool {
 func (s *symbolsArchive) initPrices() {
 }
 
-func (sa *symbolsArchive) GetLatestPriceAs(symbol SymbolType, as SymbolType) (Price, error) {
-	// Get symbol
-	s, err := sa.GetSymbol(symbol)
-	if err != nil {
-		return Price{}, fmt.Errorf("No prices for symbol: %s", symbol)
+// GetLatestPriceAs - returns the latest price of base symbol as another symbol
+func (sa *symbolsArchive) GetLatestPriceAs(base SymbolType, as SymbolType) (Price, error) {
+
+	price, err := sa.getLatestPriceAs(base, as)
+	if err == nil {
+		return price, nil
 	}
 
-	return s.GetLatestPriceAs(as)
+	// no price found for trading pair of base/as
+	// so we'll have to convert via BTC
+
+	/* fetching strategy
+	base -> BTC (Always fetch BTC price first)
+	BTC -> As
+	*/
+	baseToBtc, err := sa.getLatestPriceAs(base, BTC)
+	if err != nil {
+		return Price{}, fmt.Errorf("unable to convert %q to %q as there is no %s/%s prices", base, as, base, BTC)
+	}
+
+	// now get BTC -> as price
+	btcToAs, err := sa.getLatestPriceAs(BTC, as)
+	if err != nil {
+		return Price{}, fmt.Errorf("unable to convert %q to %q as there is no %s/%s prices", base, as, BTC, as)
+	}
+
+	// combine price conversions for overall exchange rate
+	combinedPrice := Price{
+		Base:  base,
+		As:    as,
+		Price: baseToBtc.Price * btcToAs.Price,
+		At:    btcToAs.At,
+	}
+
+	return combinedPrice, nil
+
 }
+
+// getLatestPriceAs - fetches symbol and latest price for it
+func (sa *symbolsArchive) getLatestPriceAs(base SymbolType, as SymbolType) (Price, error) {
+	// Get symbol
+	baseSymbol, err := sa.GetSymbol(base)
+	if err != nil {
+		return Price{}, fmt.Errorf("No prices for symbol %q", base)
+	}
+
+	price, err := baseSymbol.GetLatestPriceAs(as)
+	if err != nil {
+		return Price{}, fmt.Errorf("unable to convert %q to %q as their is no %s/%s prices", base, as, base, as)
+	}
+	return price, nil
+}
+
+// GetPriceAs - returns the price of base symbol as another symbol at a particular time
+func (sa *symbolsArchive) GetPriceAs(base SymbolType, as SymbolType, at time.Time) (Price, error) {
+
+	price, err := sa.getPriceAs(base, as, at)
+	if err == nil {
+		return price, nil
+	}
+
+	// no price found for trading pair of base/as
+	// so we'll have to convert via BTC
+
+	/* fetching strategy
+	base -> BTC (Always fetch BTC price first)
+	BTC -> As
+	*/
+	baseToBtc, err := sa.getPriceAs(base, BTC, at)
+	if err != nil {
+		return Price{}, fmt.Errorf("unable to convert %q to %q as there is no %s/%s prices at %s", base, as, base, BTC, at.Format(DATE_FORMAT))
+	}
+
+	// now get BTC -> as price
+	btcToAs, err := sa.getPriceAs(BTC, as, at)
+	if err != nil {
+		return Price{}, fmt.Errorf("unable to convert %q to %q as there is no %s/%s prices at %s", base, as, BTC, as, at.Format(DATE_FORMAT))
+	}
+
+	// combine price conversions for overall exchange rate
+	combinedPrice := Price{
+		Base:  base,
+		As:    as,
+		Price: baseToBtc.Price * btcToAs.Price,
+		At:    at,
+	}
+
+	return combinedPrice, nil
+
+}
+
+// getPriceAs - fetches symbol and latest price for it at a particular time
+func (sa *symbolsArchive) getPriceAs(base SymbolType, as SymbolType, at time.Time) (Price, error) {
+	// Get symbol
+	baseSymbol, err := sa.GetSymbol(base)
+	if err != nil {
+		return Price{}, fmt.Errorf("No prices for symbol %q", base)
+	}
+
+	price, err := baseSymbol.GetPriceAs(as, at)
+	if err != nil {
+		return Price{}, fmt.Errorf("unable to convert %q to %q as their is no %s/%s prices at %s", base, as, base, as, at.Format(DATE_FORMAT))
+	}
+	return price, nil
+}
+
 func (sa *symbolsArchive) UpdatePrices() error {
 	exPrices, err := DefaultClient.GetLatestPrices()
 	if err != nil {
@@ -271,6 +377,8 @@ func (sa *symbolsArchive) LoadPrices(dir string) error {
 		return fmt.Errorf("Can't load from dir: %s - %s", dir, err)
 	}
 
+	fmt.Printf("Loading prices from %d files\n", len(files))
+	t := time.Now()
 	// read all files
 	for _, file := range files {
 		// only load from .json files
@@ -280,6 +388,7 @@ func (sa *symbolsArchive) LoadPrices(dir string) error {
 			}
 		}
 	}
+	fmt.Printf("Loaded in %s\n", time.Now().Sub(t).String())
 
 	return nil
 }

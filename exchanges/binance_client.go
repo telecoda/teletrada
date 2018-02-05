@@ -51,13 +51,13 @@ func (b *binanceClient) GetExchange() string {
 	return "binance"
 }
 
-func (b *binanceClient) GetBalances() ([]ExchangeBalance, error) {
+func (b *binanceClient) GetBalances() ([]Balance, error) {
 	res, err := b.client.NewGetAccountService().Do(context.Background())
 	if err != nil {
 		return nil, err
 	}
 
-	balances := make([]ExchangeBalance, 0)
+	balances := make([]Balance, 0)
 	for _, bal := range res.Balances {
 		free, err := strconv.ParseFloat(bal.Free, 64)
 		if err != nil {
@@ -67,7 +67,7 @@ func (b *binanceClient) GetBalances() ([]ExchangeBalance, error) {
 		if err != nil {
 			return nil, fmt.Errorf("Failed to parse balance quantity locked: %s - %s. %#v", bal.Locked, err, bal)
 		}
-		newBalance := ExchangeBalance{
+		newBalance := Balance{
 			Symbol:   bal.Asset,
 			Exchange: BINANCE_EXCHANGE,
 			Free:     free,
@@ -81,13 +81,13 @@ func (b *binanceClient) GetBalances() ([]ExchangeBalance, error) {
 	return balances, nil
 }
 
-func (b *binanceClient) GetLatestPrices() ([]ExchangePrice, error) {
+func (b *binanceClient) GetLatestPrices() ([]Price, error) {
 	res, err := b.client.NewListPricesService().Do(context.Background())
 	if err != nil {
 		return nil, err
 	}
 
-	prices := make([]ExchangePrice, len(res))
+	prices := make([]Price, len(res))
 	// convert results to prices
 	for i, binancePrice := range res {
 		symbolPrice, err := strconv.ParseFloat(binancePrice.Price, 64)
@@ -98,7 +98,7 @@ func (b *binanceClient) GetLatestPrices() ([]ExchangePrice, error) {
 		// split LTCBTC symbol into base and as symbols
 		// LTC/BTC
 
-		price := ExchangePrice{
+		price := Price{
 			Price: symbolPrice,
 			At:    time.Now(),
 		}
@@ -138,8 +138,54 @@ func (b *binanceClient) GetLatestPrices() ([]ExchangePrice, error) {
 	return prices, nil
 }
 
-func (b *binanceClient) GetHistoricPrices() ([]ExchangePrice, error) {
+func (b *binanceClient) GetHistoricPrices() ([]Price, error) {
 	// TODO - get some old price data
-	prices := make([]ExchangePrice, 0)
+	prices := make([]Price, 0)
 	return prices, nil
+}
+
+func (b *binanceClient) GetPriceChange24(base, as string) (PriceChange24, error) {
+
+	tp := base + as
+
+	res, err := b.client.NewPriceChangeStatsService().Symbol(tp).Do(context.Background())
+	if err != nil {
+		return PriceChange24{}, err
+	}
+
+	priceChange := PriceChange24{
+		Price: Price{
+			Base: base,
+			As:   as,
+			At:   time.Unix(0, res.CloseTime*1000000),
+		},
+		OpenTime:  time.Unix(0, res.OpenTime*1000000),
+		CloseTime: time.Unix(0, res.CloseTime*1000000),
+	}
+
+	lastPrice, err := strconv.ParseFloat(res.LastPrice, 64)
+	if err != nil {
+		return PriceChange24{}, fmt.Errorf("Failed to parse last price: %s - %s. %s", tp, err, res.LastPrice)
+	}
+	priceChange.Price.Price = lastPrice
+
+	openPrice, err := strconv.ParseFloat(res.OpenPrice, 64)
+	if err != nil {
+		return PriceChange24{}, fmt.Errorf("Failed to parse open price: %s - %s. %s", tp, err, res.OpenPrice)
+	}
+	priceChange.OpenPrice = openPrice
+
+	changeAmount, err := strconv.ParseFloat(res.PriceChange, 64)
+	if err != nil {
+		return PriceChange24{}, fmt.Errorf("Failed to parse price change: %s - %s. %s", tp, err, res.PriceChange)
+	}
+	priceChange.ChangeAmount = changeAmount
+
+	changePercent, err := strconv.ParseFloat(res.PriceChangePercent, 64)
+	if err != nil {
+		return PriceChange24{}, fmt.Errorf("Failed to parse price change percent: %s - %s. %s", tp, err, res.PriceChange)
+	}
+	priceChange.ChangePercent = changePercent
+
+	return priceChange, nil
 }

@@ -74,3 +74,4 @@ func TestSymbolPrices(t *testing.T) {
 	assert.Error(t, err, "Should return an error")
 
 }
+

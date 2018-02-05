@@ -1,5 +1,5 @@
 ttserver/domain/testPriceHistory/*
 ttclient/ttclient
 ttserver/ttserver
-ttserver/ttserver/priceHistory
-ttserver/ttserver/priceHistory/*
+ttserver/priceHistory
+ttserver/priceHistory/*.json

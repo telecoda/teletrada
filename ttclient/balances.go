@@ -31,7 +31,7 @@ func getBalances(c *ishell.Context) {
 	tw := tabwriter.NewWriter(&buf, 0, 0, 2, ' ', tabwriter.AlignRight)
 
 	// Header
-	header := []string{"sym", "as", "total", "price", "value", "at", ""}
+	header := []string{"sym", "as", "total", "price", "value", "at", "price24", "change24", "changePct",""}
 	PrintRow(tw, PaintRowUniformly(GreenText, header))
 	PrintRow(tw, PaintRowUniformly(GreenText, AnonymizeRow(header))) // header separator
 
@@ -41,7 +41,7 @@ func getBalances(c *ishell.Context) {
 			c.Println(PaintErr(err))
 			continue
 		}
-		PrintRow(tw, FormatRow(balance.Symbol, balance.As, balance.Total, balance.AsPrice, balance.AsValue, at.Format(DATE_FORMAT), ""))
+		PrintRow(tw, FormatRow(balance.Symbol, balance.As, balance.Total, balance.Price, balance.Value, at.Format(DATE_FORMAT), balance.Price24H, balance.Change24H,balance.ChangePct24H, ""))
 	}
 
 	tw.Flush()

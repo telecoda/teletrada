@@ -27,9 +27,13 @@ message Balance {
   float locked         = 4;
   float total          = 5;
   string as            = 6;
-  float asPrice        = 7;
-  float asValue        = 8;
+  float price        = 7;
+  float value        = 8;
   google.protobuf.Timestamp at = 9;
+  float price24h       = 10;
+  float value24h       = 11;
+  float change24h      = 12;
+  float changePct24h   = 13;
 }
 
 message BalancesResponse {

@@ -33,12 +33,12 @@ type server struct {
 }
 
 type Config struct {
-	UseMock        bool
-	LoadPricesDir  string
-	SavePricesDir  string
-	SavePrices     bool
-	UpdateDuration time.Duration
-	Verbose        bool
+	UseMock       bool
+	LoadPricesDir string
+	SavePricesDir string
+	SavePrices    bool
+	UpdateFreq    time.Duration
+	Verbose       bool
 }
 
 func NewTradaServer(config Config) (Server, error) {
@@ -60,10 +60,6 @@ func NewTradaServer(config Config) (Server, error) {
 		config: config,
 	}
 
-	if err := server.Init(); err != nil {
-		return nil, err
-	}
-
 	return server, nil
 }
 
@@ -83,6 +79,8 @@ func (s *server) Init() error {
 		if err := DefaultArchive.StartPersistence(s.config.SavePricesDir); err != nil {
 			return err
 		}
+
+		DefaultArchive.StartUpdater(s.config.UpdateFreq)
 	}
 
 	if err := DefaultArchive.UpdatePrices(); err != nil {

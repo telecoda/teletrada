@@ -7,18 +7,25 @@ import (
 
 /* methods here are for convert to/from domain to protobufs */
 
-func (b *Balance) toProto() (*proto.Balance, error) {
+func (b *BalanceAs) toProto() (*proto.Balance, error) {
 	ts, err := tspb.TimestampProto(b.At)
 	if err != nil {
 		return nil, err
 	}
 	return &proto.Balance{
-		Symbol:   b.ExchangeBalance.Symbol,
-		Exchange: b.Exchange,
-		Free:     float32(b.Free),
-		Locked:   float32(b.Locked),
-		Total:    float32(b.Total),
-		At:       ts,
+		Symbol:       b.Balance.Symbol,
+		Exchange:     b.Exchange,
+		Free:         float32(b.Free),
+		Locked:       float32(b.Locked),
+		Total:        float32(b.Total),
+		At:           ts,
+		As:           string(b.As),
+		Price:        float32(b.Price),
+		Value:        float32(b.Value),
+		Price24H:     float32(b.Price24H),
+		Value24H:     float32(b.Value24H),
+		Change24H:    float32(b.Change24H),
+		ChangePct24H: float32(b.ChangePct24H),
 	}, nil
 }
 

@@ -1,6 +1,7 @@
 package domain
 
 import (
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -180,4 +181,285 @@ func TestPricePersistence(t *testing.T) {
 	assert.NoError(t, err)
 
 	assert.Equal(t, 2, len(info), "There should be 2 files in the directory now")
+}
+
+func TestMultiCurrencyPrices(t *testing.T) {
+
+	/* this test is to check we can convert prices to different currencies
+	 */
+
+	archive := &symbolsArchive{
+		symbols: make(map[SymbolType]Symbol),
+	}
+
+	mc, err := exchanges.NewMockClient()
+	assert.NoError(t, err)
+
+	// run test with mocked data
+	DefaultClient = mc
+
+	ltcSymbol := SymbolType("LTC")
+	btcSymbol := SymbolType("BTC")
+	ethSymbol := SymbolType("ETH")
+	usdtSymbol := SymbolType("USDT")
+
+	today := time.Now()
+
+	// add LTC -> BTC price
+	LtcBtcPrice := Price{
+		Base:  ltcSymbol,
+		As:    btcSymbol,
+		Price: 0.1, // how much 1 LTC is worth in BTC
+		At:    today,
+	}
+
+	// add BTC -> ETH price
+	BtcEthPrice := Price{
+		Base:  btcSymbol,
+		As:    ethSymbol,
+		Price: 20.0, // how much 1 BTC is worth in ETH
+		At:    today,
+	}
+
+	// add BTC -> USDT price
+	BtcUsdtPrice := Price{
+		Base:  btcSymbol,
+		As:    usdtSymbol,
+		Price: 20000.0, // how much 1 BTC is worth in USDT
+		At:    today,
+	}
+
+	err = archive.savePrice(LtcBtcPrice)
+	assert.NoError(t, err)
+
+	err = archive.savePrice(BtcEthPrice)
+	assert.NoError(t, err)
+
+	err = archive.savePrice(BtcUsdtPrice)
+	assert.NoError(t, err)
+
+	tests := []struct {
+		name     string
+		base     SymbolType
+		as       SymbolType
+		expErr   error
+		expPrice float64
+	}{
+		{
+			name:     "Simple conversion",
+			base:     ltcSymbol,
+			as:       btcSymbol,
+			expErr:   nil,
+			expPrice: LtcBtcPrice.Price,
+		},
+		{
+			name:     "LTC -> ETH (via BTC)",
+			base:     ltcSymbol,
+			as:       ethSymbol,
+			expErr:   nil,
+			expPrice: LtcBtcPrice.Price * BtcEthPrice.Price,
+		},
+		{
+			name:     "LTC -> USDT (via BTC)",
+			base:     ltcSymbol,
+			as:       usdtSymbol,
+			expErr:   nil,
+			expPrice: LtcBtcPrice.Price * BtcUsdtPrice.Price,
+		},
+		{
+			name:   "Unknown base symbol",
+			base:   SymbolType("unknown"),
+			as:     usdtSymbol,
+			expErr: fmt.Errorf(`unable to convert "unknown" to "USDT" as there is no unknown/BTC prices`),
+		},
+		{
+			name:   "Unknown as symbol",
+			base:   ltcSymbol,
+			as:     SymbolType("unknown"),
+			expErr: fmt.Errorf(`unable to convert "LTC" to "unknown" as there is no BTC/unknown prices`),
+		},
+		{
+			name:   "No BTC prices",
+			base:   ethSymbol,
+			as:     ltcSymbol,
+			expErr: fmt.Errorf(`unable to convert "ETH" to "LTC" as there is no ETH/BTC prices`),
+		},
+	}
+
+	for _, test := range tests {
+		price, err := archive.GetLatestPriceAs(test.base, test.as)
+
+		if test.expErr == nil && err != nil {
+			assert.Fail(t, fmt.Sprintf("Didn't expect error and received %s", err), "Test %s", test.name)
+		}
+
+		if test.expErr != nil && err == nil {
+			assert.Fail(t, fmt.Sprintf("Expected error %s and didn't receive it", test.expErr), "Test %s", test.name)
+		}
+
+		if test.expErr != nil && err != nil {
+			assert.Equal(t, test.expErr, err)
+		}
+
+		// if no error compare result
+		if test.expErr == nil {
+			assert.Equal(t, test.expPrice, price.Price, "Test %s", test.name)
+		}
+
+	}
+
+}
+
+func TestMultiCurrencyPricesAt(t *testing.T) {
+
+	/* this test is to check we can convert prices to different currencies
+	 */
+
+	archive := &symbolsArchive{
+		symbols: make(map[SymbolType]Symbol),
+	}
+
+	mc, err := exchanges.NewMockClient()
+	assert.NoError(t, err)
+
+	// run test with mocked data
+	DefaultClient = mc
+
+	ltcSymbol := SymbolType("LTC")
+	btcSymbol := SymbolType("BTC")
+	ethSymbol := SymbolType("ETH")
+	usdtSymbol := SymbolType("USDT")
+
+	today := time.Now()
+	yesterday := time.Now().AddDate(0, 0, -1)
+
+	// add LTC -> BTC price
+	LtcBtcPrice := Price{
+		Base:  ltcSymbol,
+		As:    btcSymbol,
+		Price: 0.1, // how much 1 LTC is worth in BTC
+		At:    today,
+	}
+
+	// add BTC -> ETH price
+	BtcEthPrice := Price{
+		Base:  btcSymbol,
+		As:    ethSymbol,
+		Price: 20.0, // how much 1 BTC is worth in ETH
+		At:    today,
+	}
+
+	// add BTC -> USDT price
+	BtcUsdtPrice := Price{
+		Base:  btcSymbol,
+		As:    usdtSymbol,
+		Price: 20000.0, // how much 1 BTC is worth in USDT
+		At:    today,
+	}
+
+	// add BTC -> USDT price (yesterdays price)
+	BtcUsdtPriceYesterday := Price{
+		Base:  btcSymbol,
+		As:    usdtSymbol,
+		Price: 10000.0, // how much 1 BTC is worth in USDT
+		At:    yesterday,
+	}
+
+	err = archive.savePrice(LtcBtcPrice)
+	assert.NoError(t, err)
+
+	err = archive.savePrice(BtcEthPrice)
+	assert.NoError(t, err)
+
+	err = archive.savePrice(BtcUsdtPrice)
+	assert.NoError(t, err)
+
+	err = archive.savePrice(BtcUsdtPriceYesterday)
+	assert.NoError(t, err)
+
+	tests := []struct {
+		name     string
+		base     SymbolType
+		as       SymbolType
+		at       time.Time
+		expErr   error
+		expPrice float64
+	}{
+		{
+			name:     "Simple conversion",
+			base:     ltcSymbol,
+			as:       btcSymbol,
+			at:       today,
+			expErr:   nil,
+			expPrice: LtcBtcPrice.Price,
+		},
+		{
+			name:     "LTC -> ETH (via BTC)",
+			base:     ltcSymbol,
+			as:       ethSymbol,
+			at:       today,
+			expErr:   nil,
+			expPrice: LtcBtcPrice.Price * BtcEthPrice.Price,
+		},
+		{
+			name:     "LTC -> USDT (via BTC)",
+			base:     ltcSymbol,
+			as:       usdtSymbol,
+			at:       today,
+			expErr:   nil,
+			expPrice: LtcBtcPrice.Price * BtcUsdtPrice.Price,
+		},
+		{
+			name:     "LTC -> USDT (via BTC) for yesterday",
+			base:     ltcSymbol,
+			as:       usdtSymbol,
+			at:       yesterday,
+			expErr:   nil,
+			expPrice: LtcBtcPrice.Price * BtcUsdtPriceYesterday.Price,
+		},
+		{
+			name:   "Unknown base symbol",
+			base:   SymbolType("unknown"),
+			as:     usdtSymbol,
+			at:     today,
+			expErr: fmt.Errorf(`unable to convert "unknown" to "USDT" as there is no unknown/BTC prices at %s`, today.Format(DATE_FORMAT)),
+		},
+		{
+			name:   "Unknown as symbol",
+			base:   ltcSymbol,
+			as:     SymbolType("unknown"),
+			at:     today,
+			expErr: fmt.Errorf(`unable to convert "LTC" to "unknown" as there is no BTC/unknown prices at %s`, today.Format(DATE_FORMAT)),
+		},
+		{
+			name:   "No BTC prices",
+			base:   ethSymbol,
+			as:     ltcSymbol,
+			at:     today,
+			expErr: fmt.Errorf(`unable to convert "ETH" to "LTC" as there is no ETH/BTC prices at %s`, today.Format(DATE_FORMAT)),
+		},
+	}
+
+	for _, test := range tests {
+		price, err := archive.GetPriceAs(test.base, test.as, test.at)
+
+		if test.expErr == nil && err != nil {
+			assert.Fail(t, fmt.Sprintf("Didn't expect error and received %s", err), "Test %s", test.name)
+		}
+
+		if test.expErr != nil && err == nil {
+			assert.Fail(t, fmt.Sprintf("Expected error %s and didn't receive it", test.expErr), "Test %s", test.name)
+		}
+
+		if test.expErr != nil && err != nil {
+			assert.Equal(t, test.expErr, err)
+		}
+
+		// if no error compare result
+		if test.expErr == nil {
+			assert.Equal(t, test.expPrice, price.Price, "Test %s", test.name)
+		}
+
+	}
+
 }

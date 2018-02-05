@@ -49,6 +49,7 @@ func (s *symbol) AddPrice(price Price) {
 	s.priceAs[price.As] = prices
 }
 
+// GetPriceAs - returns the price of base symbol as another symbol at a particular time
 func (s *symbol) GetPriceAs(as SymbolType, at time.Time) (Price, error) {
 	s.RLock()
 	defer s.RUnlock()
@@ -148,6 +149,7 @@ func (s *symbol) GetPriceAs(as SymbolType, at time.Time) (Price, error) {
 	}
 }
 
+// GetLatestPriceAs - returns the latest price of base symbol as another symbol
 func (s *symbol) GetLatestPriceAs(as SymbolType) (Price, error) {
 	s.RLock()
 	defer s.RUnlock()

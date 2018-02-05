@@ -4,10 +4,6 @@ import (
 	"time"
 )
 
-const (
-	USDT = "USDT"
-)
-
 type archive struct {
 }
 

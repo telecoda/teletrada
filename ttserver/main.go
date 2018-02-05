@@ -49,6 +49,7 @@ func main() {
 		LoadPricesDir: p.loadPricesDir,
 		SavePricesDir: p.savePricesDir,
 		SavePrices:    p.savePrices,
+		UpdateFreq:    p.priceUpdateFreq,
 		Verbose:       p.verbose,
 	}
 

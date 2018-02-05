@@ -2,6 +2,7 @@ package domain
 
 import (
 	"context"
+	"fmt"
 	"sync"
 	"time"
 
@@ -9,17 +10,28 @@ import (
 	"github.com/telecoda/teletrada/proto"
 )
 
-type Balance struct {
+type BalanceAs struct {
 	sync.RWMutex
-	exchanges.ExchangeBalance
-	Total float64
-	At    time.Time
+	exchanges.Balance
+	Total        float64
+	At           time.Time
+	As           SymbolType
+	Price        float64
+	Value        float64
+	Price24H     float64
+	Value24H     float64
+	Change24H    float64
+	ChangePct24H float64
 }
 
 // GetBalances returns current balances
 func (s *server) GetBalances(ctx context.Context, req *proto.BalancesRequest) (*proto.BalancesResponse, error) {
 
 	resp := &proto.BalancesResponse{}
+
+	if err := s.updatePortfolios(); err != nil {
+		return nil, fmt.Errorf("failed to update portfolios - %s", err)
+	}
 
 	balances := s.livePortfolio.balances
 
@@ -31,19 +43,6 @@ func (s *server) GetBalances(ctx context.Context, req *proto.BalancesRequest) (*
 		if err != nil {
 			return nil, err
 		}
-
-		resp.Balances[i].As = req.As
-
-		// find latest price for trading pair
-		price, err := DefaultArchive.GetLatestPriceAs(SymbolType(balance.Symbol), SymbolType(req.As))
-		if err != nil {
-			return nil, err
-		}
-
-		// reprice balance
-		resp.Balances[i].AsPrice = float32(price.Price)
-		resp.Balances[i].AsValue = float32(price.Price * balance.Total)
-
 	}
 
 	return resp, nil

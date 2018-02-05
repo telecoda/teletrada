@@ -11,32 +11,44 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestMarshalBalance(t *testing.T) {
+func TestMarshalBalanceAs(t *testing.T) {
 	now := time.Now()
 	pbNow, _ := tspb.TimestampProto(now)
 
 	tests := []struct {
-		balance  *Balance
+		balance  *BalanceAs
 		expProto *proto.Balance
 	}{
 		{
-			balance: &Balance{
-				ExchangeBalance: exchanges.ExchangeBalance{
+			balance: &BalanceAs{
+				Balance: exchanges.Balance{
 					Symbol:   "symbol",
 					Exchange: "exchange",
 					Free:     10.0,
 					Locked:   20.0,
 				},
-				Total: 30.0,
-				At:    now,
+				Total:        30.0,
+				Price:        5.00,
+				Value:        150.00,
+				At:           now,
+				Price24H:     4.00,
+				Value24H:     120.00,
+				Change24H:    1.00,
+				ChangePct24H: 25.00,
 			},
 			expProto: &proto.Balance{
-				Symbol:   "symbol",
-				Exchange: "exchange",
-				Free:     10.0,
-				Locked:   20.0,
-				Total:    30.0,
-				At:       pbNow,
+				Symbol:       "symbol",
+				Exchange:     "exchange",
+				Free:         10.0,
+				Locked:       20.0,
+				Total:        30.0,
+				Price:        5.00,
+				Value:        150.00,
+				At:           pbNow,
+				Price24H:     4.00,
+				Value24H:     120.00,
+				Change24H:    1.00,
+				ChangePct24H: 25.00,
 			},
 		},
 	}
