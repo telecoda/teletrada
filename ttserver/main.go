@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"os"
 	"time"
 
 	"github.com/telecoda/teletrada/proto"
@@ -16,15 +17,19 @@ import (
 //go:generate protoc -I ../proto --go_out=plugins=grpc:../proto ../proto/api.proto
 
 const (
-	port = ":50051"
+	// env var names
+	INFLUX_DB_NAME  = "INFLUX_DB_NAME"
+	INFLUX_USERNAME = "INFLUX_USERNAME"
+	INFLUX_PASSWORD = "INFLUX_PASSWORD"
+
+	INFLUX_DATABASE      = "teletrada"
+	TEST_INFLUX_DATABASE = "testteletrada"
 )
 
 type params struct {
 	useMock         bool
 	port            int
 	loadPricesDir   string
-	savePrices      bool
-	savePricesDir   string
 	priceUpdateFreq time.Duration
 	verbose         bool
 }
@@ -33,8 +38,6 @@ func (p *params) setup() {
 	flag.BoolVar(&p.useMock, "usemock", false, "Use mock exchange client")
 	flag.BoolVar(&p.verbose, "v", false, "Verbose logging")
 	flag.StringVar(&p.loadPricesDir, "loadpricesdir", "priceHistory", "Dir to load historic prices from")
-	flag.BoolVar(&p.savePrices, "saveprices", false, "Save new prices as files")
-	flag.StringVar(&p.savePricesDir, "savepricesdir", "priceHistory", "Dir to save new prices to")
 	flag.DurationVar(&p.priceUpdateFreq, "priceupdatefreq", time.Duration(60*time.Second), "Price update frequency")
 	flag.IntVar(&p.port, "port", 13370, "Port for server to listen on")
 }
@@ -45,12 +48,19 @@ func main() {
 	flag.Parse()
 
 	config := domain.Config{
-		UseMock:       p.useMock,
-		LoadPricesDir: p.loadPricesDir,
-		SavePricesDir: p.savePricesDir,
-		SavePrices:    p.savePrices,
-		UpdateFreq:    p.priceUpdateFreq,
-		Verbose:       p.verbose,
+		UseMock:        p.useMock,
+		LoadPricesDir:  p.loadPricesDir,
+		InfluxDBName:   os.Getenv(INFLUX_DB_NAME),
+		InfluxUsername: os.Getenv(INFLUX_USERNAME),
+		InfluxPassword: os.Getenv(INFLUX_PASSWORD),
+		UpdateFreq:     p.priceUpdateFreq,
+		Verbose:        p.verbose,
+		Port:           p.port,
+	}
+
+	// if no env vars, use defaults
+	if config.InfluxDBName == "" {
+		config.InfluxDBName = INFLUX_DATABASE
 	}
 
 	server, err := domain.NewTradaServer(config)
@@ -63,8 +73,8 @@ func main() {
 		log.Fatalf("Failed to init server - %s", err)
 	}
 
-	fmt.Printf("Starting gRPC server on: %s\n", port)
-	lis, err := net.Listen("tcp", port)
+	fmt.Printf("Starting gRPC server on: :%d\n", config.Port)
+	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", config.Port))
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}

@@ -33,12 +33,14 @@ type server struct {
 }
 
 type Config struct {
-	UseMock       bool
-	LoadPricesDir string
-	SavePricesDir string
-	SavePrices    bool
-	UpdateFreq    time.Duration
-	Verbose       bool
+	UseMock        bool
+	LoadPricesDir  string
+	InfluxDBName   string
+	InfluxUsername string
+	InfluxPassword string
+	UpdateFreq     time.Duration
+	Verbose        bool
+	Port           int
 }
 
 func NewTradaServer(config Config) (Server, error) {
@@ -76,14 +78,7 @@ func (s *server) Init() error {
 	// 	}()
 	// }
 
-	if s.config.SavePrices {
-		// s.log("Starting price persistence")
-		// if err := DefaultArchive.StartPersistence(s.config.SavePricesDir); err != nil {
-		// 	return err
-		// }
-
-		DefaultArchive.StartUpdater(s.config.UpdateFreq)
-	}
+	DefaultArchive.StartUpdater(s.config.UpdateFreq)
 
 	if err := DefaultArchive.UpdatePrices(); err != nil {
 		return fmt.Errorf("Failed to update latest prices: %s", err)

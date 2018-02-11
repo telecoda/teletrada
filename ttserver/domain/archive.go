@@ -40,9 +40,6 @@ type SymbolsArchive interface {
 	StartUpdater(frequency time.Duration)
 	// Stops automatic price updater
 	StopUpdater()
-	StartPersistence(path string) error
-	StopPersistence()
-	persistPrices(prices []Price) error
 	// Loading history
 	LoadPrices(path string) error
 }
@@ -55,8 +52,7 @@ type symbolsArchive struct {
 	updateStarted time.Time
 	updateCount   int
 	// price persistence
-	persistToDisk bool
-	persistDir    string
+	persist bool
 
 	// influxClient
 	influxClient client.Client
@@ -243,14 +239,7 @@ func (sa *symbolsArchive) UpdatePrices() error {
 		}
 	}
 
-	if sa.persistToDisk {
-		if err := sa.persistPrices(prices); err != nil {
-			return err
-		}
-	}
-
 	// send to influxDB
-
 	if err := sa.sendToInflux(prices); err != nil {
 		return err
 	}
@@ -282,7 +271,6 @@ func (sa *symbolsArchive) savePrice(price Price) error {
 	}
 	pSymbol.AddPrice(price)
 
-	fmt.Printf("TEMP: Adding price: %#v\n", price)
 	return nil
 }
 
@@ -360,49 +348,6 @@ func (sa *symbolsArchive) StopUpdater() {
 	sa.Unlock()
 }
 
-func (sa *symbolsArchive) StartPersistence(dir string) error {
-	// check dir exists
-	_, err := ioutil.ReadDir(dir)
-	if err != nil {
-		return fmt.Errorf("Can't persist to dir: %s - %s", dir, err)
-	}
-
-	sa.Lock()
-	sa.persistDir = dir
-	sa.persistToDisk = true
-	sa.Unlock()
-
-	return nil
-}
-
-func (sa *symbolsArchive) StopPersistence() {
-	sa.Lock()
-	sa.persistToDisk = false
-	sa.Unlock()
-}
-
-func (sa *symbolsArchive) persistPrices(prices []Price) error {
-
-	pricesJSON, err := json.Marshal(&prices)
-	if err != nil {
-		return err
-	}
-
-	// no prices to persist
-	if len(prices) == 0 {
-		return nil
-	}
-
-	// use time of first price in filename
-
-	priceTime := prices[0].At.Format(time.RFC3339)
-
-	priceFilename := priceTime + ".json"
-
-	path := filepath.Join(sa.persistDir, priceFilename)
-	return ioutil.WriteFile(path, pricesJSON, os.ModePerm)
-}
-
 /*
 
 Metrics we want to save:
@@ -444,6 +389,10 @@ func (sa *symbolsArchive) sendToInflux(prices []Price) error {
 		return fmt.Errorf("failed to create batch points: %s", err)
 	}
 	for _, price := range prices {
+
+		if price.As == "123456" {
+			continue // skip it
+		}
 
 		// Create a point and add to batch
 		tags := map[string]string{"symbol": string(price.Base)}
