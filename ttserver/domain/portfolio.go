@@ -78,16 +78,6 @@ func (b *BalanceAs) reprice() error {
 	b.Price = priceAs.Price
 	b.Value = priceAs.Price * b.Total
 
-	// // base and as symbol are the same so price == 1
-	// if b.Symbol == b.As {
-	// 	return Price{
-	// 		Base:  s.SymbolType,
-	// 		As:    as,
-	// 		Price: 1.0,
-	// 		At:    at,
-	// 	}, nil
-	// }
-
 	// get 24h price
 	price24H, err := DefaultClient.GetPriceChange24(b.Symbol, string(b.As))
 	if err != nil {

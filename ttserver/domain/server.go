@@ -67,18 +67,20 @@ func (s *server) Init() error {
 
 	s.startTime = time.Now().UTC()
 
-	if s.config.LoadPricesDir != "" {
-		s.log("Loading historic prices from filesystem")
-		if err := DefaultArchive.LoadPrices(s.config.LoadPricesDir); err != nil {
-			return fmt.Errorf("Failed to load historic prices: %s", err)
-		}
-	}
+	// if s.config.LoadPricesDir != "" {
+	// 	go func() {
+	// 		s.log("Loading historic prices from filesystem")
+	// 		if err := DefaultArchive.LoadPrices(s.config.LoadPricesDir); err != nil {
+	// 			s.log(fmt.Sprintf("ERROR:Failed to load historic prices: %s", err))
+	// 		}
+	// 	}()
+	// }
 
 	if s.config.SavePrices {
-		s.log("Starting price persistence")
-		if err := DefaultArchive.StartPersistence(s.config.SavePricesDir); err != nil {
-			return err
-		}
+		// s.log("Starting price persistence")
+		// if err := DefaultArchive.StartPersistence(s.config.SavePricesDir); err != nil {
+		// 	return err
+		// }
 
 		DefaultArchive.StartUpdater(s.config.UpdateFreq)
 	}
@@ -102,15 +104,3 @@ func (s *server) Init() error {
 func (s *server) isVerbose() bool {
 	return s.config.Verbose
 }
-
-// func (s *server) ListBalances() {
-// 	fmt.Printf("Live Portfolio\n")
-// 	fmt.Printf("==============\n")
-// 	s.livePortfolio.ListBalances()
-
-// 	fmt.Printf("Simulated Portfolios\n")
-// 	fmt.Printf("====================\n")
-// 	for _, p := range s.simPorts {
-// 		p.ListBalances()
-// 	}
-// }

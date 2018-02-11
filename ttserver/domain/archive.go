@@ -12,6 +12,8 @@ import (
 	"sync"
 	"text/tabwriter"
 	"time"
+
+	"github.com/influxdata/influxdb/client/v2"
 )
 
 var DefaultArchive = NewSymbolsArchive()
@@ -22,6 +24,9 @@ const (
 	ETH  = "ETH"
 	LTC  = "LTC"
 	USDT = "USDT"
+
+	INFLUX_DATABASE      = "teletrada"
+	TEST_INFLUX_DATABASE = "testteletrada"
 )
 
 type SymbolsArchive interface {
@@ -52,12 +57,17 @@ type symbolsArchive struct {
 	// price persistence
 	persistToDisk bool
 	persistDir    string
+
+	// influxClient
+	influxClient client.Client
+	influxDB     string
 }
 
 func NewSymbolsArchive() SymbolsArchive {
 	sa := &symbolsArchive{
 		symbols:    make(map[SymbolType]Symbol),
 		stopUpdate: make(chan bool),
+		influxDB:   INFLUX_DATABASE,
 	}
 	return sa
 }
@@ -115,10 +125,11 @@ func (sa *symbolsArchive) GetLatestPriceAs(base SymbolType, as SymbolType) (Pric
 
 	// combine price conversions for overall exchange rate
 	combinedPrice := Price{
-		Base:  base,
-		As:    as,
-		Price: baseToBtc.Price * btcToAs.Price,
-		At:    btcToAs.At,
+		Base:     base,
+		As:       as,
+		Price:    baseToBtc.Price * btcToAs.Price,
+		At:       btcToAs.At,
+		Exchange: baseToBtc.Exchange,
 	}
 
 	return combinedPrice, nil
@@ -168,10 +179,11 @@ func (sa *symbolsArchive) GetPriceAs(base SymbolType, as SymbolType, at time.Tim
 
 	// combine price conversions for overall exchange rate
 	combinedPrice := Price{
-		Base:  base,
-		As:    as,
-		Price: baseToBtc.Price * btcToAs.Price,
-		At:    at,
+		Base:     base,
+		As:       as,
+		Price:    baseToBtc.Price * btcToAs.Price,
+		At:       at,
+		Exchange: baseToBtc.Exchange,
 	}
 
 	return combinedPrice, nil
@@ -194,6 +206,19 @@ func (sa *symbolsArchive) getPriceAs(base SymbolType, as SymbolType, at time.Tim
 }
 
 func (sa *symbolsArchive) UpdatePrices() error {
+
+	var err error
+	if sa.influxClient == nil {
+		sa.influxClient, err = client.NewHTTPClient(client.HTTPConfig{
+			Addr:     "http://localhost:8086",
+			Username: os.Getenv("INFLUX_USER"),
+			Password: os.Getenv("INFLUX_PWD"),
+		})
+		if err != nil {
+			return fmt.Errorf("Error creating InfluxDB Client: %s", err.Error())
+		}
+	}
+
 	exPrices, err := DefaultClient.GetLatestPrices()
 	if err != nil {
 		return fmt.Errorf("Failed to get latest prices: %s", err)
@@ -204,10 +229,11 @@ func (sa *symbolsArchive) UpdatePrices() error {
 	for i, exPrice := range exPrices {
 		// convert Exchange price to Domain price
 		prices[i] = Price{
-			Base:  SymbolType(exPrice.Base),
-			As:    SymbolType(exPrice.As),
-			Price: exPrice.Price,
-			At:    exPrice.At,
+			Base:     SymbolType(exPrice.Base),
+			As:       SymbolType(exPrice.As),
+			Price:    exPrice.Price,
+			At:       exPrice.At,
+			Exchange: exPrice.Exchange,
 		}
 	}
 	// process latest prices
@@ -221,6 +247,12 @@ func (sa *symbolsArchive) UpdatePrices() error {
 		if err := sa.persistPrices(prices); err != nil {
 			return err
 		}
+	}
+
+	// send to influxDB
+
+	if err := sa.sendToInflux(prices); err != nil {
+		return err
 	}
 
 	sa.Lock()
@@ -250,6 +282,7 @@ func (sa *symbolsArchive) savePrice(price Price) error {
 	}
 	pSymbol.AddPrice(price)
 
+	fmt.Printf("TEMP: Adding price: %#v\n", price)
 	return nil
 }
 
@@ -370,6 +403,77 @@ func (sa *symbolsArchive) persistPrices(prices []Price) error {
 	return ioutil.WriteFile(path, pricesJSON, os.ModePerm)
 }
 
+/*
+
+Metrics we want to save:
+
+Every minute:
+	- All coin prices in following currencies
+		BTC
+		ETH
+		USDT
+		GBP
+
+Format:
+
+	Point: coin_price
+	Tags:
+		symbol : coin
+	Fields:
+		price.BTC - price
+		price.ETH - price
+		price.USDT - price
+		price.GBP - price
+
+*/
+
+func (sa *symbolsArchive) sendToInflux(prices []Price) error {
+
+	if len(prices) == 0 {
+		return nil
+	}
+
+	log.Printf("Sending data to influxdb")
+	// Create a new point batch
+	bp, err := client.NewBatchPoints(client.BatchPointsConfig{
+		Database:  sa.influxDB,
+		Precision: "ns",
+	})
+
+	if err != nil {
+		return fmt.Errorf("failed to create batch points: %s", err)
+	}
+	for _, price := range prices {
+
+		// Create a point and add to batch
+		tags := map[string]string{"symbol": string(price.Base)}
+		fields := make(map[string]interface{}, 0)
+
+		toSymbols := []SymbolType{SymbolType(BTC), SymbolType(ETH), SymbolType(USDT)}
+
+		for _, toSym := range toSymbols {
+			if symPrice, err := sa.GetLatestPriceAs(price.Base, toSym); err != nil {
+				log.Printf("No %s price for %s symbol - %s", toSym, price.Base, err)
+			} else {
+				fields[fmt.Sprintf("price.%s", toSym)] = symPrice.Price
+			}
+		}
+
+		if len(fields) > 0 {
+			fields["exchange"] = price.Exchange
+			// only add fields with points
+			pt, err := client.NewPoint("coin_price", tags, fields, price.At)
+			if err != nil {
+				fmt.Println("Error: ", err.Error())
+			}
+
+			bp.AddPoint(pt)
+		}
+	}
+	// Write the batch
+	return sa.influxClient.Write(bp)
+}
+
 func (sa *symbolsArchive) LoadPrices(dir string) error {
 	// check dir exists
 	files, err := ioutil.ReadDir(dir)
@@ -415,7 +519,7 @@ func (sa *symbolsArchive) loadPricesFrom(filePath string) error {
 
 	for _, price := range prices {
 		if err := sa.savePrice(price); err != nil {
-			fmt.Errorf("Failed to load price from file: %s - %s", filePath, err)
+			return fmt.Errorf("Failed to load price from file: %s - %s", filePath, err)
 		}
 	}
 

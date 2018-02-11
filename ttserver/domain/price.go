@@ -6,10 +6,11 @@ import (
 )
 
 type Price struct {
-	Base  SymbolType
-	As    SymbolType
-	Price float64
-	At    time.Time
+	Base     SymbolType
+	As       SymbolType
+	Price    float64
+	At       time.Time
+	Exchange string
 }
 
 func (p Price) Validate() error {

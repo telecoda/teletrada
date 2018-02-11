@@ -2,8 +2,6 @@ package domain
 
 import (
 	"fmt"
-	"io/ioutil"
-	"os"
 	"path/filepath"
 	"testing"
 	"time"
@@ -12,13 +10,34 @@ import (
 	"github.com/telecoda/teletrada/exchanges"
 )
 
+func setup() *symbolsArchive {
+
+	// TODO drop / create test influx db here...
+
+	archive := &symbolsArchive{
+		symbols:  make(map[SymbolType]Symbol),
+		influxDB: TEST_INFLUX_DATABASE,
+	}
+
+	return archive
+}
+
+func NewTestSymbolsArchive() SymbolsArchive {
+	sa := &symbolsArchive{
+		symbols:    make(map[SymbolType]Symbol),
+		stopUpdate: make(chan bool),
+		influxDB:   TEST_INFLUX_DATABASE,
+	}
+	return sa
+}
+
 func TestAddSymbol(t *testing.T) {
 	testSymbol := SymbolType("tester")
 	unknownSymbol := SymbolType("unknown")
 
 	symbol := NewSymbol(testSymbol)
 
-	archive := NewSymbolsArchive()
+	archive := NewTestSymbolsArchive()
 
 	_, err := archive.GetSymbol(unknownSymbol)
 	assert.Error(t, err, "Should return an erro")
@@ -42,9 +61,7 @@ func TestSavePrice(t *testing.T) {
 	today := time.Now()
 	yesterday := today.AddDate(0, 0, -1)
 
-	archive := &symbolsArchive{
-		symbols: make(map[SymbolType]Symbol),
-	}
+	archive := setup()
 
 	yesterdaysPrice := Price{
 		Base:  testSymbol,
@@ -67,10 +84,11 @@ func TestSavePrice(t *testing.T) {
 
 	// Add another price
 	todaysPrice := Price{
-		Base:  testSymbol,
-		As:    priceSymbol,
-		Price: priceToday,
-		At:    today,
+		Base:     testSymbol,
+		As:       priceSymbol,
+		Price:    priceToday,
+		At:       today,
+		Exchange: "test_exchange",
 	}
 
 	// fetch new referesh to same price
@@ -93,7 +111,7 @@ func TestSavePrice(t *testing.T) {
 
 func TestUpdatePrices(t *testing.T) {
 
-	archive := NewSymbolsArchive()
+	archive := NewTestSymbolsArchive()
 
 	mc, err := exchanges.NewMockClient()
 	assert.NoError(t, err)
@@ -124,9 +142,7 @@ func TestUpdatePrices(t *testing.T) {
 
 func TestScheduledUpdate(t *testing.T) {
 
-	archive := &symbolsArchive{
-		symbols: make(map[SymbolType]Symbol),
-	}
+	archive := setup()
 
 	mc, err := exchanges.NewMockClient()
 	assert.NoError(t, err)
@@ -147,9 +163,7 @@ func TestScheduledUpdate(t *testing.T) {
 
 func TestPricePersistence(t *testing.T) {
 
-	archive := &symbolsArchive{
-		symbols: make(map[SymbolType]Symbol),
-	}
+	archive := setup()
 
 	mc, err := exchanges.NewMockClient()
 	assert.NoError(t, err)
@@ -159,15 +173,6 @@ func TestPricePersistence(t *testing.T) {
 
 	testDir := filepath.Join(".", "testPriceHistory")
 
-	// clear test files
-	info, err := ioutil.ReadDir(testDir)
-	assert.NoError(t, err)
-
-	for _, file := range info {
-		err = os.Remove(filepath.Join(testDir, file.Name()))
-		assert.NoError(t, err)
-	}
-
 	archive.StartPersistence(testDir)
 
 	err = archive.UpdatePrices()
@@ -176,11 +181,8 @@ func TestPricePersistence(t *testing.T) {
 	err = archive.UpdatePrices()
 	assert.NoError(t, err)
 
-	// check files
-	info, err = ioutil.ReadDir(testDir)
-	assert.NoError(t, err)
-
-	assert.Equal(t, 2, len(info), "There should be 2 files in the directory now")
+	// read data from influx
+	// TODO
 }
 
 func TestMultiCurrencyPrices(t *testing.T) {
@@ -188,9 +190,7 @@ func TestMultiCurrencyPrices(t *testing.T) {
 	/* this test is to check we can convert prices to different currencies
 	 */
 
-	archive := &symbolsArchive{
-		symbols: make(map[SymbolType]Symbol),
-	}
+	archive := setup()
 
 	mc, err := exchanges.NewMockClient()
 	assert.NoError(t, err)
@@ -207,26 +207,29 @@ func TestMultiCurrencyPrices(t *testing.T) {
 
 	// add LTC -> BTC price
 	LtcBtcPrice := Price{
-		Base:  ltcSymbol,
-		As:    btcSymbol,
-		Price: 0.1, // how much 1 LTC is worth in BTC
-		At:    today,
+		Base:     ltcSymbol,
+		As:       btcSymbol,
+		Price:    0.1, // how much 1 LTC is worth in BTC
+		At:       today,
+		Exchange: "test_exchange",
 	}
 
 	// add BTC -> ETH price
 	BtcEthPrice := Price{
-		Base:  btcSymbol,
-		As:    ethSymbol,
-		Price: 20.0, // how much 1 BTC is worth in ETH
-		At:    today,
+		Base:     btcSymbol,
+		As:       ethSymbol,
+		Price:    20.0, // how much 1 BTC is worth in ETH
+		At:       today,
+		Exchange: "test_exchange",
 	}
 
 	// add BTC -> USDT price
 	BtcUsdtPrice := Price{
-		Base:  btcSymbol,
-		As:    usdtSymbol,
-		Price: 20000.0, // how much 1 BTC is worth in USDT
-		At:    today,
+		Base:     btcSymbol,
+		As:       usdtSymbol,
+		Price:    20000.0, // how much 1 BTC is worth in USDT
+		At:       today,
+		Exchange: "test_exchange",
 	}
 
 	err = archive.savePrice(LtcBtcPrice)
@@ -315,9 +318,7 @@ func TestMultiCurrencyPricesAt(t *testing.T) {
 	/* this test is to check we can convert prices to different currencies
 	 */
 
-	archive := &symbolsArchive{
-		symbols: make(map[SymbolType]Symbol),
-	}
+	archive := setup()
 
 	mc, err := exchanges.NewMockClient()
 	assert.NoError(t, err)
@@ -335,34 +336,38 @@ func TestMultiCurrencyPricesAt(t *testing.T) {
 
 	// add LTC -> BTC price
 	LtcBtcPrice := Price{
-		Base:  ltcSymbol,
-		As:    btcSymbol,
-		Price: 0.1, // how much 1 LTC is worth in BTC
-		At:    today,
+		Base:     ltcSymbol,
+		As:       btcSymbol,
+		Price:    0.1, // how much 1 LTC is worth in BTC
+		At:       today,
+		Exchange: "test_exchange",
 	}
 
 	// add BTC -> ETH price
 	BtcEthPrice := Price{
-		Base:  btcSymbol,
-		As:    ethSymbol,
-		Price: 20.0, // how much 1 BTC is worth in ETH
-		At:    today,
+		Base:     btcSymbol,
+		As:       ethSymbol,
+		Price:    20.0, // how much 1 BTC is worth in ETH
+		At:       today,
+		Exchange: "test_exchange",
 	}
 
 	// add BTC -> USDT price
 	BtcUsdtPrice := Price{
-		Base:  btcSymbol,
-		As:    usdtSymbol,
-		Price: 20000.0, // how much 1 BTC is worth in USDT
-		At:    today,
+		Base:     btcSymbol,
+		As:       usdtSymbol,
+		Price:    20000.0, // how much 1 BTC is worth in USDT
+		At:       today,
+		Exchange: "test_exchange",
 	}
 
 	// add BTC -> USDT price (yesterdays price)
 	BtcUsdtPriceYesterday := Price{
-		Base:  btcSymbol,
-		As:    usdtSymbol,
-		Price: 10000.0, // how much 1 BTC is worth in USDT
-		At:    yesterday,
+		Base:     btcSymbol,
+		As:       usdtSymbol,
+		Price:    10000.0, // how much 1 BTC is worth in USDT
+		At:       yesterday,
+		Exchange: "test_exchange",
 	}
 
 	err = archive.savePrice(LtcBtcPrice)

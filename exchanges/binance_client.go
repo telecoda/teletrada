@@ -101,6 +101,7 @@ func (b *binanceClient) GetLatestPrices() ([]Price, error) {
 		price := Price{
 			Price: symbolPrice,
 			At:    time.Now(),
+			Exchange: BINANCE_EXCHANGE,
 		}
 
 		if strings.HasSuffix(binancePrice.Symbol, BTC) {
@@ -155,9 +156,10 @@ func (b *binanceClient) GetPriceChange24(base, as string) (PriceChange24, error)
 
 	priceChange := PriceChange24{
 		Price: Price{
-			Base: base,
-			As:   as,
-			At:   time.Unix(0, res.CloseTime*1000000),
+			Base:     base,
+			As:       as,
+			At:       time.Unix(0, res.CloseTime*1000000),
+			Exchange: BINANCE_EXCHANGE,
 		},
 		OpenTime:  time.Unix(0, res.OpenTime*1000000),
 		CloseTime: time.Unix(0, res.CloseTime*1000000),
