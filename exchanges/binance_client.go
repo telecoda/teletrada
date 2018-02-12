@@ -33,11 +33,11 @@ func NewBinanceClient() (ExchangeClient, error) {
 	apiKey := os.Getenv(BINANCE_API_KEY)
 
 	if apiKey == "" {
-		return nil, fmt.Errorf("You must set environment variable %s with you key", BINANCE_API_KEY)
+		return nil, fmt.Errorf("You must set environment variable %s with your key", BINANCE_API_KEY)
 	}
 	secretKey := os.Getenv(BINANCE_API_SECRET)
 	if secretKey == "" {
-		return nil, fmt.Errorf("You must set environment variable %s with you key", BINANCE_API_SECRET)
+		return nil, fmt.Errorf("You must set environment variable %s with your secret", BINANCE_API_SECRET)
 	}
 
 	client := &binanceClient{
@@ -99,8 +99,8 @@ func (b *binanceClient) GetLatestPrices() ([]Price, error) {
 		// LTC/BTC
 
 		price := Price{
-			Price: symbolPrice,
-			At:    time.Now(),
+			Price:    symbolPrice,
+			At:       time.Now(),
 			Exchange: BINANCE_EXCHANGE,
 		}
 
