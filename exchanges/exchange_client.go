@@ -21,6 +21,7 @@ type Price struct {
 	Base  string // This is the base symbol eg. NEO
 	As    string // This is trading pair symbol eg. BTC, ETH etc
 	Price float64
+	Exchange string
 	At    time.Time
 }
 

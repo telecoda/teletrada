@@ -13,6 +13,7 @@ service teletrada {
   // Get current balances
   rpc GetBalances (BalancesRequest) returns (BalancesResponse) {}
   rpc GetLog (LogRequest) returns (LogResponse) {}
+  rpc GetStatus (StatusRequest) returns (StatusResponse) {}
 }
 
 message BalancesRequest {
@@ -50,4 +51,14 @@ message LogEntry {
 
 message LogResponse {
   repeated LogEntry entries = 1;
+}
+
+message StatusRequest {
+}
+
+message StatusResponse {
+    google.protobuf.Timestamp serverStarted = 1;
+    google.protobuf.Timestamp lastUpdate = 2;
+    int32 updateCount = 3;
+    int32 totalSymbols = 4;
 }

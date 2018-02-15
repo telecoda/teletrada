@@ -34,7 +34,8 @@ func (m *mockClient) GetLatestPrices() ([]Price, error) {
 
 	mockPrices := []Price{
 		Price{Base: "BTC", As: "USDT", Price: 12000.12345, At: time.Now()},
-		Price{Base: "LTC", As: "ETH", Price: 0.12345, At: time.Now()},
+		Price{Base: "ETH", As: "BTC", Price: 0.1, At: time.Now()},
+		Price{Base: "LTC", As: "BTC", Price: 0.12345, At: time.Now()},
 	}
 	return mockPrices, nil
 }

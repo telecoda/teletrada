@@ -2,6 +2,7 @@ package domain
 
 import (
 	"fmt"
+	"sync"
 	"time"
 
 	"github.com/telecoda/teletrada/exchanges"
@@ -23,22 +24,27 @@ type Server interface {
 }
 
 type server struct {
+	sync.RWMutex
 	livePortfolio *portfolio   // This represents the real live portfolio on the exchange
 	simPorts      []*portfolio // These represent alternate simulated portfolios and their total values
 	config        Config
 
 	// logging
 	statusLog []LogEntry
+
+	// status
 	startTime time.Time
 }
 
 type Config struct {
-	UseMock       bool
-	LoadPricesDir string
-	SavePricesDir string
-	SavePrices    bool
-	UpdateFreq    time.Duration
-	Verbose       bool
+	UseMock        bool
+	LoadPricesDir  string
+	InfluxDBName   string
+	InfluxUsername string
+	InfluxPassword string
+	UpdateFreq     time.Duration
+	Verbose        bool
+	Port           int
 }
 
 func NewTradaServer(config Config) (Server, error) {
@@ -57,31 +63,20 @@ func NewTradaServer(config Config) (Server, error) {
 	}
 
 	server := &server{
-		config: config,
+		config:    config,
+		startTime: time.Now(),
 	}
 
 	return server, nil
 }
 
 func (s *server) Init() error {
+	s.Lock()
+	defer s.Unlock()
 
 	s.startTime = time.Now().UTC()
 
-	if s.config.LoadPricesDir != "" {
-		s.log("Loading historic prices from filesystem")
-		if err := DefaultArchive.LoadPrices(s.config.LoadPricesDir); err != nil {
-			return fmt.Errorf("Failed to load historic prices: %s", err)
-		}
-	}
-
-	if s.config.SavePrices {
-		s.log("Starting price persistence")
-		if err := DefaultArchive.StartPersistence(s.config.SavePricesDir); err != nil {
-			return err
-		}
-
-		DefaultArchive.StartUpdater(s.config.UpdateFreq)
-	}
+	DefaultArchive.StartUpdater(s.config.UpdateFreq)
 
 	if err := DefaultArchive.UpdatePrices(); err != nil {
 		return fmt.Errorf("Failed to update latest prices: %s", err)
@@ -102,15 +97,3 @@ func (s *server) Init() error {
 func (s *server) isVerbose() bool {
 	return s.config.Verbose
 }
-
-// func (s *server) ListBalances() {
-// 	fmt.Printf("Live Portfolio\n")
-// 	fmt.Printf("==============\n")
-// 	s.livePortfolio.ListBalances()
-
-// 	fmt.Printf("Simulated Portfolios\n")
-// 	fmt.Printf("====================\n")
-// 	for _, p := range s.simPorts {
-// 		p.ListBalances()
-// 	}
-// }

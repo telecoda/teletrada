@@ -18,3 +18,21 @@ This is the client that communicates with the server.  The client has an interac
 ## Running tests
 
    go test ./...
+
+
+## Dependencies
+
+- Install influxdb
+
+    brew install influxdb
+
+    brew services start influxdb
+
+- Install Chronograph
+
+    brew install yarn --without-node
+
+    go get github.com/influxdata/chronograf
+    cd $GOPATH/src/github.com/influxdata/chronograf
+    make
+    

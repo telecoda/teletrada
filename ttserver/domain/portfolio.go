@@ -15,6 +15,7 @@ const DEFAULT_SYMBOL = SymbolType("BTC")
 
 // initPortfolios - fetches latest balances from exchange
 func (s *server) initPortfolios() error {
+
 	s.log("Initialising portfolios")
 	s.livePortfolio = &portfolio{}
 	if err := s.livePortfolio.refreshBalances(DEFAULT_SYMBOL); err != nil {
@@ -27,6 +28,7 @@ func (s *server) initPortfolios() error {
 
 // updatePortfolios - fetches latest balances and reprices
 func (s *server) updatePortfolios() error {
+
 	s.log("Updating portfolios")
 	if err := s.livePortfolio.refreshBalances(DEFAULT_SYMBOL); err != nil {
 		return err
@@ -77,16 +79,6 @@ func (b *BalanceAs) reprice() error {
 	// reprice balance
 	b.Price = priceAs.Price
 	b.Value = priceAs.Price * b.Total
-
-	// // base and as symbol are the same so price == 1
-	// if b.Symbol == b.As {
-	// 	return Price{
-	// 		Base:  s.SymbolType,
-	// 		As:    as,
-	// 		Price: 1.0,
-	// 		At:    at,
-	// 	}, nil
-	// }
 
 	// get 24h price
 	price24H, err := DefaultClient.GetPriceChange24(b.Symbol, string(b.As))

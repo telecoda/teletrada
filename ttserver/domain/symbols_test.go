@@ -16,19 +16,21 @@ func TestSymbolPrices(t *testing.T) {
 
 	// add today's USD price
 	priceToday := Price{
-		Base:  testSymbol,
-		As:    USDT,
-		Price: 20000.00,
-		At:    today,
+		Base:     testSymbol,
+		As:       USDT,
+		Price:    20000.00,
+		At:       today,
+		Exchange: "test_exchange",
 	}
 
 	// add yesterday;s USD price
 	// this checks that prices are sorted when they are added
 	priceYesterday := Price{
-		Base:  testSymbol,
-		As:    USDT,
-		Price: 10000.00,
-		At:    yesterday,
+		Base:     testSymbol,
+		As:       USDT,
+		Price:    10000.00,
+		At:       yesterday,
+		Exchange: "test_exchange",
 	}
 
 	symbol.AddPrice(priceToday)
@@ -51,6 +53,7 @@ func TestSymbolPrices(t *testing.T) {
 
 	assert.NoError(t, err)
 	assert.Equal(t, 10000.00, yesterdaysUSDPrice.Price, "Failed to get yesterday's price")
+	assert.Equal(t, "test_exchange", yesterdaysUSDPrice.Exchange)
 
 	// get price inbetween two dates
 	// it should calculate the mid price between the tow
@@ -58,12 +61,14 @@ func TestSymbolPrices(t *testing.T) {
 	halfdayUSDPrice, err := symbol.GetPriceAs(USDT, halfDay)
 	assert.NoError(t, err)
 	assert.Equal(t, 15000.00, halfdayUSDPrice.Price, "failed to get an adjusted price")
+	assert.Equal(t, "test_exchange", halfdayUSDPrice.Exchange)
 
 	// get price before historic prices exist
 	beforeDate := yesterday.Add(-12 * time.Hour)
 	beforeUSDPrice, err := symbol.GetPriceAs(USDT, beforeDate)
 	assert.NoError(t, err)
 	assert.Equal(t, 10000.00, beforeUSDPrice.Price, "failed to get a price")
+	assert.Equal(t, "test_exchange", beforeUSDPrice.Exchange)
 
 	// get unknown symbol
 	unknown := SymbolType("unknown")
@@ -74,4 +79,3 @@ func TestSymbolPrices(t *testing.T) {
 	assert.Error(t, err, "Should return an error")
 
 }
-
