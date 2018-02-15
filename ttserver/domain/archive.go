@@ -36,10 +36,7 @@ type SymbolsArchive interface {
 	GetPriceAs(base SymbolType, as SymbolType, at time.Time) (Price, error)
 	ListPrices(incHistory bool) // include historic prices
 	UpdatePrices() error
-	// Starts automatic price updater
-	StartUpdater(frequency time.Duration)
-	// Stops automatic price updater
-	StopUpdater()
+	UpdateClosingPrices() error
 
 	GetStatus() ArchiveStatus
 	// Loading history
@@ -48,9 +45,7 @@ type SymbolsArchive interface {
 
 type symbolsArchive struct {
 	sync.RWMutex
-	symbols map[SymbolType]Symbol
-	// scheduling
-	stopUpdate    chan bool
+	symbols       map[SymbolType]Symbol
 	updateStarted time.Time
 	lastUpdated   time.Time
 	updateCount   int
@@ -70,9 +65,8 @@ type ArchiveStatus struct {
 
 func NewSymbolsArchive() SymbolsArchive {
 	sa := &symbolsArchive{
-		symbols:    make(map[SymbolType]Symbol),
-		stopUpdate: make(chan bool),
-		influxDB:   INFLUX_DATABASE,
+		symbols:  make(map[SymbolType]Symbol),
+		influxDB: INFLUX_DATABASE,
 	}
 	return sa
 }
@@ -260,6 +254,10 @@ func (sa *symbolsArchive) UpdatePrices() error {
 	return nil
 }
 
+func (sa *symbolsArchive) UpdateClosingPrices() error {
+	return nil
+}
+
 func (sa *symbolsArchive) GetStatus() ArchiveStatus {
 	sa.RLock()
 	defer sa.RUnlock()
@@ -333,40 +331,6 @@ func (sa *symbolsArchive) ListPrices(incHistory bool) {
 	}
 
 	tw.Flush()
-}
-
-// Starts automatic price updater
-func (sa *symbolsArchive) StartUpdater(frequency time.Duration) {
-
-	sa.Lock()
-	sa.updateStarted = time.Now()
-	sa.Unlock()
-
-	go func() {
-		updateTicker := time.NewTicker(frequency)
-		defer updateTicker.Stop()
-
-		for {
-			select {
-			case <-sa.stopUpdate:
-				log.Printf("Scheduled price update stoppping.")
-				return
-			case <-updateTicker.C:
-				if err := sa.UpdatePrices(); err != nil {
-					// log error
-					log.Printf("ERROR: updating prices - %s", err)
-				}
-			}
-		}
-	}()
-
-}
-
-// Stops automatic price updater
-func (sa *symbolsArchive) StopUpdater() {
-	sa.Lock()
-	sa.stopUpdate <- true
-	sa.Unlock()
 }
 
 /*

@@ -27,18 +27,18 @@ const (
 )
 
 type params struct {
-	useMock         bool
-	port            int
-	loadPricesDir   string
-	priceUpdateFreq time.Duration
-	verbose         bool
+	useMock       bool
+	port          int
+	loadPricesDir string
+	updateFreq    time.Duration
+	verbose       bool
 }
 
 func (p *params) setup() {
 	flag.BoolVar(&p.useMock, "usemock", false, "Use mock exchange client")
 	flag.BoolVar(&p.verbose, "v", false, "Verbose logging")
 	flag.StringVar(&p.loadPricesDir, "loadpricesdir", "priceHistory", "Dir to load historic prices from")
-	flag.DurationVar(&p.priceUpdateFreq, "priceupdatefreq", time.Duration(60*time.Second), "Price update frequency")
+	flag.DurationVar(&p.updateFreq, "updatefreq", time.Duration(60*time.Second), "Update frequency")
 	flag.IntVar(&p.port, "port", 13370, "Port for server to listen on")
 }
 
@@ -53,7 +53,7 @@ func main() {
 		InfluxDBName:   os.Getenv(INFLUX_DB_NAME),
 		InfluxUsername: os.Getenv(INFLUX_USERNAME),
 		InfluxPassword: os.Getenv(INFLUX_PASSWORD),
-		UpdateFreq:     p.priceUpdateFreq,
+		UpdateFreq:     p.updateFreq,
 		Verbose:        p.verbose,
 		Port:           p.port,
 	}

@@ -19,6 +19,8 @@ type Server interface {
 	proto.TeletradaServer
 	Init() error
 
+	startScheduler()
+	stopScheduler()
 	// status logging
 	log(msg string)
 }
@@ -34,6 +36,9 @@ type server struct {
 
 	// status
 	startTime time.Time
+
+	// scheduling
+	stopUpdate chan bool
 }
 
 type Config struct {
@@ -63,8 +68,9 @@ func NewTradaServer(config Config) (Server, error) {
 	}
 
 	server := &server{
-		config:    config,
-		startTime: time.Now(),
+		config:     config,
+		startTime:  time.Now(),
+		stopUpdate: make(chan bool),
 	}
 
 	return server, nil
@@ -76,18 +82,15 @@ func (s *server) Init() error {
 
 	s.startTime = time.Now().UTC()
 
-	DefaultArchive.StartUpdater(s.config.UpdateFreq)
+	s.startScheduler()
 
+	// update prices immediately
 	if err := DefaultArchive.UpdatePrices(); err != nil {
 		return fmt.Errorf("Failed to update latest prices: %s", err)
 	}
 
 	if err := s.initPortfolios(); err != nil {
 		return fmt.Errorf("Failed to initialise portfolio: %s", err)
-	}
-
-	if err := s.updatePortfolios(); err != nil {
-		return fmt.Errorf("Failed to update portfolio: %s", err)
 	}
 
 	return nil
