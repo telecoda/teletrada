@@ -40,6 +40,8 @@ type SymbolsArchive interface {
 	StartUpdater(frequency time.Duration)
 	// Stops automatic price updater
 	StopUpdater()
+
+	GetStatus() ArchiveStatus
 	// Loading history
 	LoadPrices(path string) error
 }
@@ -50,6 +52,7 @@ type symbolsArchive struct {
 	// scheduling
 	stopUpdate    chan bool
 	updateStarted time.Time
+	lastUpdated   time.Time
 	updateCount   int
 	// price persistence
 	persist bool
@@ -57,6 +60,12 @@ type symbolsArchive struct {
 	// influxClient
 	influxClient client.Client
 	influxDB     string
+}
+
+type ArchiveStatus struct {
+	LastUpdated  time.Time
+	UpdateCount  int
+	TotalSymbols int
 }
 
 func NewSymbolsArchive() SymbolsArchive {
@@ -246,8 +255,20 @@ func (sa *symbolsArchive) UpdatePrices() error {
 
 	sa.Lock()
 	sa.updateCount++
+	sa.lastUpdated = time.Now()
 	sa.Unlock()
 	return nil
+}
+
+func (sa *symbolsArchive) GetStatus() ArchiveStatus {
+	sa.RLock()
+	defer sa.RUnlock()
+
+	return ArchiveStatus{
+		LastUpdated:  sa.lastUpdated,
+		UpdateCount:  sa.updateCount,
+		TotalSymbols: len(sa.symbols),
+	}
 }
 
 // savePrice - saves a price in the archive and updates latest if this is most recent
@@ -314,7 +335,7 @@ func (sa *symbolsArchive) ListPrices(incHistory bool) {
 	tw.Flush()
 }
 
-// Stops automatic price updater
+// Starts automatic price updater
 func (sa *symbolsArchive) StartUpdater(frequency time.Duration) {
 
 	sa.Lock()

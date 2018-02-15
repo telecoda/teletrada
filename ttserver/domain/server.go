@@ -2,6 +2,7 @@ package domain
 
 import (
 	"fmt"
+	"sync"
 	"time"
 
 	"github.com/telecoda/teletrada/exchanges"
@@ -23,12 +24,15 @@ type Server interface {
 }
 
 type server struct {
+	sync.RWMutex
 	livePortfolio *portfolio   // This represents the real live portfolio on the exchange
 	simPorts      []*portfolio // These represent alternate simulated portfolios and their total values
 	config        Config
 
 	// logging
 	statusLog []LogEntry
+
+	// status
 	startTime time.Time
 }
 
@@ -59,24 +63,18 @@ func NewTradaServer(config Config) (Server, error) {
 	}
 
 	server := &server{
-		config: config,
+		config:    config,
+		startTime: time.Now(),
 	}
 
 	return server, nil
 }
 
 func (s *server) Init() error {
+	s.Lock()
+	defer s.Unlock()
 
 	s.startTime = time.Now().UTC()
-
-	// if s.config.LoadPricesDir != "" {
-	// 	go func() {
-	// 		s.log("Loading historic prices from filesystem")
-	// 		if err := DefaultArchive.LoadPrices(s.config.LoadPricesDir); err != nil {
-	// 			s.log(fmt.Sprintf("ERROR:Failed to load historic prices: %s", err))
-	// 		}
-	// 	}()
-	// }
 
 	DefaultArchive.StartUpdater(s.config.UpdateFreq)
 

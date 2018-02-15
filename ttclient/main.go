@@ -53,18 +53,23 @@ func main() {
 }
 
 func registerCmds(shell *ishell.Shell) {
-	// register a function for "balances" command.
+	// register a functions commands.
 	shell.AddCmd(&ishell.Cmd{
 		Name: "balances",
 		Help: "show current balances eg. balances BTC",
 		Func: getBalances,
 	})
 
-	// register a function for "log" command.
 	shell.AddCmd(&ishell.Cmd{
 		Name: "log",
 		Help: "show server logs",
 		Func: getLog,
+	})
+
+	shell.AddCmd(&ishell.Cmd{
+		Name: "status",
+		Help: "show server status",
+		Func: getStatus,
 	})
 
 }

@@ -15,6 +15,7 @@ const DEFAULT_SYMBOL = SymbolType("BTC")
 
 // initPortfolios - fetches latest balances from exchange
 func (s *server) initPortfolios() error {
+
 	s.log("Initialising portfolios")
 	s.livePortfolio = &portfolio{}
 	if err := s.livePortfolio.refreshBalances(DEFAULT_SYMBOL); err != nil {
@@ -27,6 +28,7 @@ func (s *server) initPortfolios() error {
 
 // updatePortfolios - fetches latest balances and reprices
 func (s *server) updatePortfolios() error {
+
 	s.log("Updating portfolios")
 	if err := s.livePortfolio.refreshBalances(DEFAULT_SYMBOL); err != nil {
 		return err
