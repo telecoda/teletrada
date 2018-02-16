@@ -67,6 +67,12 @@ func registerCmds(shell *ishell.Shell) {
 	})
 
 	shell.AddCmd(&ishell.Cmd{
+		Name: "rebuild",
+		Help: "rebuild with latest code and restart",
+		Func: rebuild,
+	})
+
+	shell.AddCmd(&ishell.Cmd{
 		Name: "status",
 		Help: "show server status",
 		Func: getStatus,

@@ -14,6 +14,8 @@ service teletrada {
   rpc GetBalances (BalancesRequest) returns (BalancesResponse) {}
   rpc GetLog (LogRequest) returns (LogResponse) {}
   rpc GetStatus (StatusRequest) returns (StatusResponse) {}
+  rpc Rebuild (RebuildRequest) returns (RebuildResponse) {}
+
 }
 
 message BalancesRequest {
@@ -52,6 +54,14 @@ message LogEntry {
 message LogResponse {
   repeated LogEntry entries = 1;
 }
+
+message RebuildRequest {
+}
+
+message RebuildResponse {
+    string result = 1;
+}
+
 
 message StatusRequest {
 }
