@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"time"
 
 	"github.com/telecoda/teletrada/proto"
 )
@@ -36,17 +37,30 @@ func (s *server) Rebuild(ctx context.Context, req *proto.RebuildRequest) (*proto
 	cmd := exec.Command("git", "pull", "origin", "master")
 	cmd.Dir = path
 	if err := cmd.Run(); err != nil {
-		return nil, err
+		output, _ := cmd.Output()
+		return nil, fmt.Errorf("Failed fetch latest code %s - %s", err, string(output))
 	}
+	output, _ := cmd.Output()
+	log.Printf("Fetched latest code... %s", string(output))
 
 	// recompile
 	log.Printf("Compiling code...")
-
-	// return resp
+	// Untar the new config into the new directory
+	cmd = exec.Command("go", "install", "github.com/telecoda/teletrada/ttserver")
+	cmd.Dir = path
+	if err := cmd.Run(); err != nil {
+		output, _ := cmd.Output()
+		return nil, fmt.Errorf("Failed compile latest code %s - %s", err, string(output))
+	}
 
 	// terminate prog..
+	go func() {
+		// sleep then die
+		time.Sleep(1 * time.Second)
+		os.Exit(0)
+	}()
 
-	resp.Result = "it worked!!!"
+	resp.Result = "Rebuild successful"
 
 	return resp, nil
 }
