@@ -6,7 +6,7 @@ type ExchangeClient interface {
 	GetBalances() ([]Balance, error)
 	GetLatestPrices() ([]Price, error)
 	GetHistoricPrices() ([]Price, error)
-	GetPriceChange24(base, as string) (PriceChange24, error)
+	GetDaySummaries() ([]DaySummary, error)
 	GetExchange() string
 }
 
@@ -18,11 +18,25 @@ type Balance struct {
 }
 
 type Price struct {
-	Base  string // This is the base symbol eg. NEO
-	As    string // This is trading pair symbol eg. BTC, ETH etc
-	Price float64
+	Base     string // This is the base symbol eg. NEO
+	As       string // This is trading pair symbol eg. BTC, ETH etc
+	Price    float64
 	Exchange string
-	At    time.Time
+	At       time.Time
+}
+
+type DaySummary struct {
+	Base             string
+	As               string
+	OpenPrice        float64
+	ClosePrice       float64
+	WeightedAvgPrice float64
+	HighestPrice     float64
+	LowestPrice      float64
+	ChangePrice      float64
+	ChangePercent    float64
+	At               time.Time
+	Exchange         string
 }
 
 /*
@@ -51,11 +65,11 @@ type Price struct {
 },
 */
 
-type PriceChange24 struct {
-	Price
-	ChangePercent float64
-	ChangeAmount  float64
-	OpenPrice     float64
-	OpenTime      time.Time
-	CloseTime     time.Time
-}
+// type PriceChange24 struct {
+// 	Price
+// 	ChangePercent float64
+// 	ChangeAmount  float64
+// 	OpenPrice     float64
+// 	OpenTime      time.Time
+// 	CloseTime     time.Time
+// }

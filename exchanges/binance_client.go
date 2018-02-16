@@ -145,49 +145,53 @@ func (b *binanceClient) GetHistoricPrices() ([]Price, error) {
 	return prices, nil
 }
 
-func (b *binanceClient) GetPriceChange24(base, as string) (PriceChange24, error) {
-
-	tp := base + as
-
-	res, err := b.client.NewPriceChangeStatsService().Symbol(tp).Do(context.Background())
-	if err != nil {
-		return PriceChange24{}, err
-	}
-
-	priceChange := PriceChange24{
-		Price: Price{
-			Base:     base,
-			As:       as,
-			At:       time.Unix(0, res.CloseTime*1000000),
-			Exchange: BINANCE_EXCHANGE,
-		},
-		OpenTime:  time.Unix(0, res.OpenTime*1000000),
-		CloseTime: time.Unix(0, res.CloseTime*1000000),
-	}
-
-	lastPrice, err := strconv.ParseFloat(res.LastPrice, 64)
-	if err != nil {
-		return PriceChange24{}, fmt.Errorf("Failed to parse last price: %s - %s. %s", tp, err, res.LastPrice)
-	}
-	priceChange.Price.Price = lastPrice
-
-	openPrice, err := strconv.ParseFloat(res.OpenPrice, 64)
-	if err != nil {
-		return PriceChange24{}, fmt.Errorf("Failed to parse open price: %s - %s. %s", tp, err, res.OpenPrice)
-	}
-	priceChange.OpenPrice = openPrice
-
-	changeAmount, err := strconv.ParseFloat(res.PriceChange, 64)
-	if err != nil {
-		return PriceChange24{}, fmt.Errorf("Failed to parse price change: %s - %s. %s", tp, err, res.PriceChange)
-	}
-	priceChange.ChangeAmount = changeAmount
-
-	changePercent, err := strconv.ParseFloat(res.PriceChangePercent, 64)
-	if err != nil {
-		return PriceChange24{}, fmt.Errorf("Failed to parse price change percent: %s - %s. %s", tp, err, res.PriceChange)
-	}
-	priceChange.ChangePercent = changePercent
-
-	return priceChange, nil
+func (b *binanceClient) GetDaySummaries() ([]DaySummary, error) {
+	return nil, nil
 }
+
+// func (b *binanceClient) GetPriceChange24(base, as string) (PriceChange24, error) {
+
+// 	tp := base + as
+
+// 	res, err := b.client.NewPriceChangeStatsService().Symbol(tp).Do(context.Background())
+// 	if err != nil {
+// 		return PriceChange24{}, err
+// 	}
+
+// 	priceChange := PriceChange24{
+// 		Price: Price{
+// 			Base:     base,
+// 			As:       as,
+// 			At:       time.Unix(0, res.CloseTime*1000000),
+// 			Exchange: BINANCE_EXCHANGE,
+// 		},
+// 		OpenTime:  time.Unix(0, res.OpenTime*1000000),
+// 		CloseTime: time.Unix(0, res.CloseTime*1000000),
+// 	}
+
+// 	lastPrice, err := strconv.ParseFloat(res.LastPrice, 64)
+// 	if err != nil {
+// 		return PriceChange24{}, fmt.Errorf("Failed to parse last price: %s - %s. %s", tp, err, res.LastPrice)
+// 	}
+// 	priceChange.Price.Price = lastPrice
+
+// 	openPrice, err := strconv.ParseFloat(res.OpenPrice, 64)
+// 	if err != nil {
+// 		return PriceChange24{}, fmt.Errorf("Failed to parse open price: %s - %s. %s", tp, err, res.OpenPrice)
+// 	}
+// 	priceChange.OpenPrice = openPrice
+
+// 	changeAmount, err := strconv.ParseFloat(res.PriceChange, 64)
+// 	if err != nil {
+// 		return PriceChange24{}, fmt.Errorf("Failed to parse price change: %s - %s. %s", tp, err, res.PriceChange)
+// 	}
+// 	priceChange.ChangeAmount = changeAmount
+
+// 	changePercent, err := strconv.ParseFloat(res.PriceChangePercent, 64)
+// 	if err != nil {
+// 		return PriceChange24{}, fmt.Errorf("Failed to parse price change percent: %s - %s. %s", tp, err, res.PriceChange)
+// 	}
+// 	priceChange.ChangePercent = changePercent
+
+// 	return priceChange, nil
+// }

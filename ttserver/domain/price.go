@@ -13,6 +13,20 @@ type Price struct {
 	Exchange string
 }
 
+type DaySummary struct {
+	Base             SymbolType
+	As               SymbolType
+	OpenPrice        float64
+	ClosePrice       float64
+	WeightedAvgPrice float64
+	HighestPrice     float64
+	LowestPrice      float64
+	ChangePrice      float64
+	ChangePercent    float64
+	At               time.Time
+	Exchange         string
+}
+
 func (p Price) Validate() error {
 	if p.Base == "" {
 		return fmt.Errorf("Price invalid: Base symbol cannot be blank")

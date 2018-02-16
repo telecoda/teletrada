@@ -10,10 +10,14 @@ import (
 type SymbolType string
 
 type Symbol interface {
-	AddPrice(price Price)
 	GetType() SymbolType
-	GetPriceAs(symbol SymbolType, at time.Time) (Price, error)
-	GetLatestPriceAs(symbol SymbolType) (Price, error)
+	// Prices
+	AddPrice(price Price)
+	GetPriceAs(as SymbolType, at time.Time) (Price, error)
+	GetLatestPriceAs(as SymbolType) (Price, error)
+	// Daily summary
+	AddDaySummary(sum DaySummary)
+	GetDaySummaryAs(as SymbolType) (DaySummary, error)
 }
 
 type symbol struct {
@@ -22,13 +26,15 @@ type symbol struct {
 	// map of prices by currency
 	// etc for LTC symbol it may have prices for
 	// LTCBTC, LTCETH and LTCUSDT
-	priceAs map[SymbolType][]Price
+	priceAs    map[SymbolType][]Price
+	daySummary map[SymbolType]DaySummary
 }
 
 func NewSymbol(symbolType SymbolType) *symbol {
 	return &symbol{
 		SymbolType: symbolType,
 		priceAs:    make(map[SymbolType][]Price),
+		daySummary: make(map[SymbolType]DaySummary),
 	}
 }
 
@@ -47,6 +53,22 @@ func (s *symbol) AddPrice(price Price) {
 	sort.Slice(prices, func(i, j int) bool { return prices[i].At.Before(prices[j].At) })
 
 	s.priceAs[price.As] = prices
+}
+
+func (s *symbol) AddDaySummary(sum DaySummary) {
+	s.Lock()
+	defer s.Unlock()
+	s.daySummary[sum.As] = sum
+}
+
+func (s *symbol) GetDaySummaryAs(as SymbolType) (DaySummary, error) {
+	s.RLock()
+	defer s.RUnlock()
+	if sum, ok := s.daySummary[as]; !ok {
+		return DaySummary{}, fmt.Errorf("Symbol: %s has no daily summary for: %s", s.SymbolType, as)
+	} else {
+		return sum, nil
+	}
 }
 
 // GetPriceAs - returns the price of base symbol as another symbol at a particular time

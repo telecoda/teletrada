@@ -53,20 +53,24 @@ func (m *mockClient) GetHistoricPrices() ([]Price, error) {
 	return mockOldPrices, nil
 }
 
-func (m *mockClient) GetPriceChange24(base, as string) (PriceChange24, error) {
-	now := time.Now().UTC()
-	mockPriceChange := PriceChange24{
-		Price: Price{
-			Base:  base,
-			As:    as,
-			Price: 1250.00,
-			At:    now,
-		},
-		ChangePercent: 25.00,
-		ChangeAmount:  250.00,
-		OpenPrice:     1000.00,
-		OpenTime:      now.AddDate(0, 0, -1),
-		CloseTime:     now,
-	}
-	return mockPriceChange, nil
+func (m *mockClient) GetDaySummaries() ([]DaySummary, error) {
+	return nil, nil
 }
+
+// func (m *mockClient) GetPriceChange24(base, as string) (PriceChange24, error) {
+// 	now := time.Now().UTC()
+// 	mockPriceChange := PriceChange24{
+// 		Price: Price{
+// 			Base:  base,
+// 			As:    as,
+// 			Price: 1250.00,
+// 			At:    now,
+// 		},
+// 		ChangePercent: 25.00,
+// 		ChangeAmount:  250.00,
+// 		OpenPrice:     1000.00,
+// 		OpenTime:      now.AddDate(0, 0, -1),
+// 		CloseTime:     now,
+// 	}
+// 	return mockPriceChange, nil
+// }

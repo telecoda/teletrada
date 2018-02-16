@@ -82,12 +82,18 @@ func (s *server) scheduledUpdate() {
 		return
 	}
 
+	if err := s.saveMetrics(); err != nil {
+		// log error
+		s.log(fmt.Sprintf("ERROR: saving portfolios - %s", err))
+		return
+	}
+
 }
 
 // dailyUpdate - runs daily
 func (s *server) dailyUpdate() {
 	s.log("Daily update running")
-	if err := DefaultArchive.UpdateClosingPrices(); err != nil {
+	if err := DefaultArchive.UpdateDaySummaries(); err != nil {
 		s.log(fmt.Sprintf("ERROR: updating closing prices - %s", err))
 	}
 

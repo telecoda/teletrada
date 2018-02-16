@@ -80,6 +80,13 @@ func (s *server) Init() error {
 	s.Lock()
 	defer s.Unlock()
 
+	var err error
+	// init DefaultMetrics client
+	DefaultMetrics, err = newMetricsClient(s.config.InfluxDBName)
+	if err != nil {
+		return err
+	}
+
 	s.startTime = time.Now().UTC()
 
 	s.startScheduler()

@@ -10,7 +10,6 @@ import (
 	"path/filepath"
 	"strings"
 	"sync"
-	"text/tabwriter"
 	"time"
 
 	"github.com/influxdata/influxdb/client/v2"
@@ -24,9 +23,6 @@ const (
 	ETH  = "ETH"
 	LTC  = "LTC"
 	USDT = "USDT"
-
-	INFLUX_DATABASE      = "teletrada"
-	TEST_INFLUX_DATABASE = "testteletrada"
 )
 
 type SymbolsArchive interface {
@@ -34,9 +30,10 @@ type SymbolsArchive interface {
 	GetSymbol(symbol SymbolType) (Symbol, error)
 	GetLatestPriceAs(base SymbolType, as SymbolType) (Price, error)
 	GetPriceAs(base SymbolType, as SymbolType, at time.Time) (Price, error)
-	ListPrices(incHistory bool) // include historic prices
+	GetDaySummaryAs(base SymbolType, as SymbolType) (DaySummary, error)
+
 	UpdatePrices() error
-	UpdateClosingPrices() error
+	UpdateDaySummaries() error
 
 	GetStatus() ArchiveStatus
 	// Loading history
@@ -51,10 +48,6 @@ type symbolsArchive struct {
 	updateCount   int
 	// price persistence
 	persist bool
-
-	// influxClient
-	influxClient client.Client
-	influxDB     string
 }
 
 type ArchiveStatus struct {
@@ -65,8 +58,7 @@ type ArchiveStatus struct {
 
 func NewSymbolsArchive() SymbolsArchive {
 	sa := &symbolsArchive{
-		symbols:  make(map[SymbolType]Symbol),
-		influxDB: INFLUX_DATABASE,
+		symbols: make(map[SymbolType]Symbol),
 	}
 	return sa
 }
@@ -204,19 +196,23 @@ func (sa *symbolsArchive) getPriceAs(base SymbolType, as SymbolType, at time.Tim
 	return price, nil
 }
 
-func (sa *symbolsArchive) UpdatePrices() error {
+// GetDaySummaryAs - returns the last days summary of base symbol as another symbol
+func (sa *symbolsArchive) GetDaySummaryAs(base SymbolType, as SymbolType) (DaySummary, error) {
 
-	var err error
-	if sa.influxClient == nil {
-		sa.influxClient, err = client.NewHTTPClient(client.HTTPConfig{
-			Addr:     "http://localhost:8086",
-			Username: os.Getenv("INFLUX_USER"),
-			Password: os.Getenv("INFLUX_PWD"),
-		})
-		if err != nil {
-			return fmt.Errorf("Error creating InfluxDB Client: %s", err.Error())
-		}
+	baseSymbol, err := sa.GetSymbol(base)
+	if err != nil {
+		return DaySummary{}, fmt.Errorf("No prices for symbol %q", base)
 	}
+
+	sum, err := baseSymbol.GetDaySummaryAs(as)
+	if err != nil {
+		return DaySummary{}, fmt.Errorf("no day summary for %q as %q", base, as)
+	}
+	return sum, nil
+
+}
+
+func (sa *symbolsArchive) UpdatePrices() error {
 
 	exPrices, err := DefaultClient.GetLatestPrices()
 	if err != nil {
@@ -243,7 +239,7 @@ func (sa *symbolsArchive) UpdatePrices() error {
 	}
 
 	// send to influxDB
-	if err := sa.sendToInflux(prices); err != nil {
+	if err := sa.saveMetrics(prices); err != nil {
 		return err
 	}
 
@@ -254,7 +250,8 @@ func (sa *symbolsArchive) UpdatePrices() error {
 	return nil
 }
 
-func (sa *symbolsArchive) UpdateClosingPrices() error {
+func (sa *symbolsArchive) UpdateDaySummaries() error {
+	// for each sym
 	return nil
 }
 
@@ -293,46 +290,6 @@ func (sa *symbolsArchive) savePrice(price Price) error {
 	return nil
 }
 
-func (sa *symbolsArchive) ListPrices(incHistory bool) {
-	sa.RLock()
-	defer sa.RUnlock()
-
-	fmt.Printf("Prices\n")
-	fmt.Printf("======\n")
-
-	tw := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', tabwriter.AlignRight)
-
-	// headings
-	fmt.Fprintf(tw, "base\tas\tprice\t\t         at\n")
-	fmt.Fprintf(tw, "======\t======\t=============\t\t===================\n")
-
-	for _, symbol := range sa.symbols {
-
-		// get USDT prices
-		price, err := symbol.GetLatestPriceAs(USDT)
-		if err != nil {
-			fmt.Printf("Error getting USDT price: %s\n", err)
-			continue
-		}
-		fmt.Fprintf(tw, "(Latest) %s\t%s\t%s\t\t%s\n", price.Base, price.As, fmt.Sprintf("%f", price.Price), price.At.Format(DATE_FORMAT))
-
-		if incHistory {
-			// yesterday's prices
-			now := time.Now().UTC()
-			yesterday := now.AddDate(0, 0, -1)
-			price, err := symbol.GetPriceAs(USDT, yesterday)
-			if err != nil {
-				fmt.Printf("Error getting USDT price: %s\n", err)
-				continue
-			}
-			fmt.Fprintf(tw, "(Yesterday) %s\t%s\t%s\t\t%s\n", price.Base, price.As, fmt.Sprintf("%f", price.Price), price.At.Format(DATE_FORMAT))
-
-		}
-	}
-
-	tw.Flush()
-}
-
 /*
 
 Metrics we want to save:
@@ -357,16 +314,16 @@ Format:
 
 */
 
-func (sa *symbolsArchive) sendToInflux(prices []Price) error {
+func (sa *symbolsArchive) saveMetrics(prices []Price) error {
 
 	if len(prices) == 0 {
 		return nil
 	}
 
-	log.Printf("Sending data to influxdb")
+	log.Printf("Sending symbol price data to influxdb")
 	// Create a new point batch
 	bp, err := client.NewBatchPoints(client.BatchPointsConfig{
-		Database:  sa.influxDB,
+		Database:  DefaultMetrics.dbName,
 		Precision: "ns",
 	})
 
@@ -405,7 +362,7 @@ func (sa *symbolsArchive) sendToInflux(prices []Price) error {
 		}
 	}
 	// Write the batch
-	return sa.influxClient.Write(bp)
+	return DefaultMetrics.Write(bp)
 }
 
 func (sa *symbolsArchive) LoadPrices(dir string) error {

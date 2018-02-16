@@ -2,7 +2,6 @@ package domain
 
 import (
 	"fmt"
-	"path/filepath"
 	"testing"
 	"time"
 
@@ -15,8 +14,7 @@ func setup() *symbolsArchive {
 	// TODO drop / create test influx db here...
 
 	archive := &symbolsArchive{
-		symbols:  make(map[SymbolType]Symbol),
-		influxDB: TEST_INFLUX_DATABASE,
+		symbols: make(map[SymbolType]Symbol),
 	}
 
 	return archive
@@ -24,9 +22,7 @@ func setup() *symbolsArchive {
 
 func NewTestSymbolsArchive() SymbolsArchive {
 	sa := &symbolsArchive{
-		symbols:    make(map[SymbolType]Symbol),
-		stopUpdate: make(chan bool),
-		influxDB:   TEST_INFLUX_DATABASE,
+		symbols: make(map[SymbolType]Symbol),
 	}
 	return sa
 }
@@ -111,7 +107,12 @@ func TestSavePrice(t *testing.T) {
 
 func TestUpdatePrices(t *testing.T) {
 
+	var err error
+
 	archive := NewTestSymbolsArchive()
+
+	DefaultMetrics, err = newMetricsClient(TEST_INFLUX_DATABASE)
+	assert.NoError(t, err)
 
 	mc, err := exchanges.NewMockClient()
 	assert.NoError(t, err)
@@ -140,27 +141,6 @@ func TestUpdatePrices(t *testing.T) {
 
 }
 
-func TestScheduledUpdate(t *testing.T) {
-
-	archive := setup()
-
-	mc, err := exchanges.NewMockClient()
-	assert.NoError(t, err)
-
-	// run test with mocked data
-	DefaultClient = mc
-
-	assert.Equal(t, 0, archive.updateCount, "No updates yet")
-
-	freq := time.Duration(100 * time.Millisecond)
-
-	archive.StartUpdater(freq)
-	time.Sleep(550 * time.Millisecond)
-
-	assert.Equal(t, 5, archive.updateCount, "5 updates should have happened by now")
-
-}
-
 func TestPricePersistence(t *testing.T) {
 
 	archive := setup()
@@ -170,10 +150,6 @@ func TestPricePersistence(t *testing.T) {
 
 	// run test with mocked data
 	DefaultClient = mc
-
-	testDir := filepath.Join(".", "testPriceHistory")
-
-	archive.StartPersistence(testDir)
 
 	err = archive.UpdatePrices()
 	assert.NoError(t, err)
