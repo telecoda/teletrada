@@ -12,7 +12,7 @@ import (
 
 type BalanceAs struct {
 	sync.RWMutex
-	exchanges.Balance
+	exchanges.CoinBalance
 	Total        float64
 	At           time.Time
 	As           SymbolType
@@ -22,6 +22,8 @@ type BalanceAs struct {
 	Value24H     float64
 	Change24H    float64
 	ChangePct24H float64
+	//
+	Strategy
 }
 
 // GetBalances returns current balances
@@ -38,11 +40,13 @@ func (s *server) GetBalances(ctx context.Context, req *proto.BalancesRequest) (*
 	resp.Balances = make([]*proto.Balance, len(balances))
 
 	var err error
-	for i, balance := range balances {
+	i := 0
+	for _, balance := range balances {
 		resp.Balances[i], err = balance.toProto()
 		if err != nil {
 			return nil, err
 		}
+		i++
 	}
 
 	return resp, nil

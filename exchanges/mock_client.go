@@ -19,12 +19,12 @@ func (m *mockClient) GetExchange() string {
 	return MOCK_EXCHANGE
 }
 
-func (m *mockClient) GetBalances() ([]Balance, error) {
+func (m *mockClient) GetCoinBalances() ([]CoinBalance, error) {
 
-	balances := []Balance{
-		Balance{Symbol: "BTC", Free: 12.50, Locked: 12.50, Exchange: MOCK_EXCHANGE},
-		Balance{Symbol: "ETH", Free: 122.50, Locked: 122.50, Exchange: MOCK_EXCHANGE},
-		Balance{Symbol: "LTC", Free: 222.50, Locked: 222.50, Exchange: MOCK_EXCHANGE},
+	balances := []CoinBalance{
+		CoinBalance{Symbol: "BTC", Free: 12.50, Locked: 12.50, Exchange: MOCK_EXCHANGE},
+		CoinBalance{Symbol: "ETH", Free: 122.50, Locked: 122.50, Exchange: MOCK_EXCHANGE},
+		CoinBalance{Symbol: "LTC", Free: 222.50, Locked: 222.50, Exchange: MOCK_EXCHANGE},
 	}
 
 	return balances, nil
@@ -56,21 +56,3 @@ func (m *mockClient) GetHistoricPrices() ([]Price, error) {
 func (m *mockClient) GetDaySummaries() ([]DaySummary, error) {
 	return nil, nil
 }
-
-// func (m *mockClient) GetPriceChange24(base, as string) (PriceChange24, error) {
-// 	now := time.Now().UTC()
-// 	mockPriceChange := PriceChange24{
-// 		Price: Price{
-// 			Base:  base,
-// 			As:    as,
-// 			Price: 1250.00,
-// 			At:    now,
-// 		},
-// 		ChangePercent: 25.00,
-// 		ChangeAmount:  250.00,
-// 		OpenPrice:     1000.00,
-// 		OpenTime:      now.AddDate(0, 0, -1),
-// 		CloseTime:     now,
-// 	}
-// 	return mockPriceChange, nil
-// }

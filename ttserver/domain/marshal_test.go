@@ -21,7 +21,7 @@ func TestMarshalBalanceAs(t *testing.T) {
 	}{
 		{
 			balance: &BalanceAs{
-				Balance: exchanges.Balance{
+				CoinBalance: exchanges.CoinBalance{
 					Symbol:   "symbol",
 					Exchange: "exchange",
 					Free:     10.0,

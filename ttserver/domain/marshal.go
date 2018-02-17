@@ -13,7 +13,7 @@ func (b *BalanceAs) toProto() (*proto.Balance, error) {
 		return nil, err
 	}
 	return &proto.Balance{
-		Symbol:       b.Balance.Symbol,
+		Symbol:       b.CoinBalance.Symbol,
 		Exchange:     b.Exchange,
 		Free:         float32(b.Free),
 		Locked:       float32(b.Locked),

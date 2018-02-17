@@ -51,13 +51,13 @@ func (b *binanceClient) GetExchange() string {
 	return "binance"
 }
 
-func (b *binanceClient) GetBalances() ([]Balance, error) {
+func (b *binanceClient) GetCoinBalances() ([]CoinBalance, error) {
 	res, err := b.client.NewGetAccountService().Do(context.Background())
 	if err != nil {
 		return nil, err
 	}
 
-	balances := make([]Balance, 0)
+	balances := make([]CoinBalance, 0)
 	for _, bal := range res.Balances {
 		free, err := strconv.ParseFloat(bal.Free, 64)
 		if err != nil {
@@ -67,7 +67,7 @@ func (b *binanceClient) GetBalances() ([]Balance, error) {
 		if err != nil {
 			return nil, fmt.Errorf("Failed to parse balance quantity locked: %s - %s. %#v", bal.Locked, err, bal)
 		}
-		newBalance := Balance{
+		newBalance := CoinBalance{
 			Symbol:   bal.Asset,
 			Exchange: BINANCE_EXCHANGE,
 			Free:     free,

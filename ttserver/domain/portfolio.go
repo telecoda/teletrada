@@ -13,7 +13,7 @@ type portfolio struct {
 	sync.RWMutex
 	name     string
 	isLive   bool
-	balances []*BalanceAs
+	balances map[SymbolType]*BalanceAs
 }
 
 const DEFAULT_SYMBOL = SymbolType("BTC")
@@ -23,10 +23,15 @@ func (s *server) initPortfolios() error {
 
 	s.log("Initialising portfolios")
 	s.livePortfolio = &portfolio{
-		name:   "LIVE",
-		isLive: true,
+		name:     "LIVE",
+		isLive:   true,
+		balances: make(map[SymbolType]*BalanceAs, 0),
 	}
-	if err := s.livePortfolio.refreshBalances(DEFAULT_SYMBOL); err != nil {
+	if err := s.livePortfolio.refreshCoinBalances(); err != nil {
+		return err
+	}
+
+	if err := s.livePortfolio.repriceBalances(); err != nil {
 		return err
 	}
 
@@ -36,9 +41,20 @@ func (s *server) initPortfolios() error {
 
 // updatePortfolios - fetches latest balances and reprices
 func (s *server) updatePortfolios() error {
-	if err := s.livePortfolio.refreshBalances(DEFAULT_SYMBOL); err != nil {
+	if err := s.livePortfolio.refreshCoinBalances(); err != nil {
 		return err
 	}
+
+	if err := s.livePortfolio.repriceBalances(); err != nil {
+		return err
+	}
+
+	for i, _ := range s.simPorts {
+		if err := s.simPorts[i].repriceBalances(); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
@@ -123,34 +139,47 @@ func (p *portfolio) saveMetrics() error {
 
 }
 
-// refreshBalances - fetch latest balances from exchange
-func (p *portfolio) refreshBalances(as SymbolType) error {
+// refreshCoinBalances - fetch latest coin balances from exchange
+func (p *portfolio) refreshCoinBalances() error {
 	fmt.Printf("Refreshing balances\n")
 	p.Lock()
 	defer p.Unlock()
 
-	exchBalances, err := DefaultClient.GetBalances()
+	if !p.isLive {
+		return fmt.Errorf("Simulated portfolio: %s cannot have balances refreshed from exchange", p.name)
+	}
+
+	coinBalances, err := DefaultClient.GetCoinBalances()
 	if err != nil {
 		return fmt.Errorf("failed to get balances from exchange: %s", err)
 	}
 
-	p.balances = make([]*BalanceAs, 0)
+	for _, coinBalance := range coinBalances {
+		symbol := SymbolType(coinBalance.Symbol)
+		if balance, ok := p.balances[symbol]; ok {
+			balance.CoinBalance = coinBalance
+		} else {
+			// new balance
+			newBalance := &BalanceAs{
+				CoinBalance: coinBalance,
+				As:          DEFAULT_SYMBOL,
+				At:          time.Now(),
+			}
+			p.balances[symbol] = newBalance
+		}
+	}
 
+	return nil
+}
+
+func (p *portfolio) repriceBalances() error {
 	// convert exchange balances to trada balances
-	for _, exchBalance := range exchBalances {
+	for _, balance := range p.balances {
 
-		b := &BalanceAs{
-			Balance: exchBalance,
-			Total:   exchBalance.Free + exchBalance.Locked,
-			At:      time.Now().UTC(),
-			As:      as,
+		if err := balance.reprice(); err != nil {
+			return fmt.Errorf("failed reprice balance: %#v - %s", balance, err)
 		}
 
-		if err := b.reprice(); err != nil {
-			return fmt.Errorf("failed reprice balance: %#v - %s", b, err)
-		}
-
-		p.balances = append(p.balances, b)
 	}
 
 	return nil
@@ -181,4 +210,22 @@ func (b *BalanceAs) reprice() error {
 	}
 
 	return nil
+}
+
+// clone - creates a clone of portfolio for simulations
+func (p *portfolio) clone(newName string) *portfolio {
+
+	c := &portfolio{
+		name:     newName,
+		isLive:   false, // clones are never live
+		balances: make(map[SymbolType]*BalanceAs, 0),
+	}
+
+	for symbol, balance := range p.balances {
+		// clone balance
+		cb := *balance
+		c.balances[symbol] = &cb
+	}
+
+	return c
 }

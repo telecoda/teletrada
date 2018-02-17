@@ -3,14 +3,14 @@ package exchanges
 import "time"
 
 type ExchangeClient interface {
-	GetBalances() ([]Balance, error)
+	GetCoinBalances() ([]CoinBalance, error)
 	GetLatestPrices() ([]Price, error)
 	GetHistoricPrices() ([]Price, error)
 	GetDaySummaries() ([]DaySummary, error)
 	GetExchange() string
 }
 
-type Balance struct {
+type CoinBalance struct {
 	Symbol   string
 	Exchange string
 	Free     float64
