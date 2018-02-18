@@ -11,8 +11,6 @@ import (
 	"strings"
 	"sync"
 	"time"
-
-	"github.com/influxdata/influxdb/client/v2"
 )
 
 var DefaultArchive = NewSymbolsArchive()
@@ -239,7 +237,7 @@ func (sa *symbolsArchive) UpdatePrices() error {
 	}
 
 	// send to influxDB
-	if err := sa.saveMetrics(prices); err != nil {
+	if err := DefaultMetrics.SavePriceMetrics(prices); err != nil {
 		return err
 	}
 
@@ -313,57 +311,6 @@ Format:
 		price.GBP - price
 
 */
-
-func (sa *symbolsArchive) saveMetrics(prices []Price) error {
-
-	if len(prices) == 0 {
-		return nil
-	}
-
-	log.Printf("Sending symbol price data to influxdb")
-	// Create a new point batch
-	bp, err := client.NewBatchPoints(client.BatchPointsConfig{
-		Database:  DefaultMetrics.dbName,
-		Precision: "ns",
-	})
-
-	if err != nil {
-		return fmt.Errorf("failed to create batch points: %s", err)
-	}
-	for _, price := range prices {
-
-		if price.As == "123456" {
-			continue // skip it
-		}
-
-		// Create a point and add to batch
-		tags := map[string]string{"symbol": string(price.Base)}
-		fields := make(map[string]interface{}, 0)
-
-		toSymbols := []SymbolType{SymbolType(BTC), SymbolType(ETH), SymbolType(USDT)}
-
-		for _, toSym := range toSymbols {
-			if symPrice, err := sa.GetLatestPriceAs(price.Base, toSym); err != nil {
-				log.Printf("No %s price for %s symbol - %s", toSym, price.Base, err)
-			} else {
-				fields[fmt.Sprintf("price.%s", toSym)] = symPrice.Price
-			}
-		}
-
-		if len(fields) > 0 {
-			fields["exchange"] = price.Exchange
-			// only add fields with points
-			pt, err := client.NewPoint("coin_price", tags, fields, price.At)
-			if err != nil {
-				fmt.Println("Error: ", err.Error())
-			}
-
-			bp.AddPoint(pt)
-		}
-	}
-	// Write the batch
-	return DefaultMetrics.Write(bp)
-}
 
 func (sa *symbolsArchive) LoadPrices(dir string) error {
 	// check dir exists
