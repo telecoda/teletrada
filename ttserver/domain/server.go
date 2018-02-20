@@ -27,8 +27,8 @@ type Server interface {
 
 type server struct {
 	sync.RWMutex
-	livePortfolio *portfolio   // This represents the real live portfolio on the exchange
-	simPorts      []*portfolio // These represent alternate simulated portfolios and their total values
+	livePortfolio *portfolio            // This represents the real live portfolio on the exchange
+	simPorts      map[string]*portfolio // These represent alternate simulated portfolios and their total values
 	config        Config
 
 	// logging

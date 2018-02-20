@@ -28,11 +28,25 @@ func (s *server) initPortfolios() error {
 		return err
 	}
 
+	// set default strategies
+	for _, balance := range s.livePortfolio.balances {
+		if bs, err := NewBaseStrategy("base-buy", SymbolType(balance.Symbol), balance.As, 100); err != nil {
+			return err
+		} else {
+			balance.BuyStrategy = bs
+		}
+		if ss, err := NewBaseStrategy("base-sell", SymbolType(balance.Symbol), balance.As, 100); err != nil {
+			return err
+		} else {
+			balance.BuyStrategy = ss
+		}
+	}
+
 	if err := s.livePortfolio.repriceBalances(); err != nil {
 		return err
 	}
 
-	s.simPorts = make([]*portfolio, 0)
+	s.simPorts = make(map[string]*portfolio, 0)
 	return nil
 }
 
@@ -71,7 +85,6 @@ func (s *server) saveMetrics() error {
 		if err := DefaultMetrics.SavePortfolioMetrics(portfolio); err != nil {
 			return err
 		}
-
 	}
 
 	return nil
@@ -151,7 +164,7 @@ func (b *BalanceAs) reprice() error {
 }
 
 // clone - creates a clone of portfolio for simulations
-func (p *portfolio) clone(newName string) *portfolio {
+func (p *portfolio) clone(newName string) (*portfolio, error) {
 
 	c := &portfolio{
 		name:     newName,
@@ -162,8 +175,10 @@ func (p *portfolio) clone(newName string) *portfolio {
 	for symbol, balance := range p.balances {
 		// clone balance
 		cb := *balance
+		cb.BuyStrategy = nil
+		cb.SellStrategy = nil
 		c.balances[symbol] = &cb
 	}
 
-	return c
+	return c, nil
 }

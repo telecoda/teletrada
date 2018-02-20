@@ -23,7 +23,8 @@ type BalanceAs struct {
 	Change24H    float64
 	ChangePct24H float64
 	//
-	Strategy
+	BuyStrategy  Strategy
+	SellStrategy Strategy
 }
 
 // GetBalances returns current balances

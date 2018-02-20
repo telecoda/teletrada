@@ -25,6 +25,7 @@ const (
 
 type SymbolsArchive interface {
 	AddSymbol(symbol Symbol) bool
+	AddPrice(price Price) error
 	GetSymbol(symbol SymbolType) (Symbol, error)
 	GetLatestPriceAs(base SymbolType, as SymbolType) (Price, error)
 	GetPriceAs(base SymbolType, as SymbolType, at time.Time) (Price, error)
@@ -246,6 +247,10 @@ func (sa *symbolsArchive) UpdatePrices() error {
 	sa.lastUpdated = time.Now()
 	sa.Unlock()
 	return nil
+}
+
+func (sa *symbolsArchive) AddPrice(price Price) error {
+	return sa.savePrice(price)
 }
 
 func (sa *symbolsArchive) UpdateDaySummaries() error {

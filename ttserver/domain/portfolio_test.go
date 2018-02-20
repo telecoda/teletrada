@@ -56,7 +56,8 @@ func TestClone(t *testing.T) {
 	originalPortfolio.balances["symbol1"] = balance1
 	originalPortfolio.balances["symbol2"] = balance2
 
-	clonedPortfolio := originalPortfolio.clone("Cloned portfolio")
+	clonedPortfolio, err := originalPortfolio.clone("Cloned portfolio")
+	assert.NoError(t, err)
 
 	assert.Equal(t, len(originalPortfolio.balances), len(clonedPortfolio.balances))
 	assert.Equal(t, "Cloned portfolio", clonedPortfolio.name)

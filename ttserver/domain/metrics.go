@@ -17,7 +17,6 @@ const (
 )
 
 type MetricsClient interface {
-	client.Client
 	GetDBName() string
 	SavePriceMetrics(prices []Price) error
 	SavePortfolioMetrics(portfolio *portfolio) error
@@ -158,4 +157,28 @@ func (m *metricsClient) SavePortfolioMetrics(p *portfolio) error {
 	// Write the batch
 	return m.Write(bp)
 
+}
+
+type mockMetricsClient struct {
+	dbName string
+}
+
+func newMockMetricsClient(dbName string) (MetricsClient, error) {
+
+	mClient := &mockMetricsClient{
+		dbName: dbName,
+	}
+
+	return mClient, nil
+}
+
+func (m *mockMetricsClient) GetDBName() string {
+	return m.dbName
+}
+
+func (m *mockMetricsClient) SavePriceMetrics(prices []Price) error {
+	return nil
+}
+func (m *mockMetricsClient) SavePortfolioMetrics(portfolio *portfolio) error {
+	return nil
 }
