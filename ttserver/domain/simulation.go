@@ -1,6 +1,9 @@
 package domain
 
-import "fmt"
+import (
+	"fmt"
+	"time"
+)
 
 /*
 
@@ -18,27 +21,53 @@ apply Strategy to all coin balances
 
 */
 
-func (s *server) NewSimulation(simName string) (*portfolio, error) {
+type simulation struct {
+	*portfolio // original portfolio
 
-	if _, ok := s.simPorts[simName]; ok {
+	// Simulation specific stuff here
+
+	// historic simulation attributes
+	useHistoricData bool          // do we use historic data
+	simFromTime     *time.Time    // when does data start
+	simToTime       *time.Time    // when does data end
+	dataFrequency   time.Duration // what frequency do we sample the data (normally captured once per minute)
+
+	useRealtimeData bool
+}
+
+func (s *server) NewSimulation(simName string) (*simulation, error) {
+
+	if _, ok := s.simulations[simName]; ok {
 		return nil, fmt.Errorf("Cannot create simulation %s as it already exists", simName)
 	}
 
-	sim, err := s.livePortfolio.clone(simName)
+	clonedPort, err := s.livePortfolio.clone(simName)
 	if err != nil {
 		return nil, err
 	}
 
-	s.simPorts[simName] = sim
+	sim := &simulation{
+		portfolio: clonedPort,
+	}
 
 	symbol := SymbolType("TRX")
 	as := SymbolType("USDT")
-	sellStrat, err := NewPriceAboveStrategy("sim-001", symbol, as, 0.0545, 100.00)
+	sellStrat, err := NewPriceAboveStrategy("sell-trx", symbol, as, 0.0545, 100.00)
+	if err != nil {
+		return nil, err
+	}
+
+	buyStrat, err := NewPriceBelowStrategy("buy-trx", symbol, as, 0.0500, 100.00)
 	if err != nil {
 		return nil, err
 	}
 
 	sim.balances[symbol].SellStrategy = sellStrat
+	sim.balances[symbol].SellStrategy = buyStrat
+
+	s.simulations[simName] = sim
+
+	// setup simulation parameters
 
 	return sim, nil
 }

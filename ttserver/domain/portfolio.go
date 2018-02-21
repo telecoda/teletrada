@@ -46,7 +46,7 @@ func (s *server) initPortfolios() error {
 		return err
 	}
 
-	s.simPorts = make(map[string]*portfolio, 0)
+	s.simulations = make(map[string]*simulation, 0)
 	return nil
 }
 
@@ -60,9 +60,11 @@ func (s *server) updatePortfolios() error {
 		return err
 	}
 
-	for i, _ := range s.simPorts {
-		if err := s.simPorts[i].repriceBalances(); err != nil {
-			return err
+	for _, simulation := range s.simulations {
+		if simulation.useRealtimeData {
+			if err := simulation.repriceBalances(); err != nil {
+				return err
+			}
 		}
 	}
 
@@ -81,8 +83,8 @@ func (s *server) saveMetrics() error {
 	}
 
 	// simulated portfolio metrics
-	for _, portfolio := range s.simPorts {
-		if err := DefaultMetrics.SavePortfolioMetrics(portfolio); err != nil {
+	for _, simulation := range s.simulations {
+		if err := DefaultMetrics.SavePortfolioMetrics(simulation.portfolio); err != nil {
 			return err
 		}
 	}
