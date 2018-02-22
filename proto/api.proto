@@ -10,15 +10,34 @@ package proto;
 
 // The teletrader service definition.
 service teletrada {
-  // Get current balances
-  rpc GetBalances (BalancesRequest) returns (BalancesResponse) {}
+  // Get portfolio
+  rpc GetPortfolio (GetPortfolioRequest) returns (GetPortfolioResponse) {}
+  rpc GetSimulations (GetSimulationsRequest) returns (GetSimulationsResponse) {}
   rpc GetLog (LogRequest) returns (LogResponse) {}
   rpc GetStatus (StatusRequest) returns (StatusResponse) {}
   rpc Rebuild (RebuildRequest) returns (RebuildResponse) {}
 
 }
 
-message BalancesRequest {
+message LogRequest {
+}
+
+message LogEntry {
+    google.protobuf.Timestamp time = 1;
+    string text = 2;
+}
+
+message LogResponse {
+  repeated LogEntry entries = 1;
+}
+
+message Portfolio {
+  string name        = 1;
+  repeated Balance balances = 2;
+}
+
+
+message GetPortfolioRequest {
   string as        = 1;
   bool ignoreSmall = 2;
 }
@@ -37,22 +56,12 @@ message Balance {
   float value24h       = 11;
   float change24h      = 12;
   float changePct24h   = 13;
+  Strategy buyStrategy  = 14;
+  Strategy sellStrategy = 15;
 }
 
-message BalancesResponse {
+message GetPortfolioResponse {
   repeated Balance balances = 1;
-}
-
-message LogRequest {
-}
-
-message LogEntry {
-    google.protobuf.Timestamp time = 1;
-    string text = 2;
-}
-
-message LogResponse {
-  repeated LogEntry entries = 1;
 }
 
 message RebuildRequest {
@@ -62,6 +71,22 @@ message RebuildResponse {
     string result = 1;
 }
 
+message GetSimulationsRequest {
+  string id        = 1;
+}
+
+message Simulation {
+  bool useHistoricalData = 1;
+  google.protobuf.Timestamp fromTime = 2;
+  google.protobuf.Timestamp toTime = 3;
+  int32 dataFrequency = 4; // in seconds
+  bool useRealtimeData = 5;
+  Portfolio portfolio = 6;
+}
+
+message GetSimulationsResponse {
+  repeated Simulation simulations = 1;
+}
 
 message StatusRequest {
 }
@@ -71,4 +96,13 @@ message StatusResponse {
     google.protobuf.Timestamp lastUpdate = 2;
     int32 updateCount = 3;
     int32 totalSymbols = 4;
+}
+
+message Strategy {
+  string id = 1;
+  string description = 2;
+  float coinPercent = 3;
+  string symbol = 4;
+  string as = 5;
+  bool isRunning = 6;
 }

@@ -8,17 +8,12 @@ import (
 /* methods here are for convert to/from domain to protobufs */
 
 func (b *BalanceAs) toProto() (*proto.Balance, error) {
-	ts, err := tspb.TimestampProto(b.At)
-	if err != nil {
-		return nil, err
-	}
-	return &proto.Balance{
+	pb := &proto.Balance{
 		Symbol:       b.CoinBalance.Symbol,
 		Exchange:     b.Exchange,
 		Free:         float32(b.Free),
 		Locked:       float32(b.Locked),
 		Total:        float32(b.Total),
-		At:           ts,
 		As:           string(b.As),
 		Price:        float32(b.Price),
 		Value:        float32(b.Value),
@@ -26,7 +21,28 @@ func (b *BalanceAs) toProto() (*proto.Balance, error) {
 		Value24H:     float32(b.Value24H),
 		Change24H:    float32(b.Change24H),
 		ChangePct24H: float32(b.ChangePct24H),
-	}, nil
+	}
+
+	ts, err := tspb.TimestampProto(b.At)
+	if err != nil {
+		return nil, err
+	} else {
+		pb.At = ts
+	}
+
+	if b.BuyStrategy != nil {
+		if pb.BuyStrategy, err = b.BuyStrategy.toProto(); err != nil {
+			return nil, err
+		}
+	}
+
+	if b.SellStrategy != nil {
+		if pb.SellStrategy, err = b.SellStrategy.toProto(); err != nil {
+			return nil, err
+		}
+	}
+
+	return pb, nil
 }
 
 func (l *LogEntry) toProto() (*proto.LogEntry, error) {
@@ -38,4 +54,54 @@ func (l *LogEntry) toProto() (*proto.LogEntry, error) {
 		Time: ts,
 		Text: l.Message,
 	}, nil
+}
+
+func (p *portfolio) toProto() (*proto.Portfolio, error) {
+	pp := &proto.Portfolio{
+		Name:     p.name,
+		Balances: make([]*proto.Balance, len(p.balances)),
+	}
+
+	i := 0
+	var err error
+	for _, balance := range p.balances {
+		if pp.Balances[i], err = balance.toProto(); err != nil {
+			return nil, err
+		}
+		i++
+	}
+
+	return pp, nil
+}
+
+func (s *simulation) toProto() (*proto.Simulation, error) {
+	ps := &proto.Simulation{
+		UseHistoricalData: s.useHistoricData,
+		DataFrequency:     int32(s.dataFrequency.Seconds()),
+		UseRealtimeData:   s.useRealtimeData,
+	}
+
+	if s.simFromTime != nil {
+		fromTime, err := tspb.TimestampProto(*s.simFromTime)
+		if err != nil {
+			return nil, err
+		}
+		ps.FromTime = fromTime
+	}
+
+	if s.simToTime != nil {
+		toTime, err := tspb.TimestampProto(*s.simToTime)
+		if err != nil {
+			return nil, err
+		}
+		ps.ToTime = toTime
+	}
+
+	if protoPort, err := s.portfolio.toProto(); err != nil {
+		return nil, err
+	} else {
+		ps.Portfolio = protoPort
+	}
+
+	return ps, nil
 }

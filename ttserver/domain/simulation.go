@@ -1,8 +1,11 @@
 package domain
 
 import (
+	"context"
 	"fmt"
 	"time"
+
+	"github.com/telecoda/teletrada/proto"
 )
 
 /*
@@ -70,4 +73,28 @@ func (s *server) NewSimulation(simName string) (*simulation, error) {
 	// setup simulation parameters
 
 	return sim, nil
+}
+
+func (s *simulation) run() error {
+	return nil
+}
+
+// GetSimulations returns current simulations
+func (s *server) GetSimulations(ctx context.Context, req *proto.GetSimulationsRequest) (*proto.GetSimulationsResponse, error) {
+
+	resp := &proto.GetSimulationsResponse{}
+
+	resp.Simulations = make([]*proto.Simulation, len(s.simulations))
+
+	var err error
+	i := 0
+	for _, simulation := range s.simulations {
+		resp.Simulations[i], err = simulation.toProto()
+		if err != nil {
+			return nil, err
+		}
+		i++
+	}
+
+	return resp, nil
 }

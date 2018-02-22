@@ -26,7 +26,7 @@ type symbol struct {
 	// map of prices by currency
 	// etc for LTC symbol it may have prices for
 	// LTCBTC, LTCETH and LTCUSDT
-	priceAs    map[SymbolType][]Price
+	priceAs    map[SymbolType][]Price // an array of prices by symbol type
 	daySummary map[SymbolType]DaySummary
 }
 

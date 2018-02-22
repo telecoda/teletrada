@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"sync"
 	"time"
+
+	"github.com/telecoda/teletrada/proto"
 )
 
 type Strategy interface {
@@ -16,6 +18,7 @@ type Strategy interface {
 	Start()
 	Stop()
 	IsRunning() bool
+	toProto() (*proto.Strategy, error)
 }
 
 /*
@@ -121,6 +124,18 @@ func (b *baseStrategy) Stop() {
 	b.Lock()
 	b.isRunning = false
 	b.Unlock()
+}
+
+func (b *baseStrategy) toProto() (*proto.Strategy, error) {
+	ps := &proto.Strategy{
+		Id:          b.ID(),
+		Description: b.Description(),
+		CoinPercent: float32(b.CoinPercent()),
+		Symbol:      string(b.Symbol()),
+		As:          string(b.As()),
+		IsRunning:   b.IsRunning(),
+	}
+	return ps, nil
 }
 
 type doNothingStrategy struct {

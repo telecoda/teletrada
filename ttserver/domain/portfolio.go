@@ -1,9 +1,12 @@
 package domain
 
 import (
+	"context"
 	"fmt"
 	"sync"
 	"time"
+
+	"github.com/telecoda/teletrada/proto"
 )
 
 type portfolio struct {
@@ -14,6 +17,32 @@ type portfolio struct {
 }
 
 const DEFAULT_SYMBOL = SymbolType("BTC")
+
+// GetPortfolio returns current portfolio
+func (s *server) GetPortfolio(ctx context.Context, req *proto.GetPortfolioRequest) (*proto.GetPortfolioResponse, error) {
+
+	resp := &proto.GetPortfolioResponse{}
+
+	if err := s.updatePortfolios(); err != nil {
+		return nil, fmt.Errorf("failed to update portfolios - %s", err)
+	}
+
+	balances := s.livePortfolio.balances
+
+	resp.Balances = make([]*proto.Balance, len(balances))
+
+	var err error
+	i := 0
+	for _, balance := range balances {
+		resp.Balances[i], err = balance.toProto()
+		if err != nil {
+			return nil, err
+		}
+		i++
+	}
+
+	return resp, nil
+}
 
 // initPortfolios - fetches latest balances from exchange
 func (s *server) initPortfolios() error {
@@ -38,7 +67,7 @@ func (s *server) initPortfolios() error {
 		if ss, err := NewBaseStrategy("base-sell", SymbolType(balance.Symbol), balance.As, 100); err != nil {
 			return err
 		} else {
-			balance.BuyStrategy = ss
+			balance.SellStrategy = ss
 		}
 	}
 

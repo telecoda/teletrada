@@ -11,27 +11,27 @@ import (
 	"golang.org/x/net/context"
 )
 
-func getBalances(c *ishell.Context) {
+func getPortfolio(c *ishell.Context) {
 
-	req := &proto.BalancesRequest{}
+	req := &proto.GetPortfolioRequest{}
 
 	if len(c.Args) > 0 {
 		req.As = c.Args[0]
 	}
 
-	r, err := client.GetBalances(context.Background(), req)
+	r, err := client.GetPortfolio(context.Background(), req)
 	if err != nil {
-		c.Print(PaintErr(fmt.Errorf("could not get balances: %v\n", err)))
+		c.Print(PaintErr(fmt.Errorf("could not get portfolio: %v\n", err)))
 		return
 	}
 
-	c.Printf("Balances:\n")
+	c.Printf("Portfolio balances:\n")
 	buf := bytes.Buffer{}
 
 	tw := tabwriter.NewWriter(&buf, 0, 0, 2, ' ', tabwriter.AlignRight)
 
 	// Header
-	header := []string{"sym", "as", "total", "price", "price24", "value", "value24", "at", "change24", "changePct", ""}
+	header := []string{"sym", "as", "total", "price", "price24", "value", "value24", "at", "change24", "changePct", "buystrat", "sellstrat", ""}
 	PrintRow(tw, PaintRowUniformly(GreenText, header))
 	PrintRow(tw, PaintRowUniformly(GreenText, AnonymizeRow(header))) // header separator
 
@@ -46,7 +46,15 @@ func getBalances(c *ishell.Context) {
 			c.Println(PaintErr(err))
 			continue
 		}
-		PrintRow(tw, FormatRow(balance.Symbol, balance.As, balance.Total, balance.Price, balance.Price24H, balance.Value, balance.Value24H, at.Format(DATE_FORMAT), balance.Change24H, balance.ChangePct24H, ""))
+		buyStrat := ""
+		if balance.BuyStrategy != nil {
+			buyStrat = balance.BuyStrategy.Id
+		}
+		sellStrat := ""
+		if balance.SellStrategy != nil {
+			sellStrat = balance.SellStrategy.Id
+		}
+		PrintRow(tw, FormatRow(balance.Symbol, balance.As, balance.Total, balance.Price, balance.Price24H, balance.Value, balance.Value24H, at.Format(DATE_FORMAT), balance.Change24H, balance.ChangePct24H, buyStrat, sellStrat, ""))
 
 		// add to total
 		total.Exchange = balance.Exchange
