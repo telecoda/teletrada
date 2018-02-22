@@ -26,6 +26,15 @@ func getPortfolio(c *ishell.Context) {
 	}
 
 	c.Printf("Portfolio balances:\n")
+
+	printBalances(c, r.Balances)
+}
+
+func printBalances(c *ishell.Context, balances []*proto.Balance) {
+	if len(balances) == 0 {
+		return
+	}
+
 	buf := bytes.Buffer{}
 
 	tw := tabwriter.NewWriter(&buf, 0, 0, 2, ' ', tabwriter.AlignRight)
@@ -37,10 +46,10 @@ func getPortfolio(c *ishell.Context) {
 
 	total := proto.Balance{
 		Symbol: "tot",
-		As:     req.As,
+		As:     balances[0].As,
 	}
 
-	for _, balance := range r.Balances {
+	for _, balance := range balances {
 		at, err := tspb.Timestamp(balance.At)
 		if err != nil {
 			c.Println(PaintErr(err))
@@ -73,4 +82,5 @@ func getPortfolio(c *ishell.Context) {
 
 	tw.Flush()
 	c.Printf("%s", buf.String())
+
 }

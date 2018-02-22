@@ -53,14 +53,14 @@ func (s *server) NewSimulation(simName string) (*simulation, error) {
 		portfolio: clonedPort,
 	}
 
-	symbol := SymbolType("TRX")
-	as := SymbolType("USDT")
-	sellStrat, err := NewPriceAboveStrategy("sell-trx", symbol, as, 0.0545, 100.00)
+	symbol := SymbolType("ETH")
+	as := SymbolType("BTC")
+	sellStrat, err := NewPriceAboveStrategy("sell-eth", symbol, as, 0.0545, 100.00)
 	if err != nil {
 		return nil, err
 	}
 
-	buyStrat, err := NewPriceBelowStrategy("buy-trx", symbol, as, 0.0500, 100.00)
+	buyStrat, err := NewPriceBelowStrategy("buy-eth", symbol, as, 0.0500, 100.00)
 	if err != nil {
 		return nil, err
 	}

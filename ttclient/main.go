@@ -61,6 +61,12 @@ func registerCmds(shell *ishell.Shell) {
 	})
 
 	shell.AddCmd(&ishell.Cmd{
+		Name: "sim",
+		Help: "show simulations eg. sim 001",
+		Func: getSimulations,
+	})
+
+	shell.AddCmd(&ishell.Cmd{
 		Name: "log",
 		Help: "show server logs",
 		Func: getLog,

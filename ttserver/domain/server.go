@@ -100,6 +100,11 @@ func (s *server) Init() error {
 		return fmt.Errorf("Failed to initialise portfolio: %s", err)
 	}
 
+	// TEMP code create simulation
+	if _, err := s.NewSimulation("test-sim"); err != nil {
+		return fmt.Errorf("Failed to create simulation: %s", err)
+	}
+
 	return nil
 
 }
