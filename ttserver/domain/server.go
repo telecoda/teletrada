@@ -60,8 +60,17 @@ func NewTradaServer(config Config) (Server, error) {
 		if err != nil {
 			return nil, err
 		}
+		DefaultMetrics, err = newMockMetricsClient("MockMetricsDB")
+		if err != nil {
+			return nil, err
+		}
+
 	} else {
 		DefaultClient, err = exchanges.NewBinanceClient()
+		if err != nil {
+			return nil, err
+		}
+		DefaultMetrics, err = newMetricsClient(config.InfluxDBName)
 		if err != nil {
 			return nil, err
 		}
@@ -79,13 +88,6 @@ func NewTradaServer(config Config) (Server, error) {
 func (s *server) Init() error {
 	s.Lock()
 	defer s.Unlock()
-
-	var err error
-	// init DefaultMetrics client
-	DefaultMetrics, err = newMetricsClient(s.config.InfluxDBName)
-	if err != nil {
-		return err
-	}
 
 	s.startTime = time.Now().UTC()
 

@@ -27,6 +27,7 @@ type SymbolsArchive interface {
 	AddSymbol(symbol Symbol) bool
 	AddPrice(price Price) error
 	GetSymbol(symbol SymbolType) (Symbol, error)
+	GetSymbolTypes() map[SymbolType][]SymbolType
 	GetLatestPriceAs(base SymbolType, as SymbolType) (Price, error)
 	GetPriceAs(base SymbolType, as SymbolType, at time.Time) (Price, error)
 	GetDaySummaryAs(base SymbolType, as SymbolType) (DaySummary, error)
@@ -70,6 +71,19 @@ func (sa *symbolsArchive) GetSymbol(symbol SymbolType) (Symbol, error) {
 		return s, nil
 	}
 	return nil, fmt.Errorf("Symbol: %s not found", symbol)
+}
+
+func (sa *symbolsArchive) GetSymbolTypes() map[SymbolType][]SymbolType {
+	sa.RLock()
+	defer sa.RUnlock()
+
+	symbolTypes := make(map[SymbolType][]SymbolType, len(sa.symbols))
+
+	for k, v := range sa.symbols {
+		symbolTypes[k] = v.GetAsTypes()
+	}
+
+	return symbolTypes
 }
 
 // AddSymbol - adds a new symbol to the archive

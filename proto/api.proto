@@ -10,36 +10,15 @@ package proto;
 
 // The teletrader service definition.
 service teletrada {
-  // Get portfolio
+  // Get requests
   rpc GetPortfolio (GetPortfolioRequest) returns (GetPortfolioResponse) {}
   rpc GetSimulations (GetSimulationsRequest) returns (GetSimulationsResponse) {}
-  rpc GetLog (LogRequest) returns (LogResponse) {}
-  rpc GetStatus (StatusRequest) returns (StatusResponse) {}
+  rpc GetLog (GetLogRequest) returns (GetLogResponse) {}
+  rpc GetStatus (GetStatusRequest) returns (GetStatusResponse) {}
+  rpc GetSymbolTypes (GetSymbolTypesRequest) returns (GetSymbolTypesResponse) {}
+
+  // Rebuild server
   rpc Rebuild (RebuildRequest) returns (RebuildResponse) {}
-
-}
-
-message LogRequest {
-}
-
-message LogEntry {
-    google.protobuf.Timestamp time = 1;
-    string text = 2;
-}
-
-message LogResponse {
-  repeated LogEntry entries = 1;
-}
-
-message Portfolio {
-  string name        = 1;
-  repeated Balance balances = 2;
-}
-
-
-message GetPortfolioRequest {
-  string as        = 1;
-  bool ignoreSmall = 2;
 }
 
 message Balance {
@@ -60,8 +39,58 @@ message Balance {
   Strategy sellStrategy = 15;
 }
 
+message GetLogRequest {
+}
+
+
+message GetLogResponse {
+  repeated LogEntry entries = 1;
+}
+
+
+message GetPortfolioRequest {
+  string as        = 1;
+  bool ignoreSmall = 2;
+}
+
 message GetPortfolioResponse {
   repeated Balance balances = 1;
+}
+
+message GetSimulationsRequest {
+  string id        = 1;
+}
+
+
+message GetSimulationsResponse {
+  repeated Simulation simulations = 1;
+}
+
+message GetStatusRequest {
+}
+
+message GetStatusResponse {
+    google.protobuf.Timestamp serverStarted = 1;
+    google.protobuf.Timestamp lastUpdate = 2;
+    int32 updateCount = 3;
+    int32 totalSymbols = 4;
+}
+
+message GetSymbolTypesRequest {
+}
+
+message GetSymbolTypesResponse {
+  repeated SymbolType symbolTypes = 1;
+}
+
+message LogEntry {
+    google.protobuf.Timestamp time = 1;
+    string text = 2;
+}
+
+message Portfolio {
+  string name        = 1;
+  repeated Balance balances = 2;
 }
 
 message RebuildRequest {
@@ -69,10 +98,6 @@ message RebuildRequest {
 
 message RebuildResponse {
     string result = 1;
-}
-
-message GetSimulationsRequest {
-  string id        = 1;
 }
 
 message Simulation {
@@ -84,19 +109,6 @@ message Simulation {
   Portfolio portfolio = 6;
 }
 
-message GetSimulationsResponse {
-  repeated Simulation simulations = 1;
-}
-
-message StatusRequest {
-}
-
-message StatusResponse {
-    google.protobuf.Timestamp serverStarted = 1;
-    google.protobuf.Timestamp lastUpdate = 2;
-    int32 updateCount = 3;
-    int32 totalSymbols = 4;
-}
 
 message Strategy {
   string id = 1;
@@ -105,4 +117,9 @@ message Strategy {
   string symbol = 4;
   string as = 5;
   bool isRunning = 6;
+}
+
+message SymbolType {
+  string base = 1;
+  repeated string as = 2;
 }

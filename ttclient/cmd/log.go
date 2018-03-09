@@ -1,4 +1,4 @@
-package main
+package cmd
 
 import (
 	"bytes"
@@ -14,7 +14,7 @@ import (
 const DATE_FORMAT = "2006-01-02 15:04:05"
 
 func getLog(c *ishell.Context) {
-	r, err := client.GetLog(context.Background(), &proto.LogRequest{})
+	r, err := client.GetLog(context.Background(), &proto.GetLogRequest{})
 	if err != nil {
 		c.Print(PaintErr(fmt.Errorf("could not get server log: %v\n", err)))
 		return

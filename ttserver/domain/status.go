@@ -9,7 +9,7 @@ import (
 )
 
 // GetStatus returns status of server
-func (s *server) GetStatus(ctx context.Context, req *proto.StatusRequest) (*proto.StatusResponse, error) {
+func (s *server) GetStatus(ctx context.Context, req *proto.GetStatusRequest) (*proto.GetStatusResponse, error) {
 
 	s.RLock()
 	defer s.RUnlock()
@@ -25,7 +25,7 @@ func (s *server) GetStatus(ctx context.Context, req *proto.StatusRequest) (*prot
 	if err != nil {
 		return nil, fmt.Errorf("failed to convert lastUpdate: %s", err)
 	}
-	resp := &proto.StatusResponse{
+	resp := &proto.GetStatusResponse{
 		ServerStarted: startTime,
 		LastUpdate:    lastUpdated,
 		UpdateCount:   int32(archiveStatus.UpdateCount),
