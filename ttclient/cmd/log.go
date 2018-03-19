@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"text/tabwriter"
 
-	"github.com/abiosoft/ishell"
+	"github.com/desertbit/grumble"
 	tspb "github.com/golang/protobuf/ptypes"
 	"github.com/telecoda/teletrada/proto"
 	"golang.org/x/net/context"
@@ -13,11 +13,10 @@ import (
 
 const DATE_FORMAT = "2006-01-02 15:04:05"
 
-func getLog(c *ishell.Context) {
-	r, err := client.GetLog(context.Background(), &proto.GetLogRequest{})
+func listLogs(c *grumble.Context) error {
+	r, err := getClient().GetLog(context.Background(), &proto.GetLogRequest{})
 	if err != nil {
-		c.Print(PaintErr(fmt.Errorf("could not get server log: %v\n", err)))
-		return
+		return fmt.Errorf("could not get server log: %v\n", err)
 	}
 
 	buf := bytes.Buffer{}
@@ -25,17 +24,17 @@ func getLog(c *ishell.Context) {
 
 	// Headers
 	header := []string{"timestamp", "log", ""}
-	PrintRow(tw, PaintRowUniformly(GreenText, header))
-	PrintRow(tw, PaintRowUniformly(GreenText, AnonymizeRow(header))) // header separator
+	writeHeading(tw, header)
 
 	for _, entry := range r.Entries {
 		timestamp, err := tspb.Timestamp(entry.Time)
 		if err != nil {
-			c.Println(PaintErr(err))
-			continue
+			return err
 		}
-		PrintRow(tw, FormatRow(timestamp.Format(DATE_FORMAT), entry.Text, ""))
+		writeRow(tw, formatColRow(timestamp.Format(DATE_FORMAT), entry.Text, ""))
 	}
 	tw.Flush()
-	c.Printf("%s", buf.String())
+	fmt.Printf("%s", buf.String())
+
+	return nil
 }

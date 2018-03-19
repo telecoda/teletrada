@@ -33,9 +33,6 @@ var App = grumble.New(&grumble.Config{
 	HelpSubCommands:       true,
 
 	Flags: func(f *grumble.Flags) {
-		//f.String("a", "address", defaultAddress, "Address to connect to client")
-		// f.String("b", "base", "", "Base symbol")
-		// f.String("s", "as", "", "As symbol")
 		f.Bool("v", "verbose", false, "enable verbose mode")
 	},
 })
@@ -96,11 +93,11 @@ func Close() {
 		simulation
 		strategy
 	list:
+		logs
 		portfolio
+		prices
 		simulation(s)
 		strategy(ies)
-		prices
-		logs
 	delete:
 		simulation
 		strategy

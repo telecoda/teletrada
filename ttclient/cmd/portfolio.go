@@ -3,46 +3,51 @@ package cmd
 import (
 	"bytes"
 	"fmt"
+	"strings"
 	"text/tabwriter"
 
-	"github.com/abiosoft/ishell"
+	"github.com/desertbit/grumble"
 	tspb "github.com/golang/protobuf/ptypes"
 	"github.com/telecoda/teletrada/proto"
 	"golang.org/x/net/context"
 )
 
-func getPortfolio(c *ishell.Context) {
-
-	req := &proto.GetPortfolioRequest{}
-
-	if len(c.Args) > 0 {
-		req.As = c.Args[0]
+func listPortfolio(c *grumble.Context) error {
+	as := defaultSymbol
+	if len(c.Args) >= 1 {
+		as = c.Args[0]
 	}
 
-	r, err := client.GetPortfolio(context.Background(), req)
+	as = strings.ToLower(as)
+	if as == "" {
+		as = defaultSymbol
+	}
+
+	printHeading(fmt.Sprintf("Listing portfolio as %q", as))
+	req := &proto.GetPortfolioRequest{
+		As: as,
+	}
+
+	r, err := getClient().GetPortfolio(context.Background(), req)
 	if err != nil {
-		c.Print(PaintErr(fmt.Errorf("could not get portfolio: %v\n", err)))
-		return
+		return fmt.Errorf("could not get portfolio: %v\n", err)
 	}
 
-	c.Printf("Portfolio balances:\n")
+	if len(r.Balances) == 0 {
+		return nil
+	}
 
-	printBalances(c, r.Balances)
+	return printBalances(r.Balances)
 }
 
-func printBalances(c *ishell.Context, balances []*proto.Balance) {
-	if len(balances) == 0 {
-		return
-	}
-
+func printBalances(balances []*proto.Balance) error {
 	buf := bytes.Buffer{}
 
 	tw := tabwriter.NewWriter(&buf, 0, 0, 2, ' ', tabwriter.AlignRight)
 
 	// Header
 	header := []string{"sym", "as", "total", "price", "price24", "value", "value24", "at", "change24", "changePct", "buystrat", "sellstrat", ""}
-	PrintRow(tw, PaintRowUniformly(GreenText, header))
-	PrintRow(tw, PaintRowUniformly(GreenText, AnonymizeRow(header))) // header separator
+	writeHeading(tw, header)
 
 	total := proto.Balance{
 		Symbol: "tot",
@@ -52,8 +57,7 @@ func printBalances(c *ishell.Context, balances []*proto.Balance) {
 	for _, balance := range balances {
 		at, err := tspb.Timestamp(balance.At)
 		if err != nil {
-			c.Println(PaintErr(err))
-			continue
+			return err
 		}
 		buyStrat := ""
 		if balance.BuyStrategy != nil {
@@ -63,7 +67,7 @@ func printBalances(c *ishell.Context, balances []*proto.Balance) {
 		if balance.SellStrategy != nil {
 			sellStrat = balance.SellStrategy.Id
 		}
-		PrintRow(tw, FormatRow(balance.Symbol, balance.As, balance.Total, balance.Price, balance.Price24H, balance.Value, balance.Value24H, at.Format(DATE_FORMAT), balance.Change24H, balance.ChangePct24H, buyStrat, sellStrat, ""))
+		writeRow(tw, formatColRow(balance.Symbol, balance.As, priceField(balance.Total), priceField(balance.Price), priceField(balance.Price24H), priceField(balance.Value), priceField(balance.Value24H), at.Format(DATE_FORMAT), priceField(balance.Change24H), percentField(balance.ChangePct24H), buyStrat, sellStrat, ""))
 
 		// add to total
 		total.Exchange = balance.Exchange
@@ -78,9 +82,10 @@ func printBalances(c *ishell.Context, balances []*proto.Balance) {
 	}
 
 	// Print total
-	PrintRow(tw, FormatRow(total.Symbol, total.As, "", "", "", total.Value, total.Value24H, "", total.Change24H, total.ChangePct24H, ""))
+	writeRow(tw, formatColRow(total.Symbol, total.As, "", "", "", priceField(total.Value), priceField(total.Value24H), "", priceField(total.Change24H), priceField(total.ChangePct24H), ""))
 
 	tw.Flush()
-	c.Printf("%s", buf.String())
+	fmt.Printf("%s", buf.String())
 
+	return nil
 }

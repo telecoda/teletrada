@@ -1,8 +1,12 @@
 package domain
 
 import (
+	"context"
 	"fmt"
+	"strings"
 	"time"
+
+	"github.com/telecoda/teletrada/proto"
 )
 
 type Price struct {
@@ -43,4 +47,54 @@ func (p Price) Validate() error {
 
 	return nil
 
+}
+
+// GetPrices returns current prices
+func (s *server) GetPrices(ctx context.Context, req *proto.GetPricesRequest) (*proto.GetPricesResponse, error) {
+	resp := &proto.GetPricesResponse{}
+
+	req.Base = strings.ToUpper(req.Base)
+	req.As = strings.ToUpper(req.As)
+
+	var symbolTypes []SymbolType
+
+	if req.Base == "" || req.Base == "*ALL" {
+		// all prices
+		symbolMap := DefaultArchive.GetSymbolTypes()
+		symbolTypes = make([]SymbolType, len(symbolMap))
+		i := 0
+		for symbolType, _ := range symbolMap {
+			symbolTypes[i] = symbolType
+			i++
+		}
+
+	} else {
+		// only one symbol
+		symbolTypes = make([]SymbolType, 1)
+		symbolTypes[0] = SymbolType(req.Base)
+	}
+
+	resp.Prices = make([]*proto.Price, len(symbolTypes))
+
+	for i, symbolType := range symbolTypes {
+		price, err := DefaultArchive.GetLatestPriceAs(symbolType, SymbolType(req.As))
+		if err != nil {
+			return nil, fmt.Errorf("Failed to fetch symbol %s price as %s - %s", req.Base, req.As, err)
+		}
+
+		pp, err := price.toProto()
+		if err != nil {
+			return nil, err
+		}
+
+		daySummary, err := DefaultArchive.GetDaySummaryAs(symbolType, SymbolType(req.As))
+		if err == nil {
+			// day summary found so fill in corresponding fields
+			pp.ChangePct24H = float32(daySummary.ChangePercent)
+		}
+
+		resp.Prices[i] = pp
+	}
+
+	return resp, nil
 }

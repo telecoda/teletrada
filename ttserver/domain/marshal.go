@@ -74,6 +74,24 @@ func (p *portfolio) toProto() (*proto.Portfolio, error) {
 	return pp, nil
 }
 
+func (p *Price) toProto() (*proto.Price, error) {
+	pp := &proto.Price{
+		Symbol:   string(p.Base),
+		Exchange: p.Exchange,
+		As:       string(p.As),
+		Price:    float32(p.Price),
+	}
+
+	ts, err := tspb.TimestampProto(p.At)
+	if err != nil {
+		return nil, err
+	} else {
+		pp.At = ts
+	}
+
+	return pp, nil
+}
+
 func (s *simulation) toProto() (*proto.Simulation, error) {
 	ps := &proto.Simulation{
 		UseHistoricalData: s.useHistoricData,

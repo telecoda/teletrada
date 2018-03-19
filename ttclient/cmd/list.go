@@ -1,26 +1,37 @@
 package cmd
 
 import (
+	"bytes"
 	"fmt"
 	"strings"
+	"text/tabwriter"
 
 	"github.com/desertbit/grumble"
+	tspb "github.com/golang/protobuf/ptypes"
+	"github.com/telecoda/teletrada/proto"
+	"golang.org/x/net/context"
 )
 
 func init() {
 	listCommand := &grumble.Command{
-		Name:     "list",
-		Aliases:  []string{"ls"},
-		Help:     "list <item>",
-		LongHelp: "list operations",
+		Name:    "list",
+		Aliases: []string{"ls"},
+		Help:    "list operations",
 	}
 	App.AddCommand(listCommand)
 
+	// list logs
+	listCommand.AddCommand(&grumble.Command{
+		Name: "logs",
+		Help: "list logs",
+		Run:  listLogs,
+	})
 	// list portfolio
 	listCommand.AddCommand(&grumble.Command{
 		Name:      "portfolio",
 		Aliases:   []string{"po"},
-		Help:      "list portfolio <as>",
+		Help:      "list portfolio",
+		Usage:     "list portfolio [as]",
 		AllowArgs: true,
 		Run:       listPortfolio,
 	})
@@ -29,7 +40,8 @@ func init() {
 	listCommand.AddCommand(&grumble.Command{
 		Name:      "prices",
 		Aliases:   []string{"pr"},
-		Help:      "list prices <base> <as>",
+		Help:      "list prices",
+		Usage:     "list prices [base] [as]",
 		AllowArgs: true,
 		Completer: symbolCompleter,
 		Run:       listPrices,
@@ -42,21 +54,6 @@ func init() {
 		Help:    "list simulations",
 		Run:     listSimulations,
 	})
-}
-
-func listPortfolio(c *grumble.Context) error {
-	as := defaultSymbol
-	if len(c.Args) >= 1 {
-		as = c.Args[0]
-	}
-
-	as = strings.ToLower(as)
-	if as == "" {
-		as = defaultSymbol
-	}
-
-	fmt.Printf("Listing portfolio as %q\n", as)
-	return nil
 }
 
 func listPrices(c *grumble.Context) error {
@@ -87,10 +84,32 @@ func listPrices(c *grumble.Context) error {
 		fmt.Printf("Listing prices for %q as %q\n", base, as)
 	}
 
-	return nil
-}
+	resp, err := getClient().GetPrices(context.Background(), &proto.GetPricesRequest{Base: base, As: as})
+	if err != nil {
+		return err
+	}
 
-func listSimulations(c *grumble.Context) error {
-	fmt.Println("List simulations")
+	// print prices
+	printHeading("Prices")
+
+	buf := bytes.Buffer{}
+
+	tw := tabwriter.NewWriter(&buf, 0, 0, 2, ' ', tabwriter.AlignRight)
+
+	// Header
+	header := []string{"sym", "as", "price", "price24", "at", "change24", "changePct", ""}
+	writeHeading(tw, header)
+
+	for _, price := range resp.Prices {
+		at, err := tspb.Timestamp(price.At)
+		if err != nil {
+			return err
+		}
+		writeRow(tw, formatColRow(price.Symbol, price.As, priceField(price.Price), priceField(price.Price24H), at.Format(DATE_FORMAT), priceField(price.Change24H), percentField(price.ChangePct24H), ""))
+	}
+
+	tw.Flush()
+	fmt.Printf("%s", buf.String())
+
 	return nil
 }

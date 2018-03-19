@@ -3,18 +3,28 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/abiosoft/ishell"
+	"github.com/desertbit/grumble"
 	"github.com/telecoda/teletrada/proto"
 	"golang.org/x/net/context"
 )
 
-func rebuild(c *ishell.Context) {
-	r, err := client.Rebuild(context.Background(), &proto.RebuildRequest{})
+func init() {
+	App.AddCommand(&grumble.Command{
+		Name: "rebuild",
+		Help: "rebuild server and restart",
+		Run:  rebuild,
+	})
+}
+
+func rebuild(c *grumble.Context) error {
+
+	r, err := getClient().Rebuild(context.Background(), &proto.RebuildRequest{})
 	if err != nil {
-		c.Print(PaintErr(fmt.Errorf("could not rebuild code: %v\n", err)))
-		return
+		return (fmt.Errorf("could not rebuild code: %v\n", err))
 	}
 
-	c.Printf("Rebuild:\n")
-	c.Printf("Result: %s\n", r.Result)
+	printHeading("Rebuild")
+	fmt.Printf("Result: %s\n", r.Result)
+
+	return nil
 }
