@@ -9,21 +9,27 @@ It is generated from these files:
 	api.proto
 
 It has these top-level messages:
-	LogRequest
-	LogEntry
-	LogResponse
-	Portfolio
-	GetPortfolioRequest
 	Balance
+	GetLogRequest
+	GetLogResponse
+	GetPortfolioRequest
 	GetPortfolioResponse
+	GetPricesRequest
+	GetPricesResponse
+	GetSimulationsRequest
+	GetSimulationsResponse
+	GetStatusRequest
+	GetStatusResponse
+	GetSymbolTypesRequest
+	GetSymbolTypesResponse
+	LogEntry
+	Portfolio
+	Price
 	RebuildRequest
 	RebuildResponse
-	GetSimulationsRequest
 	Simulation
-	GetSimulationsResponse
-	StatusRequest
-	StatusResponse
 	Strategy
+	SymbolType
 */
 package proto
 
@@ -48,102 +54,6 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto1.ProtoPackageIsVersion2 // please upgrade the proto package
 
-type LogRequest struct {
-}
-
-func (m *LogRequest) Reset()                    { *m = LogRequest{} }
-func (m *LogRequest) String() string            { return proto1.CompactTextString(m) }
-func (*LogRequest) ProtoMessage()               {}
-func (*LogRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{0} }
-
-type LogEntry struct {
-	Time *google_protobuf.Timestamp `protobuf:"bytes,1,opt,name=time" json:"time,omitempty"`
-	Text string                     `protobuf:"bytes,2,opt,name=text" json:"text,omitempty"`
-}
-
-func (m *LogEntry) Reset()                    { *m = LogEntry{} }
-func (m *LogEntry) String() string            { return proto1.CompactTextString(m) }
-func (*LogEntry) ProtoMessage()               {}
-func (*LogEntry) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{1} }
-
-func (m *LogEntry) GetTime() *google_protobuf.Timestamp {
-	if m != nil {
-		return m.Time
-	}
-	return nil
-}
-
-func (m *LogEntry) GetText() string {
-	if m != nil {
-		return m.Text
-	}
-	return ""
-}
-
-type LogResponse struct {
-	Entries []*LogEntry `protobuf:"bytes,1,rep,name=entries" json:"entries,omitempty"`
-}
-
-func (m *LogResponse) Reset()                    { *m = LogResponse{} }
-func (m *LogResponse) String() string            { return proto1.CompactTextString(m) }
-func (*LogResponse) ProtoMessage()               {}
-func (*LogResponse) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{2} }
-
-func (m *LogResponse) GetEntries() []*LogEntry {
-	if m != nil {
-		return m.Entries
-	}
-	return nil
-}
-
-type Portfolio struct {
-	Name     string     `protobuf:"bytes,1,opt,name=name" json:"name,omitempty"`
-	Balances []*Balance `protobuf:"bytes,2,rep,name=balances" json:"balances,omitempty"`
-}
-
-func (m *Portfolio) Reset()                    { *m = Portfolio{} }
-func (m *Portfolio) String() string            { return proto1.CompactTextString(m) }
-func (*Portfolio) ProtoMessage()               {}
-func (*Portfolio) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{3} }
-
-func (m *Portfolio) GetName() string {
-	if m != nil {
-		return m.Name
-	}
-	return ""
-}
-
-func (m *Portfolio) GetBalances() []*Balance {
-	if m != nil {
-		return m.Balances
-	}
-	return nil
-}
-
-type GetPortfolioRequest struct {
-	As          string `protobuf:"bytes,1,opt,name=as" json:"as,omitempty"`
-	IgnoreSmall bool   `protobuf:"varint,2,opt,name=ignoreSmall" json:"ignoreSmall,omitempty"`
-}
-
-func (m *GetPortfolioRequest) Reset()                    { *m = GetPortfolioRequest{} }
-func (m *GetPortfolioRequest) String() string            { return proto1.CompactTextString(m) }
-func (*GetPortfolioRequest) ProtoMessage()               {}
-func (*GetPortfolioRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{4} }
-
-func (m *GetPortfolioRequest) GetAs() string {
-	if m != nil {
-		return m.As
-	}
-	return ""
-}
-
-func (m *GetPortfolioRequest) GetIgnoreSmall() bool {
-	if m != nil {
-		return m.IgnoreSmall
-	}
-	return false
-}
-
 type Balance struct {
 	Symbol       string                     `protobuf:"bytes,1,opt,name=symbol" json:"symbol,omitempty"`
 	Exchange     string                     `protobuf:"bytes,2,opt,name=exchange" json:"exchange,omitempty"`
@@ -165,7 +75,7 @@ type Balance struct {
 func (m *Balance) Reset()                    { *m = Balance{} }
 func (m *Balance) String() string            { return proto1.CompactTextString(m) }
 func (*Balance) ProtoMessage()               {}
-func (*Balance) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{5} }
+func (*Balance) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{0} }
 
 func (m *Balance) GetSymbol() string {
 	if m != nil {
@@ -272,6 +182,54 @@ func (m *Balance) GetSellStrategy() *Strategy {
 	return nil
 }
 
+type GetLogRequest struct {
+}
+
+func (m *GetLogRequest) Reset()                    { *m = GetLogRequest{} }
+func (m *GetLogRequest) String() string            { return proto1.CompactTextString(m) }
+func (*GetLogRequest) ProtoMessage()               {}
+func (*GetLogRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{1} }
+
+type GetLogResponse struct {
+	Entries []*LogEntry `protobuf:"bytes,1,rep,name=entries" json:"entries,omitempty"`
+}
+
+func (m *GetLogResponse) Reset()                    { *m = GetLogResponse{} }
+func (m *GetLogResponse) String() string            { return proto1.CompactTextString(m) }
+func (*GetLogResponse) ProtoMessage()               {}
+func (*GetLogResponse) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{2} }
+
+func (m *GetLogResponse) GetEntries() []*LogEntry {
+	if m != nil {
+		return m.Entries
+	}
+	return nil
+}
+
+type GetPortfolioRequest struct {
+	As          string `protobuf:"bytes,1,opt,name=as" json:"as,omitempty"`
+	IgnoreSmall bool   `protobuf:"varint,2,opt,name=ignoreSmall" json:"ignoreSmall,omitempty"`
+}
+
+func (m *GetPortfolioRequest) Reset()                    { *m = GetPortfolioRequest{} }
+func (m *GetPortfolioRequest) String() string            { return proto1.CompactTextString(m) }
+func (*GetPortfolioRequest) ProtoMessage()               {}
+func (*GetPortfolioRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{3} }
+
+func (m *GetPortfolioRequest) GetAs() string {
+	if m != nil {
+		return m.As
+	}
+	return ""
+}
+
+func (m *GetPortfolioRequest) GetIgnoreSmall() bool {
+	if m != nil {
+		return m.IgnoreSmall
+	}
+	return false
+}
+
 type GetPortfolioResponse struct {
 	Balances []*Balance `protobuf:"bytes,1,rep,name=balances" json:"balances,omitempty"`
 }
@@ -279,7 +237,7 @@ type GetPortfolioResponse struct {
 func (m *GetPortfolioResponse) Reset()                    { *m = GetPortfolioResponse{} }
 func (m *GetPortfolioResponse) String() string            { return proto1.CompactTextString(m) }
 func (*GetPortfolioResponse) ProtoMessage()               {}
-func (*GetPortfolioResponse) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{6} }
+func (*GetPortfolioResponse) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{4} }
 
 func (m *GetPortfolioResponse) GetBalances() []*Balance {
 	if m != nil {
@@ -288,28 +246,44 @@ func (m *GetPortfolioResponse) GetBalances() []*Balance {
 	return nil
 }
 
-type RebuildRequest struct {
+type GetPricesRequest struct {
+	Base string `protobuf:"bytes,1,opt,name=base" json:"base,omitempty"`
+	As   string `protobuf:"bytes,2,opt,name=as" json:"as,omitempty"`
 }
 
-func (m *RebuildRequest) Reset()                    { *m = RebuildRequest{} }
-func (m *RebuildRequest) String() string            { return proto1.CompactTextString(m) }
-func (*RebuildRequest) ProtoMessage()               {}
-func (*RebuildRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{7} }
+func (m *GetPricesRequest) Reset()                    { *m = GetPricesRequest{} }
+func (m *GetPricesRequest) String() string            { return proto1.CompactTextString(m) }
+func (*GetPricesRequest) ProtoMessage()               {}
+func (*GetPricesRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{5} }
 
-type RebuildResponse struct {
-	Result string `protobuf:"bytes,1,opt,name=result" json:"result,omitempty"`
-}
-
-func (m *RebuildResponse) Reset()                    { *m = RebuildResponse{} }
-func (m *RebuildResponse) String() string            { return proto1.CompactTextString(m) }
-func (*RebuildResponse) ProtoMessage()               {}
-func (*RebuildResponse) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{8} }
-
-func (m *RebuildResponse) GetResult() string {
+func (m *GetPricesRequest) GetBase() string {
 	if m != nil {
-		return m.Result
+		return m.Base
 	}
 	return ""
+}
+
+func (m *GetPricesRequest) GetAs() string {
+	if m != nil {
+		return m.As
+	}
+	return ""
+}
+
+type GetPricesResponse struct {
+	Prices []*Price `protobuf:"bytes,1,rep,name=prices" json:"prices,omitempty"`
+}
+
+func (m *GetPricesResponse) Reset()                    { *m = GetPricesResponse{} }
+func (m *GetPricesResponse) String() string            { return proto1.CompactTextString(m) }
+func (*GetPricesResponse) ProtoMessage()               {}
+func (*GetPricesResponse) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{6} }
+
+func (m *GetPricesResponse) GetPrices() []*Price {
+	if m != nil {
+		return m.Prices
+	}
+	return nil
 }
 
 type GetSimulationsRequest struct {
@@ -319,11 +293,251 @@ type GetSimulationsRequest struct {
 func (m *GetSimulationsRequest) Reset()                    { *m = GetSimulationsRequest{} }
 func (m *GetSimulationsRequest) String() string            { return proto1.CompactTextString(m) }
 func (*GetSimulationsRequest) ProtoMessage()               {}
-func (*GetSimulationsRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{9} }
+func (*GetSimulationsRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{7} }
 
 func (m *GetSimulationsRequest) GetId() string {
 	if m != nil {
 		return m.Id
+	}
+	return ""
+}
+
+type GetSimulationsResponse struct {
+	Simulations []*Simulation `protobuf:"bytes,1,rep,name=simulations" json:"simulations,omitempty"`
+}
+
+func (m *GetSimulationsResponse) Reset()                    { *m = GetSimulationsResponse{} }
+func (m *GetSimulationsResponse) String() string            { return proto1.CompactTextString(m) }
+func (*GetSimulationsResponse) ProtoMessage()               {}
+func (*GetSimulationsResponse) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{8} }
+
+func (m *GetSimulationsResponse) GetSimulations() []*Simulation {
+	if m != nil {
+		return m.Simulations
+	}
+	return nil
+}
+
+type GetStatusRequest struct {
+}
+
+func (m *GetStatusRequest) Reset()                    { *m = GetStatusRequest{} }
+func (m *GetStatusRequest) String() string            { return proto1.CompactTextString(m) }
+func (*GetStatusRequest) ProtoMessage()               {}
+func (*GetStatusRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{9} }
+
+type GetStatusResponse struct {
+	ServerStarted *google_protobuf.Timestamp `protobuf:"bytes,1,opt,name=serverStarted" json:"serverStarted,omitempty"`
+	LastUpdate    *google_protobuf.Timestamp `protobuf:"bytes,2,opt,name=lastUpdate" json:"lastUpdate,omitempty"`
+	UpdateCount   int32                      `protobuf:"varint,3,opt,name=updateCount" json:"updateCount,omitempty"`
+	TotalSymbols  int32                      `protobuf:"varint,4,opt,name=totalSymbols" json:"totalSymbols,omitempty"`
+}
+
+func (m *GetStatusResponse) Reset()                    { *m = GetStatusResponse{} }
+func (m *GetStatusResponse) String() string            { return proto1.CompactTextString(m) }
+func (*GetStatusResponse) ProtoMessage()               {}
+func (*GetStatusResponse) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{10} }
+
+func (m *GetStatusResponse) GetServerStarted() *google_protobuf.Timestamp {
+	if m != nil {
+		return m.ServerStarted
+	}
+	return nil
+}
+
+func (m *GetStatusResponse) GetLastUpdate() *google_protobuf.Timestamp {
+	if m != nil {
+		return m.LastUpdate
+	}
+	return nil
+}
+
+func (m *GetStatusResponse) GetUpdateCount() int32 {
+	if m != nil {
+		return m.UpdateCount
+	}
+	return 0
+}
+
+func (m *GetStatusResponse) GetTotalSymbols() int32 {
+	if m != nil {
+		return m.TotalSymbols
+	}
+	return 0
+}
+
+type GetSymbolTypesRequest struct {
+}
+
+func (m *GetSymbolTypesRequest) Reset()                    { *m = GetSymbolTypesRequest{} }
+func (m *GetSymbolTypesRequest) String() string            { return proto1.CompactTextString(m) }
+func (*GetSymbolTypesRequest) ProtoMessage()               {}
+func (*GetSymbolTypesRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{11} }
+
+type GetSymbolTypesResponse struct {
+	SymbolTypes []*SymbolType `protobuf:"bytes,1,rep,name=symbolTypes" json:"symbolTypes,omitempty"`
+}
+
+func (m *GetSymbolTypesResponse) Reset()                    { *m = GetSymbolTypesResponse{} }
+func (m *GetSymbolTypesResponse) String() string            { return proto1.CompactTextString(m) }
+func (*GetSymbolTypesResponse) ProtoMessage()               {}
+func (*GetSymbolTypesResponse) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{12} }
+
+func (m *GetSymbolTypesResponse) GetSymbolTypes() []*SymbolType {
+	if m != nil {
+		return m.SymbolTypes
+	}
+	return nil
+}
+
+type LogEntry struct {
+	Time *google_protobuf.Timestamp `protobuf:"bytes,1,opt,name=time" json:"time,omitempty"`
+	Text string                     `protobuf:"bytes,2,opt,name=text" json:"text,omitempty"`
+}
+
+func (m *LogEntry) Reset()                    { *m = LogEntry{} }
+func (m *LogEntry) String() string            { return proto1.CompactTextString(m) }
+func (*LogEntry) ProtoMessage()               {}
+func (*LogEntry) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{13} }
+
+func (m *LogEntry) GetTime() *google_protobuf.Timestamp {
+	if m != nil {
+		return m.Time
+	}
+	return nil
+}
+
+func (m *LogEntry) GetText() string {
+	if m != nil {
+		return m.Text
+	}
+	return ""
+}
+
+type Portfolio struct {
+	Name     string     `protobuf:"bytes,1,opt,name=name" json:"name,omitempty"`
+	Balances []*Balance `protobuf:"bytes,2,rep,name=balances" json:"balances,omitempty"`
+}
+
+func (m *Portfolio) Reset()                    { *m = Portfolio{} }
+func (m *Portfolio) String() string            { return proto1.CompactTextString(m) }
+func (*Portfolio) ProtoMessage()               {}
+func (*Portfolio) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{14} }
+
+func (m *Portfolio) GetName() string {
+	if m != nil {
+		return m.Name
+	}
+	return ""
+}
+
+func (m *Portfolio) GetBalances() []*Balance {
+	if m != nil {
+		return m.Balances
+	}
+	return nil
+}
+
+type Price struct {
+	Symbol       string                     `protobuf:"bytes,1,opt,name=symbol" json:"symbol,omitempty"`
+	Exchange     string                     `protobuf:"bytes,2,opt,name=exchange" json:"exchange,omitempty"`
+	As           string                     `protobuf:"bytes,3,opt,name=as" json:"as,omitempty"`
+	Price        float32                    `protobuf:"fixed32,4,opt,name=price" json:"price,omitempty"`
+	At           *google_protobuf.Timestamp `protobuf:"bytes,5,opt,name=at" json:"at,omitempty"`
+	Price24H     float32                    `protobuf:"fixed32,6,opt,name=price24h" json:"price24h,omitempty"`
+	Value24H     float32                    `protobuf:"fixed32,7,opt,name=value24h" json:"value24h,omitempty"`
+	Change24H    float32                    `protobuf:"fixed32,8,opt,name=change24h" json:"change24h,omitempty"`
+	ChangePct24H float32                    `protobuf:"fixed32,9,opt,name=changePct24h" json:"changePct24h,omitempty"`
+}
+
+func (m *Price) Reset()                    { *m = Price{} }
+func (m *Price) String() string            { return proto1.CompactTextString(m) }
+func (*Price) ProtoMessage()               {}
+func (*Price) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{15} }
+
+func (m *Price) GetSymbol() string {
+	if m != nil {
+		return m.Symbol
+	}
+	return ""
+}
+
+func (m *Price) GetExchange() string {
+	if m != nil {
+		return m.Exchange
+	}
+	return ""
+}
+
+func (m *Price) GetAs() string {
+	if m != nil {
+		return m.As
+	}
+	return ""
+}
+
+func (m *Price) GetPrice() float32 {
+	if m != nil {
+		return m.Price
+	}
+	return 0
+}
+
+func (m *Price) GetAt() *google_protobuf.Timestamp {
+	if m != nil {
+		return m.At
+	}
+	return nil
+}
+
+func (m *Price) GetPrice24H() float32 {
+	if m != nil {
+		return m.Price24H
+	}
+	return 0
+}
+
+func (m *Price) GetValue24H() float32 {
+	if m != nil {
+		return m.Value24H
+	}
+	return 0
+}
+
+func (m *Price) GetChange24H() float32 {
+	if m != nil {
+		return m.Change24H
+	}
+	return 0
+}
+
+func (m *Price) GetChangePct24H() float32 {
+	if m != nil {
+		return m.ChangePct24H
+	}
+	return 0
+}
+
+type RebuildRequest struct {
+}
+
+func (m *RebuildRequest) Reset()                    { *m = RebuildRequest{} }
+func (m *RebuildRequest) String() string            { return proto1.CompactTextString(m) }
+func (*RebuildRequest) ProtoMessage()               {}
+func (*RebuildRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{16} }
+
+type RebuildResponse struct {
+	Result string `protobuf:"bytes,1,opt,name=result" json:"result,omitempty"`
+}
+
+func (m *RebuildResponse) Reset()                    { *m = RebuildResponse{} }
+func (m *RebuildResponse) String() string            { return proto1.CompactTextString(m) }
+func (*RebuildResponse) ProtoMessage()               {}
+func (*RebuildResponse) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{17} }
+
+func (m *RebuildResponse) GetResult() string {
+	if m != nil {
+		return m.Result
 	}
 	return ""
 }
@@ -340,7 +554,7 @@ type Simulation struct {
 func (m *Simulation) Reset()                    { *m = Simulation{} }
 func (m *Simulation) String() string            { return proto1.CompactTextString(m) }
 func (*Simulation) ProtoMessage()               {}
-func (*Simulation) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{10} }
+func (*Simulation) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{18} }
 
 func (m *Simulation) GetUseHistoricalData() bool {
 	if m != nil {
@@ -384,70 +598,6 @@ func (m *Simulation) GetPortfolio() *Portfolio {
 	return nil
 }
 
-type GetSimulationsResponse struct {
-	Simulations []*Simulation `protobuf:"bytes,1,rep,name=simulations" json:"simulations,omitempty"`
-}
-
-func (m *GetSimulationsResponse) Reset()                    { *m = GetSimulationsResponse{} }
-func (m *GetSimulationsResponse) String() string            { return proto1.CompactTextString(m) }
-func (*GetSimulationsResponse) ProtoMessage()               {}
-func (*GetSimulationsResponse) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{11} }
-
-func (m *GetSimulationsResponse) GetSimulations() []*Simulation {
-	if m != nil {
-		return m.Simulations
-	}
-	return nil
-}
-
-type StatusRequest struct {
-}
-
-func (m *StatusRequest) Reset()                    { *m = StatusRequest{} }
-func (m *StatusRequest) String() string            { return proto1.CompactTextString(m) }
-func (*StatusRequest) ProtoMessage()               {}
-func (*StatusRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{12} }
-
-type StatusResponse struct {
-	ServerStarted *google_protobuf.Timestamp `protobuf:"bytes,1,opt,name=serverStarted" json:"serverStarted,omitempty"`
-	LastUpdate    *google_protobuf.Timestamp `protobuf:"bytes,2,opt,name=lastUpdate" json:"lastUpdate,omitempty"`
-	UpdateCount   int32                      `protobuf:"varint,3,opt,name=updateCount" json:"updateCount,omitempty"`
-	TotalSymbols  int32                      `protobuf:"varint,4,opt,name=totalSymbols" json:"totalSymbols,omitempty"`
-}
-
-func (m *StatusResponse) Reset()                    { *m = StatusResponse{} }
-func (m *StatusResponse) String() string            { return proto1.CompactTextString(m) }
-func (*StatusResponse) ProtoMessage()               {}
-func (*StatusResponse) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{13} }
-
-func (m *StatusResponse) GetServerStarted() *google_protobuf.Timestamp {
-	if m != nil {
-		return m.ServerStarted
-	}
-	return nil
-}
-
-func (m *StatusResponse) GetLastUpdate() *google_protobuf.Timestamp {
-	if m != nil {
-		return m.LastUpdate
-	}
-	return nil
-}
-
-func (m *StatusResponse) GetUpdateCount() int32 {
-	if m != nil {
-		return m.UpdateCount
-	}
-	return 0
-}
-
-func (m *StatusResponse) GetTotalSymbols() int32 {
-	if m != nil {
-		return m.TotalSymbols
-	}
-	return 0
-}
-
 type Strategy struct {
 	Id          string  `protobuf:"bytes,1,opt,name=id" json:"id,omitempty"`
 	Description string  `protobuf:"bytes,2,opt,name=description" json:"description,omitempty"`
@@ -460,7 +610,7 @@ type Strategy struct {
 func (m *Strategy) Reset()                    { *m = Strategy{} }
 func (m *Strategy) String() string            { return proto1.CompactTextString(m) }
 func (*Strategy) ProtoMessage()               {}
-func (*Strategy) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{14} }
+func (*Strategy) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{19} }
 
 func (m *Strategy) GetId() string {
 	if m != nil {
@@ -504,22 +654,52 @@ func (m *Strategy) GetIsRunning() bool {
 	return false
 }
 
+type SymbolType struct {
+	Base string   `protobuf:"bytes,1,opt,name=base" json:"base,omitempty"`
+	As   []string `protobuf:"bytes,2,rep,name=as" json:"as,omitempty"`
+}
+
+func (m *SymbolType) Reset()                    { *m = SymbolType{} }
+func (m *SymbolType) String() string            { return proto1.CompactTextString(m) }
+func (*SymbolType) ProtoMessage()               {}
+func (*SymbolType) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{20} }
+
+func (m *SymbolType) GetBase() string {
+	if m != nil {
+		return m.Base
+	}
+	return ""
+}
+
+func (m *SymbolType) GetAs() []string {
+	if m != nil {
+		return m.As
+	}
+	return nil
+}
+
 func init() {
-	proto1.RegisterType((*LogRequest)(nil), "proto.LogRequest")
-	proto1.RegisterType((*LogEntry)(nil), "proto.LogEntry")
-	proto1.RegisterType((*LogResponse)(nil), "proto.LogResponse")
-	proto1.RegisterType((*Portfolio)(nil), "proto.Portfolio")
-	proto1.RegisterType((*GetPortfolioRequest)(nil), "proto.GetPortfolioRequest")
 	proto1.RegisterType((*Balance)(nil), "proto.Balance")
+	proto1.RegisterType((*GetLogRequest)(nil), "proto.GetLogRequest")
+	proto1.RegisterType((*GetLogResponse)(nil), "proto.GetLogResponse")
+	proto1.RegisterType((*GetPortfolioRequest)(nil), "proto.GetPortfolioRequest")
 	proto1.RegisterType((*GetPortfolioResponse)(nil), "proto.GetPortfolioResponse")
+	proto1.RegisterType((*GetPricesRequest)(nil), "proto.GetPricesRequest")
+	proto1.RegisterType((*GetPricesResponse)(nil), "proto.GetPricesResponse")
+	proto1.RegisterType((*GetSimulationsRequest)(nil), "proto.GetSimulationsRequest")
+	proto1.RegisterType((*GetSimulationsResponse)(nil), "proto.GetSimulationsResponse")
+	proto1.RegisterType((*GetStatusRequest)(nil), "proto.GetStatusRequest")
+	proto1.RegisterType((*GetStatusResponse)(nil), "proto.GetStatusResponse")
+	proto1.RegisterType((*GetSymbolTypesRequest)(nil), "proto.GetSymbolTypesRequest")
+	proto1.RegisterType((*GetSymbolTypesResponse)(nil), "proto.GetSymbolTypesResponse")
+	proto1.RegisterType((*LogEntry)(nil), "proto.LogEntry")
+	proto1.RegisterType((*Portfolio)(nil), "proto.Portfolio")
+	proto1.RegisterType((*Price)(nil), "proto.Price")
 	proto1.RegisterType((*RebuildRequest)(nil), "proto.RebuildRequest")
 	proto1.RegisterType((*RebuildResponse)(nil), "proto.RebuildResponse")
-	proto1.RegisterType((*GetSimulationsRequest)(nil), "proto.GetSimulationsRequest")
 	proto1.RegisterType((*Simulation)(nil), "proto.Simulation")
-	proto1.RegisterType((*GetSimulationsResponse)(nil), "proto.GetSimulationsResponse")
-	proto1.RegisterType((*StatusRequest)(nil), "proto.StatusRequest")
-	proto1.RegisterType((*StatusResponse)(nil), "proto.StatusResponse")
 	proto1.RegisterType((*Strategy)(nil), "proto.Strategy")
+	proto1.RegisterType((*SymbolType)(nil), "proto.SymbolType")
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -533,11 +713,14 @@ const _ = grpc.SupportPackageIsVersion4
 // Client API for Teletrada service
 
 type TeletradaClient interface {
-	// Get portfolio
+	// Get requests
+	GetLog(ctx context.Context, in *GetLogRequest, opts ...grpc.CallOption) (*GetLogResponse, error)
 	GetPortfolio(ctx context.Context, in *GetPortfolioRequest, opts ...grpc.CallOption) (*GetPortfolioResponse, error)
+	GetPrices(ctx context.Context, in *GetPricesRequest, opts ...grpc.CallOption) (*GetPricesResponse, error)
 	GetSimulations(ctx context.Context, in *GetSimulationsRequest, opts ...grpc.CallOption) (*GetSimulationsResponse, error)
-	GetLog(ctx context.Context, in *LogRequest, opts ...grpc.CallOption) (*LogResponse, error)
-	GetStatus(ctx context.Context, in *StatusRequest, opts ...grpc.CallOption) (*StatusResponse, error)
+	GetStatus(ctx context.Context, in *GetStatusRequest, opts ...grpc.CallOption) (*GetStatusResponse, error)
+	GetSymbolTypes(ctx context.Context, in *GetSymbolTypesRequest, opts ...grpc.CallOption) (*GetSymbolTypesResponse, error)
+	// Rebuild server
 	Rebuild(ctx context.Context, in *RebuildRequest, opts ...grpc.CallOption) (*RebuildResponse, error)
 }
 
@@ -549,9 +732,27 @@ func NewTeletradaClient(cc *grpc.ClientConn) TeletradaClient {
 	return &teletradaClient{cc}
 }
 
+func (c *teletradaClient) GetLog(ctx context.Context, in *GetLogRequest, opts ...grpc.CallOption) (*GetLogResponse, error) {
+	out := new(GetLogResponse)
+	err := grpc.Invoke(ctx, "/proto.teletrada/GetLog", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *teletradaClient) GetPortfolio(ctx context.Context, in *GetPortfolioRequest, opts ...grpc.CallOption) (*GetPortfolioResponse, error) {
 	out := new(GetPortfolioResponse)
 	err := grpc.Invoke(ctx, "/proto.teletrada/GetPortfolio", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *teletradaClient) GetPrices(ctx context.Context, in *GetPricesRequest, opts ...grpc.CallOption) (*GetPricesResponse, error) {
+	out := new(GetPricesResponse)
+	err := grpc.Invoke(ctx, "/proto.teletrada/GetPrices", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -567,18 +768,18 @@ func (c *teletradaClient) GetSimulations(ctx context.Context, in *GetSimulations
 	return out, nil
 }
 
-func (c *teletradaClient) GetLog(ctx context.Context, in *LogRequest, opts ...grpc.CallOption) (*LogResponse, error) {
-	out := new(LogResponse)
-	err := grpc.Invoke(ctx, "/proto.teletrada/GetLog", in, out, c.cc, opts...)
+func (c *teletradaClient) GetStatus(ctx context.Context, in *GetStatusRequest, opts ...grpc.CallOption) (*GetStatusResponse, error) {
+	out := new(GetStatusResponse)
+	err := grpc.Invoke(ctx, "/proto.teletrada/GetStatus", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *teletradaClient) GetStatus(ctx context.Context, in *StatusRequest, opts ...grpc.CallOption) (*StatusResponse, error) {
-	out := new(StatusResponse)
-	err := grpc.Invoke(ctx, "/proto.teletrada/GetStatus", in, out, c.cc, opts...)
+func (c *teletradaClient) GetSymbolTypes(ctx context.Context, in *GetSymbolTypesRequest, opts ...grpc.CallOption) (*GetSymbolTypesResponse, error) {
+	out := new(GetSymbolTypesResponse)
+	err := grpc.Invoke(ctx, "/proto.teletrada/GetSymbolTypes", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -597,16 +798,37 @@ func (c *teletradaClient) Rebuild(ctx context.Context, in *RebuildRequest, opts 
 // Server API for Teletrada service
 
 type TeletradaServer interface {
-	// Get portfolio
+	// Get requests
+	GetLog(context.Context, *GetLogRequest) (*GetLogResponse, error)
 	GetPortfolio(context.Context, *GetPortfolioRequest) (*GetPortfolioResponse, error)
+	GetPrices(context.Context, *GetPricesRequest) (*GetPricesResponse, error)
 	GetSimulations(context.Context, *GetSimulationsRequest) (*GetSimulationsResponse, error)
-	GetLog(context.Context, *LogRequest) (*LogResponse, error)
-	GetStatus(context.Context, *StatusRequest) (*StatusResponse, error)
+	GetStatus(context.Context, *GetStatusRequest) (*GetStatusResponse, error)
+	GetSymbolTypes(context.Context, *GetSymbolTypesRequest) (*GetSymbolTypesResponse, error)
+	// Rebuild server
 	Rebuild(context.Context, *RebuildRequest) (*RebuildResponse, error)
 }
 
 func RegisterTeletradaServer(s *grpc.Server, srv TeletradaServer) {
 	s.RegisterService(&_Teletrada_serviceDesc, srv)
+}
+
+func _Teletrada_GetLog_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetLogRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(TeletradaServer).GetLog(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.teletrada/GetLog",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(TeletradaServer).GetLog(ctx, req.(*GetLogRequest))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
 func _Teletrada_GetPortfolio_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -623,6 +845,24 @@ func _Teletrada_GetPortfolio_Handler(srv interface{}, ctx context.Context, dec f
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(TeletradaServer).GetPortfolio(ctx, req.(*GetPortfolioRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Teletrada_GetPrices_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetPricesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(TeletradaServer).GetPrices(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.teletrada/GetPrices",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(TeletradaServer).GetPrices(ctx, req.(*GetPricesRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -645,26 +885,8 @@ func _Teletrada_GetSimulations_Handler(srv interface{}, ctx context.Context, dec
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Teletrada_GetLog_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(LogRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(TeletradaServer).GetLog(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/proto.teletrada/GetLog",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(TeletradaServer).GetLog(ctx, req.(*LogRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _Teletrada_GetStatus_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(StatusRequest)
+	in := new(GetStatusRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -676,7 +898,25 @@ func _Teletrada_GetStatus_Handler(srv interface{}, ctx context.Context, dec func
 		FullMethod: "/proto.teletrada/GetStatus",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(TeletradaServer).GetStatus(ctx, req.(*StatusRequest))
+		return srv.(TeletradaServer).GetStatus(ctx, req.(*GetStatusRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Teletrada_GetSymbolTypes_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetSymbolTypesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(TeletradaServer).GetSymbolTypes(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.teletrada/GetSymbolTypes",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(TeletradaServer).GetSymbolTypes(ctx, req.(*GetSymbolTypesRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -704,20 +944,28 @@ var _Teletrada_serviceDesc = grpc.ServiceDesc{
 	HandlerType: (*TeletradaServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
+			MethodName: "GetLog",
+			Handler:    _Teletrada_GetLog_Handler,
+		},
+		{
 			MethodName: "GetPortfolio",
 			Handler:    _Teletrada_GetPortfolio_Handler,
+		},
+		{
+			MethodName: "GetPrices",
+			Handler:    _Teletrada_GetPrices_Handler,
 		},
 		{
 			MethodName: "GetSimulations",
 			Handler:    _Teletrada_GetSimulations_Handler,
 		},
 		{
-			MethodName: "GetLog",
-			Handler:    _Teletrada_GetLog_Handler,
-		},
-		{
 			MethodName: "GetStatus",
 			Handler:    _Teletrada_GetStatus_Handler,
+		},
+		{
+			MethodName: "GetSymbolTypes",
+			Handler:    _Teletrada_GetSymbolTypes_Handler,
 		},
 		{
 			MethodName: "Rebuild",
@@ -731,62 +979,72 @@ var _Teletrada_serviceDesc = grpc.ServiceDesc{
 func init() { proto1.RegisterFile("api.proto", fileDescriptor0) }
 
 var fileDescriptor0 = []byte{
-	// 900 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x09, 0x6e, 0x88, 0x02, 0xff, 0x8c, 0x55, 0x5d, 0x6f, 0xdb, 0x36,
-	0x14, 0x9d, 0x9d, 0x38, 0x91, 0xaf, 0x1d, 0xbb, 0xe1, 0xd2, 0x40, 0x70, 0x3b, 0xac, 0x10, 0x06,
-	0xac, 0x1d, 0x06, 0x75, 0x75, 0x86, 0x61, 0xe8, 0xd3, 0x90, 0x7d, 0xb4, 0xc3, 0xbe, 0x0c, 0x7a,
-	0xc3, 0x9e, 0x69, 0x89, 0x71, 0x88, 0xd1, 0xa2, 0x46, 0x52, 0x5d, 0xfc, 0x7f, 0x86, 0xfd, 0x97,
-	0xbd, 0x0e, 0xfb, 0x41, 0x23, 0x29, 0x52, 0x96, 0xdc, 0xac, 0xe9, 0x93, 0x79, 0xcf, 0x3d, 0xf7,
-	0xe8, 0x52, 0xf7, 0xea, 0x18, 0x86, 0xa4, 0x64, 0x69, 0x29, 0x85, 0x16, 0x68, 0xe0, 0x7e, 0x66,
-	0xef, 0xaf, 0x85, 0x58, 0x73, 0xfa, 0xd4, 0x45, 0xab, 0xea, 0xea, 0xa9, 0x66, 0x1b, 0xaa, 0x34,
-	0xd9, 0x94, 0x35, 0x2f, 0x19, 0x03, 0x7c, 0x2f, 0xd6, 0x98, 0xfe, 0x5e, 0x19, 0x38, 0xf9, 0x11,
-	0x22, 0x13, 0x7d, 0x5d, 0x68, 0xb9, 0x45, 0x29, 0x1c, 0x5a, 0x72, 0xdc, 0x7b, 0xd4, 0x7b, 0x3c,
-	0x9a, 0xcf, 0xd2, 0x5a, 0x29, 0x0d, 0x4a, 0xe9, 0xcf, 0x41, 0x09, 0x3b, 0x1e, 0x42, 0x86, 0x4f,
-	0x6f, 0x74, 0xdc, 0x37, 0xfc, 0x21, 0x76, 0xe7, 0xe4, 0x73, 0x18, 0x39, 0x75, 0x55, 0x8a, 0x42,
-	0x51, 0xf4, 0x04, 0x8e, 0xa9, 0xd1, 0x66, 0x54, 0x19, 0xd5, 0x03, 0xa3, 0x3a, 0xad, 0xe5, 0xd2,
-	0xf0, 0x50, 0x1c, 0xf2, 0xc9, 0x77, 0x30, 0x5c, 0x08, 0xa9, 0xaf, 0x04, 0x67, 0xc2, 0x4a, 0x17,
-	0xc4, 0xb7, 0x62, 0xa4, 0xed, 0x19, 0x7d, 0x04, 0xd1, 0x8a, 0x70, 0x52, 0x64, 0x46, 0xac, 0xef,
-	0xc4, 0x26, 0x5e, 0xec, 0xb2, 0x86, 0x71, 0x93, 0x4f, 0x5e, 0xc0, 0xbb, 0x2f, 0xa8, 0x6e, 0xf4,
-	0xfc, 0x6d, 0xd1, 0x04, 0xfa, 0x44, 0x79, 0x51, 0x73, 0x42, 0x8f, 0x60, 0xc4, 0xd6, 0x85, 0x90,
-	0x74, 0xb9, 0x21, 0x9c, 0xbb, 0x8b, 0x44, 0xb8, 0x0d, 0x25, 0x7f, 0x1f, 0xc0, 0xb1, 0x97, 0x47,
-	0xe7, 0x70, 0xa4, 0xb6, 0x9b, 0x95, 0xe0, 0x5e, 0xc1, 0x47, 0x68, 0x06, 0x11, 0xbd, 0xc9, 0xae,
-	0x49, 0xb1, 0xa6, 0xfe, 0x5d, 0x34, 0xb1, 0xbd, 0xc8, 0x95, 0xa4, 0x34, 0x3e, 0x30, 0x78, 0x1f,
-	0xbb, 0xb3, 0xd5, 0xe1, 0x22, 0xfb, 0x8d, 0xe6, 0xf1, 0xa1, 0x43, 0x7d, 0x84, 0xce, 0x60, 0xa0,
-	0x85, 0x26, 0x3c, 0x1e, 0x38, 0xb8, 0x0e, 0x7c, 0xcf, 0x47, 0x4d, 0xcf, 0x86, 0x55, 0x4a, 0x96,
-	0xd1, 0xf8, 0xb8, 0x66, 0xb9, 0xc0, 0xa2, 0xaf, 0x08, 0xaf, 0x68, 0x1c, 0xd5, 0xa8, 0x0b, 0xcc,
-	0x2b, 0xeb, 0x13, 0x1d, 0x0f, 0xef, 0x9c, 0xa7, 0x61, 0xd9, 0x5b, 0x38, 0xa9, 0xf9, 0xa7, 0xd7,
-	0x31, 0x38, 0x91, 0x26, 0xb6, 0x39, 0x27, 0x68, 0x73, 0xa3, 0x3a, 0x17, 0x62, 0xf4, 0x10, 0x86,
-	0xf5, 0x5d, 0x6d, 0x72, 0xec, 0x92, 0x3b, 0x00, 0x25, 0x30, 0xae, 0x83, 0x45, 0xa6, 0x2d, 0xe1,
-	0xc4, 0x11, 0x3a, 0x18, 0x7a, 0x06, 0xa3, 0x55, 0xb5, 0x5d, 0x6a, 0x49, 0x34, 0x5d, 0x6f, 0xe3,
-	0x89, 0x6b, 0x37, 0x2c, 0x4a, 0x80, 0x71, 0x9b, 0x83, 0x2e, 0x60, 0xac, 0x28, 0xe7, 0x4d, 0xcd,
-	0xf4, 0xf6, 0x9a, 0x0e, 0x29, 0xb9, 0x84, 0xb3, 0xee, 0x52, 0xf8, 0x25, 0x6d, 0x2f, 0x56, 0xef,
-	0x8e, 0xc5, 0xba, 0x07, 0x13, 0x4c, 0x57, 0x15, 0xe3, 0x79, 0xf8, 0x82, 0x9e, 0xc0, 0xb4, 0x41,
-	0xbc, 0xa0, 0x19, 0xb0, 0xa4, 0xaa, 0xe2, 0x3a, 0x2c, 0x4a, 0x1d, 0x25, 0x1f, 0xc2, 0x7d, 0xd3,
-	0xc0, 0x92, 0x6d, 0x2a, 0x4e, 0x34, 0x33, 0xd4, 0xd6, 0x5e, 0xb2, 0x3c, 0xec, 0x25, 0xcb, 0x93,
-	0xbf, 0xfa, 0x00, 0x3b, 0x1a, 0xfa, 0x18, 0x4e, 0x2b, 0x45, 0x5f, 0x32, 0xa5, 0x85, 0x99, 0x08,
-	0xe1, 0x5f, 0x11, 0x4d, 0x1c, 0x3b, 0xc2, 0xaf, 0x27, 0xd0, 0x67, 0x10, 0x5d, 0x49, 0xb1, 0xb1,
-	0xd3, 0x75, 0xeb, 0xf8, 0xe6, 0xd1, 0x37, 0x5c, 0x34, 0x87, 0x23, 0x2d, 0x5c, 0xd5, 0xc1, 0x9d,
-	0x55, 0x9e, 0x89, 0x3e, 0x80, 0x93, 0xdc, 0x3c, 0xf3, 0x1b, 0x69, 0x2f, 0x52, 0x64, 0x5b, 0xb7,
-	0xd1, 0x03, 0xdc, 0x05, 0xd1, 0x63, 0x98, 0x9a, 0x36, 0x31, 0x25, 0xdc, 0xfa, 0x86, 0xeb, 0x7e,
-	0xe0, 0xba, 0xdf, 0x87, 0x8d, 0x05, 0x0d, 0xcb, 0x30, 0x1f, 0xb7, 0xf3, 0xa3, 0xf9, 0x3d, 0x3f,
-	0x8b, 0xdd, 0xdc, 0x76, 0x94, 0xe4, 0x07, 0x38, 0xdf, 0x7f, 0xa3, 0x7e, 0x06, 0x17, 0x30, 0x52,
-	0x3b, 0xd8, 0xcf, 0xf5, 0x34, 0x2c, 0x48, 0x93, 0xc1, 0x6d, 0x56, 0x32, 0x85, 0x93, 0xa5, 0x26,
-	0xba, 0x0a, 0x83, 0x49, 0xfe, 0xed, 0xc1, 0x24, 0x20, 0x5e, 0xf8, 0x0b, 0x38, 0x51, 0x54, 0xbe,
-	0xa2, 0xd2, 0xe0, 0x52, 0xd3, 0xfc, 0x2d, 0xec, 0xb2, 0x5b, 0x80, 0x9e, 0x03, 0x70, 0xa2, 0xf4,
-	0x2f, 0xa5, 0x79, 0x4b, 0x6f, 0x33, 0xa2, 0x16, 0xdb, 0x3a, 0x56, 0xe5, 0x4e, 0x5f, 0x8a, 0xaa,
-	0xd0, 0x6e, 0x52, 0x03, 0xdc, 0x86, 0xec, 0x17, 0xe7, 0x8c, 0x63, 0xe9, 0xcc, 0x49, 0xf9, 0x89,
-	0x74, 0xb0, 0xe4, 0xcf, 0x1e, 0x44, 0xcd, 0xb7, 0xb4, 0xb7, 0x7c, 0xf6, 0x11, 0x39, 0x55, 0x99,
-	0x64, 0xa5, 0x7d, 0x29, 0xde, 0xd1, 0xda, 0x90, 0x65, 0x64, 0x82, 0x15, 0x0b, 0x2a, 0x33, 0xea,
-	0x9b, 0xe8, 0xe3, 0x36, 0xd4, 0xb2, 0xca, 0xc3, 0x8e, 0x55, 0xd6, 0x66, 0x36, 0x68, 0xcc, 0xcc,
-	0x98, 0x07, 0x53, 0xb8, 0x2a, 0x0a, 0x56, 0xac, 0xdd, 0xbc, 0x23, 0xbc, 0x03, 0xe6, 0xff, 0xf4,
-	0x61, 0xa8, 0x29, 0xa7, 0xa6, 0xd3, 0x9c, 0xa0, 0x6f, 0x61, 0xdc, 0xfe, 0x7c, 0xd1, 0xcc, 0x0f,
-	0xf3, 0x16, 0xa3, 0x9f, 0x3d, 0xb8, 0x35, 0x57, 0x4f, 0x30, 0x79, 0x07, 0xfd, 0x04, 0x93, 0xee,
-	0xda, 0xa0, 0x87, 0xbb, 0x82, 0xd7, 0xbf, 0xcf, 0xd9, 0x7b, 0xff, 0x93, 0x6d, 0x04, 0x9f, 0xc1,
-	0x91, 0xc9, 0x99, 0x3f, 0x35, 0x74, 0xba, 0xfb, 0x83, 0x0b, 0xd5, 0xa8, 0x0d, 0x35, 0x25, 0xcf,
-	0x61, 0x68, 0xe5, 0xdc, 0x72, 0xa1, 0xb3, 0xc6, 0xb9, 0x5a, 0xdb, 0x37, 0xbb, 0xbf, 0x87, 0xb6,
-	0x6a, 0x8f, 0xbd, 0xe7, 0xa0, 0xc0, 0xe9, 0xba, 0xd2, 0xec, 0x7c, 0x1f, 0x0e, 0xb5, 0x97, 0x9f,
-	0xc0, 0x03, 0x26, 0xd2, 0xb5, 0x2c, 0xb3, 0x94, 0xde, 0x98, 0xf5, 0xe2, 0x54, 0xa5, 0xd7, 0xc6,
-	0x26, 0xc5, 0x1f, 0x42, 0xf2, 0xfc, 0x72, 0xfa, 0xd2, 0x9e, 0x7f, 0xb5, 0xe7, 0x85, 0x55, 0x58,
-	0xf4, 0x56, 0x47, 0x4e, 0xea, 0xe2, 0xbf, 0x00, 0x00, 0x00, 0xff, 0xff, 0x28, 0x2a, 0x07, 0x20,
-	0x6d, 0x08, 0x00, 0x00,
+	// 1059 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x09, 0x6e, 0x88, 0x02, 0xff, 0x9c, 0x56, 0xeb, 0x6e, 0x1b, 0x45,
+	0x14, 0xc6, 0x76, 0xec, 0xac, 0x8f, 0x93, 0x38, 0x19, 0xd2, 0x74, 0xe5, 0x16, 0x51, 0x8d, 0x90,
+	0x68, 0x2b, 0xe4, 0x16, 0x07, 0x15, 0x51, 0xfe, 0x54, 0xe1, 0xd2, 0x22, 0x6e, 0xd6, 0xba, 0x88,
+	0xdf, 0xe3, 0xf5, 0xc4, 0x59, 0x31, 0xde, 0x59, 0x76, 0x67, 0x4b, 0xfc, 0x04, 0xbc, 0x08, 0xe2,
+	0x5d, 0x78, 0x02, 0x9e, 0x83, 0x37, 0x60, 0xae, 0xbb, 0xb3, 0x76, 0x71, 0x4a, 0x7f, 0x79, 0xce,
+	0x77, 0x2e, 0x7b, 0xe6, 0xcc, 0x77, 0xce, 0x31, 0xf4, 0x49, 0x96, 0x8c, 0xb3, 0x9c, 0x0b, 0x8e,
+	0xba, 0xfa, 0x67, 0xf4, 0xfe, 0x92, 0xf3, 0x25, 0xa3, 0x8f, 0xb4, 0x34, 0x2f, 0x2f, 0x1f, 0x89,
+	0x64, 0x45, 0x0b, 0x41, 0x56, 0x99, 0xb1, 0xc3, 0x7f, 0x75, 0x60, 0xff, 0x82, 0x30, 0x92, 0xc6,
+	0x14, 0x9d, 0x41, 0xaf, 0x58, 0xaf, 0xe6, 0x9c, 0x85, 0xad, 0x7b, 0xad, 0xfb, 0xfd, 0xc8, 0x4a,
+	0x68, 0x04, 0x01, 0xbd, 0x8e, 0xaf, 0x48, 0xba, 0xa4, 0x61, 0x5b, 0x6b, 0x2a, 0x19, 0x21, 0xd8,
+	0xbb, 0xcc, 0x29, 0x0d, 0x3b, 0x12, 0x6f, 0x47, 0xfa, 0xac, 0xe2, 0x30, 0x1e, 0xff, 0x42, 0x17,
+	0xe1, 0x9e, 0x46, 0xad, 0x84, 0x4e, 0xa1, 0x2b, 0xb8, 0x20, 0x2c, 0xec, 0x6a, 0xd8, 0x08, 0xe8,
+	0x08, 0xda, 0xa4, 0x08, 0x7b, 0x3a, 0xae, 0x3c, 0x29, 0xab, 0x2c, 0x4f, 0x62, 0x1a, 0xee, 0x1b,
+	0x2b, 0x2d, 0x28, 0xf4, 0x15, 0x61, 0x25, 0x0d, 0x03, 0x83, 0x6a, 0x01, 0x3d, 0x94, 0xbe, 0x22,
+	0xec, 0x4b, 0x68, 0x30, 0x19, 0x8d, 0xcd, 0x5d, 0xc7, 0xee, 0xae, 0xe3, 0x97, 0xee, 0xae, 0x32,
+	0xae, 0x50, 0xb7, 0xd0, 0xa1, 0x26, 0x9f, 0x5c, 0x85, 0xa0, 0x83, 0x54, 0xb2, 0xd2, 0xe9, 0x80,
+	0x4a, 0x37, 0x30, 0x3a, 0x27, 0xa3, 0xbb, 0xd0, 0x37, 0x77, 0x55, 0xca, 0x03, 0xad, 0xac, 0x01,
+	0x84, 0xe1, 0xc0, 0x08, 0xd3, 0x58, 0x28, 0x83, 0x43, 0x6d, 0xd0, 0xc0, 0xd0, 0xc7, 0x30, 0x98,
+	0x97, 0xeb, 0x99, 0xc8, 0x89, 0xa0, 0xcb, 0x75, 0x78, 0xa4, 0xd3, 0x1d, 0x9a, 0x3c, 0xc7, 0x0e,
+	0x8e, 0x7c, 0x1b, 0x74, 0x0e, 0x07, 0x05, 0x65, 0xac, 0xf2, 0x19, 0xbe, 0xde, 0xa7, 0x61, 0x84,
+	0x87, 0x70, 0xf8, 0x9c, 0x8a, 0xef, 0xf8, 0x32, 0xa2, 0xbf, 0x96, 0xf2, 0xe6, 0xf8, 0x73, 0x38,
+	0x72, 0x40, 0x91, 0xf1, 0xb4, 0xa0, 0xe8, 0x01, 0xec, 0xd3, 0x54, 0xe4, 0x09, 0x2d, 0xe4, 0x1b,
+	0x77, 0xbc, 0x90, 0xd2, 0xe8, 0x2b, 0xa9, 0x58, 0x47, 0x4e, 0x8f, 0x9f, 0xc3, 0xbb, 0xd2, 0x79,
+	0xca, 0x73, 0x71, 0xc9, 0x59, 0xc2, 0x6d, 0x4c, 0xfb, 0x5c, 0xad, 0xea, 0xb9, 0xee, 0xc1, 0x20,
+	0x59, 0xa6, 0x3c, 0xa7, 0xb3, 0x15, 0x61, 0x4c, 0xf3, 0x23, 0x88, 0x7c, 0x08, 0x5f, 0xc0, 0x69,
+	0x33, 0x90, 0xcd, 0xe5, 0x21, 0x04, 0x73, 0xc3, 0x3c, 0x97, 0xcc, 0x91, 0x4d, 0xc6, 0x12, 0x32,
+	0xaa, 0xf4, 0xf8, 0x09, 0x1c, 0xab, 0x18, 0xea, 0xbd, 0x0a, 0x97, 0x89, 0xa4, 0xde, 0x9c, 0x14,
+	0xd4, 0xe6, 0xa2, 0xcf, 0x36, 0xbb, 0xb6, 0xcb, 0x0e, 0x7f, 0x06, 0x27, 0x9e, 0x9f, 0xfd, 0xf0,
+	0x07, 0xd0, 0xd3, 0x2f, 0xef, 0x3e, 0x7b, 0x60, 0x3f, 0xab, 0xcd, 0x22, 0xab, 0xc3, 0x1f, 0xc2,
+	0x2d, 0xe9, 0x3a, 0x4b, 0x56, 0x25, 0x23, 0x22, 0x91, 0x8e, 0x5e, 0x05, 0x92, 0x85, 0xab, 0x40,
+	0xb2, 0xc0, 0xdf, 0xc3, 0xd9, 0xa6, 0xa1, 0xfd, 0xd0, 0x39, 0x0c, 0x8a, 0x1a, 0xb6, 0x5f, 0x3b,
+	0x71, 0x8f, 0x58, 0x69, 0x22, 0xdf, 0x0a, 0x23, 0x7d, 0xd5, 0x99, 0x20, 0xa2, 0x74, 0x9f, 0xc4,
+	0x7f, 0xb7, 0xf4, 0x3d, 0x1c, 0x68, 0xc3, 0x3f, 0x83, 0xc3, 0x82, 0xe6, 0xaf, 0x68, 0x2e, 0xf1,
+	0x5c, 0x50, 0x93, 0xd3, 0xee, 0x46, 0x68, 0x3a, 0xa0, 0xa7, 0x00, 0x8c, 0x14, 0xe2, 0xa7, 0x6c,
+	0x21, 0x19, 0xa4, 0xcb, 0xb6, 0xdb, 0xdd, 0xb3, 0x56, 0x0f, 0x5f, 0xea, 0xd3, 0x17, 0xbc, 0x4c,
+	0x85, 0x1e, 0x00, 0xdd, 0xc8, 0x87, 0x54, 0x6f, 0xe8, 0x16, 0x9f, 0xe9, 0x31, 0x52, 0xe8, 0x69,
+	0xd0, 0x8d, 0x1a, 0x18, 0xbe, 0x6d, 0xaa, 0xac, 0xa5, 0x97, 0xeb, 0xac, 0x7a, 0x5d, 0x57, 0x55,
+	0x5f, 0xe1, 0x55, 0xb5, 0x86, 0x37, 0xab, 0x5a, 0x69, 0x22, 0xdf, 0x0a, 0xff, 0x00, 0x81, 0xa3,
+	0x38, 0x1a, 0xc3, 0x9e, 0x1a, 0x83, 0x6f, 0x50, 0x2e, 0x6d, 0xa7, 0x88, 0x26, 0xe8, 0xb5, 0xb0,
+	0xb4, 0xd2, 0x67, 0xfc, 0x2d, 0xf4, 0x2b, 0x46, 0x2b, 0x83, 0x94, 0xac, 0x2a, 0x26, 0xaa, 0x73,
+	0x83, 0xdd, 0xed, 0x1b, 0xd8, 0xfd, 0x7b, 0x1b, 0xba, 0x9a, 0x7c, 0x6f, 0x35, 0x82, 0x0d, 0xe7,
+	0x3b, 0xdb, 0x03, 0x74, 0xcf, 0x1f, 0xa0, 0x66, 0x54, 0x76, 0xff, 0xf7, 0xa8, 0xec, 0xed, 0x18,
+	0x95, 0xfb, 0xbb, 0x46, 0x65, 0x70, 0xd3, 0xa8, 0xec, 0x6f, 0x8f, 0x4a, 0x7c, 0x0c, 0x47, 0x11,
+	0x9d, 0x97, 0x09, 0x5b, 0x38, 0x1e, 0x3c, 0x80, 0x61, 0x85, 0x58, 0x02, 0xc8, 0x22, 0xe5, 0xb4,
+	0x28, 0x99, 0x70, 0x45, 0x32, 0x12, 0xfe, 0xb3, 0x0d, 0x50, 0x77, 0x15, 0xfa, 0x08, 0x4e, 0xca,
+	0x82, 0xbe, 0x48, 0x0a, 0xc1, 0x65, 0xf2, 0x84, 0x7d, 0x49, 0x04, 0xd1, 0x1e, 0x41, 0xb4, 0xad,
+	0x40, 0x4f, 0x20, 0xb8, 0xcc, 0xf9, 0x4a, 0x15, 0xe2, 0x0d, 0x1a, 0xa1, 0xb2, 0x45, 0x13, 0xe8,
+	0x09, 0xae, 0xbd, 0x3a, 0x37, 0x7a, 0x59, 0x4b, 0x39, 0x80, 0x0e, 0x65, 0x97, 0x90, 0xaf, 0x73,
+	0x75, 0xc7, 0x34, 0x5e, 0xdb, 0xce, 0x68, 0x82, 0xe8, 0x3e, 0x0c, 0x65, 0x9a, 0x11, 0x25, 0x4c,
+	0xb1, 0x50, 0x67, 0xdf, 0xd5, 0xd9, 0x6f, 0xc2, 0x92, 0xd0, 0xfd, 0xcc, 0x91, 0x51, 0x3f, 0xd8,
+	0x60, 0x72, 0xec, 0x66, 0x5a, 0x35, 0x76, 0x6b, 0x13, 0xfc, 0x47, 0x0b, 0x82, 0x6a, 0xd5, 0x6c,
+	0x8c, 0x33, 0xd5, 0xd7, 0x0b, 0x5a, 0xc4, 0x79, 0x92, 0xa9, 0x2a, 0x5a, 0xb6, 0xf9, 0x90, 0xb2,
+	0x88, 0x79, 0x92, 0x4e, 0x69, 0x1e, 0x53, 0xdb, 0xf9, 0xed, 0xc8, 0x87, 0x3c, 0x1a, 0xef, 0x35,
+	0x68, 0x6c, 0xa8, 0xda, 0xad, 0xa8, 0x2a, 0x09, 0x93, 0x14, 0x51, 0x99, 0xa6, 0x49, 0xba, 0xd4,
+	0x89, 0x07, 0x51, 0x0d, 0xe0, 0xc7, 0xf2, 0x39, 0xab, 0x16, 0xde, 0x39, 0xee, 0x3b, 0x26, 0xde,
+	0xe4, 0x9f, 0x0e, 0xf4, 0x05, 0x65, 0x54, 0xde, 0x6d, 0x41, 0xd0, 0xa7, 0xd0, 0x33, 0xeb, 0x0f,
+	0x9d, 0xda, 0x6a, 0x34, 0xd6, 0xe3, 0xe8, 0xd6, 0x06, 0x6a, 0xe8, 0x85, 0xdf, 0x41, 0xdf, 0xc0,
+	0x81, 0xbf, 0xb1, 0xd0, 0xa8, 0x36, 0xdc, 0xdc, 0x87, 0xa3, 0x3b, 0xaf, 0xd5, 0x55, 0xa1, 0x9e,
+	0x41, 0xbf, 0x5a, 0x40, 0xe8, 0xb6, 0x67, 0xeb, 0xaf, 0xb2, 0x51, 0xb8, 0xad, 0xa8, 0x22, 0xfc,
+	0xa8, 0x97, 0xb8, 0xb7, 0x5e, 0xd0, 0xdd, 0xda, 0x7a, 0x7b, 0x3d, 0x8d, 0xde, 0xfb, 0x0f, 0xed,
+	0x46, 0x4a, 0x66, 0x97, 0xf8, 0x29, 0x35, 0x56, 0x8e, 0x9f, 0x52, 0x73, 0xed, 0xd4, 0x29, 0xd5,
+	0xe3, 0xb5, 0x91, 0xd2, 0xd6, 0x2c, 0x6f, 0xa4, 0xb4, 0x3d, 0xd0, 0x65, 0xc0, 0xa7, 0xb0, 0x6f,
+	0x9b, 0x1c, 0xb9, 0x47, 0x69, 0x8e, 0x81, 0xd1, 0xd9, 0x26, 0xec, 0x7c, 0x2f, 0x1e, 0xc3, 0x9d,
+	0x84, 0x8f, 0x97, 0x79, 0x16, 0x8f, 0xe9, 0xb5, 0xec, 0x32, 0x46, 0x8b, 0xf1, 0x95, 0xfc, 0x5b,
+	0xc4, 0x7f, 0xe3, 0x39, 0x5b, 0x5c, 0x0c, 0x5f, 0xa8, 0xf3, 0xcf, 0xea, 0x3c, 0x55, 0x11, 0xa6,
+	0xad, 0x79, 0x4f, 0x87, 0x3a, 0xff, 0x37, 0x00, 0x00, 0xff, 0xff, 0x28, 0x1c, 0x52, 0x7a, 0x2f,
+	0x0b, 0x00, 0x00,
 }

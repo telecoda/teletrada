@@ -116,9 +116,12 @@ func TestUpdatePrices(t *testing.T) {
 
 	mc, err := exchanges.NewMockClient()
 	assert.NoError(t, err)
+	mtc, err := newMockMetricsClient("test")
+	assert.NoError(t, err)
 
 	// run test with mocked data
 	DefaultClient = mc
+	DefaultMetrics = mtc
 
 	testSymbol := SymbolType("BTC")
 	currency := SymbolType("USDT")
@@ -147,9 +150,12 @@ func TestPricePersistence(t *testing.T) {
 
 	mc, err := exchanges.NewMockClient()
 	assert.NoError(t, err)
+	mtc, err := newMockMetricsClient("test")
+	assert.NoError(t, err)
 
 	// run test with mocked data
 	DefaultClient = mc
+	DefaultMetrics = mtc
 
 	err = archive.UpdatePrices()
 	assert.NoError(t, err)

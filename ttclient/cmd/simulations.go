@@ -1,15 +1,16 @@
-package main
+package cmd
 
 import (
 	"fmt"
 
-	"github.com/abiosoft/ishell"
+	"github.com/desertbit/grumble"
 	"github.com/telecoda/teletrada/proto"
 	"golang.org/x/net/context"
 )
 
-func getSimulations(c *ishell.Context) {
+func listSimulations(c *grumble.Context) error {
 
+	printHeading("List simulations")
 	req := &proto.GetSimulationsRequest{}
 
 	if len(c.Args) > 0 {
@@ -18,20 +19,17 @@ func getSimulations(c *ishell.Context) {
 
 	r, err := client.GetSimulations(context.Background(), req)
 	if err != nil {
-		c.Print(PaintErr(fmt.Errorf("could not get simulations: %v\n", err)))
-		return
+		return fmt.Errorf("could not get simulations: %v\n", err)
 	}
-
-	c.Printf("Simulations:\n")
-	c.Printf("============\n")
 
 	for _, simulation := range r.Simulations {
 		if simulation.Portfolio != nil {
 			// Print simulation header details
-			c.Printf("Name: %s\n", simulation.Portfolio.Name)
-			// Print simulation balances
+			printHeading(fmt.Sprintf("Name: %s", simulation.Portfolio.Name))
 
-			printBalances(c, simulation.Portfolio.Balances)
+			printBalances(simulation.Portfolio.Balances)
 		}
 	}
+
+	return nil
 }

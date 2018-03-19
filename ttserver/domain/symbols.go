@@ -1,16 +1,20 @@
 package domain
 
 import (
+	"context"
 	"fmt"
 	"sort"
 	"sync"
 	"time"
+
+	"github.com/telecoda/teletrada/proto"
 )
 
 type SymbolType string
 
 type Symbol interface {
 	GetType() SymbolType
+	GetAsTypes() []SymbolType
 	// Prices
 	AddPrice(price Price)
 	GetPriceAs(as SymbolType, at time.Time) (Price, error)
@@ -39,7 +43,21 @@ func NewSymbol(symbolType SymbolType) *symbol {
 }
 
 func (s *symbol) GetType() SymbolType {
+	s.RLock()
+	defer s.RUnlock()
 	return s.SymbolType
+}
+
+func (s *symbol) GetAsTypes() []SymbolType {
+	s.RLock()
+	defer s.RUnlock()
+	asTypes := make([]SymbolType, len(s.priceAs))
+	i := 0
+	for k, _ := range s.priceAs {
+		asTypes[i] = k
+		i++
+	}
+	return asTypes
 }
 
 func (s *symbol) AddPrice(price Price) {
@@ -191,4 +209,43 @@ func (s *symbol) GetLatestPriceAs(as SymbolType) (Price, error) {
 		// return last price
 		return prices[len(prices)-1], nil
 	}
+}
+
+// GetSymbolTypes returns list of available symbols
+func (s *server) GetSymbolTypes(ctx context.Context, req *proto.GetSymbolTypesRequest) (*proto.GetSymbolTypesResponse, error) {
+
+	// s.RLock()
+	// defer s.RUnlock()
+
+	// startTime, err := tspb.TimestampProto(s.startTime)
+	// if err != nil {
+	// 	return nil, fmt.Errorf("failed to convert startTime: %s", err)
+	// }
+
+	// archiveStatus := DefaultArchive.GetStatus()
+
+	// lastUpdated, err := tspb.TimestampProto(archiveStatus.LastUpdated)
+	// if err != nil {
+	// 	return nil, fmt.Errorf("failed to convert lastUpdate: %s", err)
+	// }
+
+	symbols := DefaultArchive.GetSymbolTypes()
+
+	resp := &proto.GetSymbolTypesResponse{
+		SymbolTypes: make([]*proto.SymbolType, len(symbols)),
+	}
+
+	i := 0
+	for k, asTypes := range symbols {
+		protoSymbol := &proto.SymbolType{}
+		protoSymbol.Base = string(k)
+		protoSymbol.As = make([]string, len(asTypes))
+		for n, asType := range asTypes {
+			protoSymbol.As[n] = string(asType)
+		}
+		resp.SymbolTypes[i] = protoSymbol
+		i++
+	}
+
+	return resp, nil
 }

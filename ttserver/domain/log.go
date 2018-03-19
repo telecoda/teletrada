@@ -26,9 +26,9 @@ func (s *server) log(msg string) {
 }
 
 // GetLog returns server log
-func (s *server) GetLog(ctx context.Context, in *proto.LogRequest) (*proto.LogResponse, error) {
+func (s *server) GetLog(ctx context.Context, in *proto.GetLogRequest) (*proto.GetLogResponse, error) {
 
-	resp := &proto.LogResponse{}
+	resp := &proto.GetLogResponse{}
 
 	entries := s.statusLog
 
