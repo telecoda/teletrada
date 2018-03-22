@@ -26,12 +26,13 @@ func init() {
 }
 
 func getStatus(c *grumble.Context) error {
+	printHeading("Status")
+	fmt.Print(formatAttrString("Address", address+"\n"))
 	s, err := getClient().GetStatus(context.Background(), &proto.GetStatusRequest{})
 	if err != nil {
 		return err
 	}
 
-	printHeading("Status")
 	timestamp, err := tspb.Timestamp(s.ServerStarted)
 	if err != nil {
 		return err
