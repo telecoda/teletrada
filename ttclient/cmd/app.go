@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"flag"
 	"fmt"
 	"log"
 
@@ -34,6 +33,7 @@ var App = grumble.New(&grumble.Config{
 
 	Flags: func(f *grumble.Flags) {
 		f.Bool("v", "verbose", false, "enable verbose mode")
+		f.String("a", "address", defaultAddress, "address to connect to client")
 	},
 })
 
@@ -48,8 +48,14 @@ func init() {
 		fmt.Println()
 	})
 
-	flag.StringVar(&address, "address", defaultAddress, "Address to connect to client")
+	App.OnInit(onInit)
+	//flag.StringVar(&address, "address", defaultAddress, "Address to connect to client")
 
+}
+
+func onInit(a *grumble.App, flags grumble.FlagMap) error {
+	address = flags.String("address")
+	return nil
 }
 
 func getClient() proto.TeletradaClient {
