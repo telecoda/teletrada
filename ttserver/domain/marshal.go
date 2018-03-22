@@ -79,7 +79,7 @@ func (p *Price) toProto() (*proto.Price, error) {
 		Symbol:   string(p.Base),
 		Exchange: p.Exchange,
 		As:       string(p.As),
-		Price:    float32(p.Price),
+		Current:  float32(p.Price),
 	}
 
 	ts, err := tspb.TimestampProto(p.At)

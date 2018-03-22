@@ -91,6 +91,15 @@ func (s *server) GetPrices(ctx context.Context, req *proto.GetPricesRequest) (*p
 		if err == nil {
 			// day summary found so fill in corresponding fields
 			pp.ChangePct24H = float32(daySummary.ChangePercent)
+			pp.Change24H = float32(daySummary.ChangePrice)
+			pp.Opening = float32(daySummary.OpenPrice)
+			pp.Closing = float32(daySummary.ClosePrice)
+			pp.Highest = float32(daySummary.HighestPrice)
+			pp.Lowest = float32(daySummary.LowestPrice)
+			pp.ChangeToday = pp.Current - pp.Closing
+			if pp.ChangeToday != 0 {
+				pp.ChangePctToday = (pp.ChangeToday / pp.Closing) * 100.00
+			}
 		}
 
 		resp.Prices[i] = pp

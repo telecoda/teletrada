@@ -268,7 +268,34 @@ func (sa *symbolsArchive) AddPrice(price Price) error {
 }
 
 func (sa *symbolsArchive) UpdateDaySummaries() error {
-	// for each sym
+	summaries, err := DefaultClient.GetDaySummaries()
+	if err != nil {
+		return err
+	}
+
+	for _, exSummary := range summaries {
+		symbol, err := sa.GetSymbol(SymbolType(exSummary.Base))
+		if err != nil {
+			return fmt.Errorf("ERROR: [UpdateDaySummaries] failed getting symbol %s - %s", exSummary.Base, err)
+		}
+
+		summary := DaySummary{
+			Base:             SymbolType(exSummary.Base),
+			As:               SymbolType(exSummary.As),
+			OpenPrice:        exSummary.OpenPrice,
+			ClosePrice:       exSummary.ClosePrice,
+			WeightedAvgPrice: exSummary.WeightedAvgPrice,
+			HighestPrice:     exSummary.HighestPrice,
+			LowestPrice:      exSummary.LowestPrice,
+			ChangePrice:      exSummary.ChangePrice,
+			ChangePercent:    exSummary.ChangePercent,
+			At:               exSummary.At,
+			Exchange:         exSummary.Exchange,
+		}
+
+		symbol.AddDaySummary(summary)
+	}
+
 	return nil
 }
 

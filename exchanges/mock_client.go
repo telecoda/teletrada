@@ -54,5 +54,47 @@ func (m *mockClient) GetHistoricPrices() ([]Price, error) {
 }
 
 func (m *mockClient) GetDaySummaries() ([]DaySummary, error) {
-	return nil, nil
+
+	summaries := []DaySummary{
+		DaySummary{
+			Base:             "BTC",
+			As:               "USDT",
+			OpenPrice:        10000.00,
+			ClosePrice:       11000.00,
+			WeightedAvgPrice: 10500.00,
+			HighestPrice:     11500.00,
+			LowestPrice:      9500.00,
+			ChangePrice:      1000.00,
+			ChangePercent:    10.00,
+			At:               time.Now(),
+			Exchange:         m.GetExchange(),
+		},
+		DaySummary{
+			Base:             "ETH",
+			As:               "USDT",
+			OpenPrice:        1100.00,
+			ClosePrice:       1000.00,
+			WeightedAvgPrice: 1050.00,
+			HighestPrice:     1150.00,
+			LowestPrice:      950.00,
+			ChangePrice:      -100.00,
+			ChangePercent:    -10.00,
+			At:               time.Now(),
+			Exchange:         m.GetExchange(),
+		},
+		DaySummary{
+			Base:             "LTC",
+			As:               "USDT",
+			OpenPrice:        110.00,
+			ClosePrice:       100.00,
+			WeightedAvgPrice: 150.00,
+			HighestPrice:     150.00,
+			LowestPrice:      90.00,
+			ChangePrice:      -10.00,
+			ChangePercent:    -99.1234,
+			At:               time.Now(),
+			Exchange:         m.GetExchange(),
+		},
+	}
+	return summaries, nil
 }
