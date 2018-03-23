@@ -9,7 +9,7 @@ import (
 	"github.com/telecoda/teletrada/exchanges"
 )
 
-func setup() *symbolsArchive {
+func setupArchive() *symbolsArchive {
 
 	// TODO drop / create test influx db here...
 
@@ -57,7 +57,7 @@ func TestSavePrice(t *testing.T) {
 	today := time.Now()
 	yesterday := today.AddDate(0, 0, -1)
 
-	archive := setup()
+	archive := setupArchive()
 
 	yesterdaysPrice := Price{
 		Base:  testSymbol,
@@ -146,7 +146,7 @@ func TestUpdatePrices(t *testing.T) {
 
 func TestPricePersistence(t *testing.T) {
 
-	archive := setup()
+	archive := setupArchive()
 
 	mc, err := exchanges.NewMockClient()
 	assert.NoError(t, err)
@@ -172,7 +172,7 @@ func TestMultiCurrencyPrices(t *testing.T) {
 	/* this test is to check we can convert prices to different currencies
 	 */
 
-	archive := setup()
+	archive := setupArchive()
 
 	mc, err := exchanges.NewMockClient()
 	assert.NoError(t, err)
@@ -300,7 +300,7 @@ func TestMultiCurrencyPricesAt(t *testing.T) {
 	/* this test is to check we can convert prices to different currencies
 	 */
 
-	archive := setup()
+	archive := setupArchive()
 
 	mc, err := exchanges.NewMockClient()
 	assert.NoError(t, err)

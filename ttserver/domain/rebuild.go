@@ -33,7 +33,6 @@ func (s *server) Rebuild(ctx context.Context, req *proto.RebuildRequest) (*proto
 	// pull code
 	log.Printf("Pulling latest code...")
 
-	// Untar the new config into the new directory
 	cmd := exec.Command("git", "pull", "origin", "master")
 	cmd.Dir = path
 	if err := cmd.Run(); err != nil {
@@ -45,7 +44,6 @@ func (s *server) Rebuild(ctx context.Context, req *proto.RebuildRequest) (*proto
 
 	// recompile
 	log.Printf("Compiling code...")
-	// Untar the new config into the new directory
 	cmd = exec.Command("go", "install", "github.com/telecoda/teletrada/ttserver")
 	cmd.Dir = path
 	if err := cmd.Run(); err != nil {

@@ -91,12 +91,8 @@ func (s *server) Init() error {
 
 	s.startTime = time.Now().UTC()
 
+	// scheduler will do a price update immediately
 	s.startScheduler()
-
-	// update prices immediately
-	if err := DefaultArchive.UpdatePrices(); err != nil {
-		return fmt.Errorf("Failed to update latest prices: %s", err)
-	}
 
 	if err := s.initPortfolios(); err != nil {
 		return fmt.Errorf("Failed to initialise portfolio: %s", err)

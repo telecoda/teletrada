@@ -17,7 +17,7 @@ func listSimulations(c *grumble.Context) error {
 		req.Id = c.Args[0]
 	}
 
-	r, err := client.GetSimulations(context.Background(), req)
+	r, err := getClient().GetSimulations(context.Background(), req)
 	if err != nil {
 		return fmt.Errorf("could not get simulations: %v\n", err)
 	}

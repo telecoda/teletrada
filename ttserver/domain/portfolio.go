@@ -41,6 +41,15 @@ func (s *server) GetPortfolio(ctx context.Context, req *proto.GetPortfolioReques
 		i++
 	}
 
+	// convert balances to a different symbol if necessary
+	for _, protoBalance := range resp.Balances {
+		if protoBalance.As != req.As {
+			// convert to different if available
+
+			// TODO - stuff goes here..
+		}
+	}
+
 	return resp, nil
 }
 
