@@ -160,7 +160,7 @@ func (b *binanceClient) GetDaySummaries() ([]DaySummary, error) {
 	//errors := make([]error, 0)
 
 	for i, symbol := range info.Symbols {
-		key := symbol.BaseAsset + symbol.Symbol
+		key := symbol.Symbol
 		stats, err := b.client.NewPriceChangeStatsService().Symbol(key).Do(context.Background())
 		if err != nil {
 			// 	errors = append(errors, fmt.Errorf("Failed to get price change info for symbol %s - %s", symbol.BaseAsset, err))
