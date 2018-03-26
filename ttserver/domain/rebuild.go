@@ -44,7 +44,7 @@ func (s *server) Rebuild(ctx context.Context, req *proto.RebuildRequest) (*proto
 
 	// recompile
 	log.Printf("Compiling code...")
-	cmd = exec.Command("go", "install", "github.com/telecoda/teletrada/ttserver")
+	cmd = exec.Command("go", "install", "github.com/telecoda/teletrada/ttserver", "-a")
 	cmd.Dir = path
 	if err := cmd.Run(); err != nil {
 		output, _ := cmd.Output()
