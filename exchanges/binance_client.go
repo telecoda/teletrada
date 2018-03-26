@@ -157,10 +157,13 @@ func (b *binanceClient) GetDaySummaries() ([]DaySummary, error) {
 
 	days := make([]DaySummary, len(info.Symbols))
 
+	errors := make([]error, 0)
+
 	for i, symbol := range info.Symbols {
-		stats, err := b.client.NewPriceChangeStatsService().Symbol(symbol.BaseAsset).Do(context.Background())
+		stats, err := b.client.NewPriceChangeStatsService().Symbol(symbol.BaseAsset + symbol.Symbol).Do(context.Background())
 		if err != nil {
-			return nil, fmt.Errorf("Failed to get price change info for symbol %s - %s", symbol.BaseAsset, err)
+			errors = append(errors, fmt.Errorf("Failed to get price change info for symbol %s - %s", symbol.BaseAsset, err))
+			continue
 		}
 
 		days[i] = DaySummary{
@@ -212,6 +215,15 @@ func (b *binanceClient) GetDaySummaries() ([]DaySummary, error) {
 
 		days[i].At = time.Unix(stats.CloseTime, 0)
 		days[i].Exchange = b.GetExchange()
+	}
+
+	// concat all error into one
+	if len(errors) > 0 {
+		errString := ""
+		for i, err := range errors {
+			errString += fmt.Sprintf("ERROR: (%d) - %s\n", i, err.Error())
+		}
+		return days, fmt.Errorf(errString)
 	}
 
 	return days, nil
