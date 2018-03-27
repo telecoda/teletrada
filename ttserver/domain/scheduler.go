@@ -71,8 +71,6 @@ func (s *server) stopScheduler() {
 // scheduledUpdate - runs every x seconds
 func (s *server) scheduledUpdate() {
 
-	s.log("started Scheduled Update")
-
 	// Update latest prices
 	if err := DefaultArchive.UpdatePrices(); err != nil {
 		// log error
@@ -92,8 +90,6 @@ func (s *server) scheduledUpdate() {
 		s.log(fmt.Sprintf("ERROR: saving portfolios - %s", err))
 		return
 	}
-
-	s.log("ended Scheduled Update")
 
 }
 
