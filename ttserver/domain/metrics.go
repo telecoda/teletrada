@@ -97,7 +97,12 @@ func (m *metricsClient) SavePriceMetrics(prices []Price) error {
 		}
 	}
 	// Write the batch
-	return m.Write(bp)
+	if err := m.Write(bp); err != nil {
+		log.Printf("error sending metrics %s", err)
+		return err
+	}
+
+	return nil
 }
 
 func (m *metricsClient) SavePortfolioMetrics(p *portfolio) error {
@@ -148,10 +153,11 @@ func (m *metricsClient) SavePortfolioMetrics(p *portfolio) error {
 			// only add fields with points
 			pt, err := client.NewPoint("portfolio_balance", tags, fields, balance.At)
 			if err != nil {
-				fmt.Println("Error: ", err.Error())
+				log.Printf("Error: %s", err.Error())
+			} else {
+				bp.AddPoint(pt)
 			}
 
-			bp.AddPoint(pt)
 		}
 	}
 	// Write the batch

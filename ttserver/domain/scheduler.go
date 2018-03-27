@@ -8,6 +8,11 @@ import (
 
 func (s *server) startScheduler() {
 
+	// fetch end of day prices NOW
+	log.Printf("Initialising prices at server start")
+	s.dailyUpdate()
+	log.Printf("Initialisation complete")
+
 	// this update runs every x seconds
 	go func(frequency time.Duration) {
 		updateTicker := time.NewTicker(frequency)
@@ -24,9 +29,6 @@ func (s *server) startScheduler() {
 		}
 	}(s.config.UpdateFreq)
 
-	// fetch end of day prices NOW
-	s.dailyUpdate()
-
 	// fetch end of day prices at end of day every 24 hours
 	go func() {
 		now := time.Now()
@@ -38,7 +40,7 @@ func (s *server) startScheduler() {
 
 		<-timer.C
 
-		// first update
+		// update at end of first day
 		s.dailyUpdate()
 
 		frequency := time.Duration(24 * time.Hour)
@@ -52,6 +54,7 @@ func (s *server) startScheduler() {
 				log.Printf("Scheduled price update stopping.")
 				return
 			case <-updateTicker.C:
+				// update every 24 hours
 				s.dailyUpdate()
 			}
 		}
@@ -67,6 +70,8 @@ func (s *server) stopScheduler() {
 
 // scheduledUpdate - runs every x seconds
 func (s *server) scheduledUpdate() {
+
+	s.log("started Scheduled Update")
 
 	// Update latest prices
 	if err := DefaultArchive.UpdatePrices(); err != nil {
@@ -88,11 +93,13 @@ func (s *server) scheduledUpdate() {
 		return
 	}
 
+	s.log("ended Scheduled Update")
+
 }
 
 // dailyUpdate - runs daily
 func (s *server) dailyUpdate() {
-	s.log("Daily update running")
+	s.log("started Daily update")
 	if err := DefaultArchive.UpdatePrices(); err != nil {
 		// log error
 		s.log(fmt.Sprintf("ERROR: updating prices - %s", err))
@@ -101,5 +108,6 @@ func (s *server) dailyUpdate() {
 	if err := DefaultArchive.UpdateDaySummaries(); err != nil {
 		s.log(fmt.Sprintf("ERROR: updating closing prices - %s", err))
 	}
+	s.log("ended Daily update")
 
 }

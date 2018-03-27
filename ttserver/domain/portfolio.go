@@ -132,7 +132,9 @@ func (s *server) saveMetrics() error {
 
 // refreshCoinBalances - fetch latest coin balances from exchange
 func (p *portfolio) refreshCoinBalances() error {
-	fmt.Printf("Refreshing balances\n")
+	if p == nil {
+		return fmt.Errorf("No portfolio to refresh\n")
+	}
 	p.Lock()
 	defer p.Unlock()
 

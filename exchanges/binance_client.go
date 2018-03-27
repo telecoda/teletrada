@@ -87,9 +87,13 @@ func (b *binanceClient) GetLatestPrices() ([]Price, error) {
 		return nil, err
 	}
 
-	prices := make([]Price, len(res))
+	prices := make([]Price, 0)
 	// convert results to prices
-	for i, binancePrice := range res {
+	for _, binancePrice := range res {
+		if binancePrice.Symbol == "123456" {
+			continue
+		}
+
 		symbolPrice, err := strconv.ParseFloat(binancePrice.Price, 64)
 		if err != nil {
 			return nil, fmt.Errorf("Failed to parse symbol price: %s - %s. %s", binancePrice.Symbol, err, binancePrice.Price)
@@ -121,18 +125,13 @@ func (b *binanceClient) GetLatestPrices() ([]Price, error) {
 			price.As = USDT
 		}
 
-		if binancePrice.Symbol == "123456" {
-			price.As = "123456"
-			price.Base = "123456"
-		} else {
-			// only use price
-			if price.As == "" {
-				return nil, fmt.Errorf("Unexpected symbol type %s - %#v", binancePrice.Symbol, binancePrice)
-			}
-			price.Base = strings.Replace(binancePrice.Symbol, string(price.As), "", 1)
-
+		// only use price
+		if price.As == "" {
+			return nil, fmt.Errorf("Unexpected symbol type %s - %#v", binancePrice.Symbol, binancePrice)
 		}
-		prices[i] = price
+		price.Base = strings.Replace(binancePrice.Symbol, string(price.As), "", 1)
+
+		prices = append(prices, price)
 
 	}
 
@@ -157,14 +156,10 @@ func (b *binanceClient) GetDaySummaries() ([]DaySummary, error) {
 
 	days := make([]DaySummary, len(info.Symbols))
 
-	//errors := make([]error, 0)
-
 	for i, symbol := range info.Symbols {
 		key := symbol.Symbol
 		stats, err := b.client.NewPriceChangeStatsService().Symbol(key).Do(context.Background())
 		if err != nil {
-			// 	errors = append(errors, fmt.Errorf("Failed to get price change info for symbol %s - %s", symbol.BaseAsset, err))
-			// 	continue
 			return nil, fmt.Errorf("Failed to get price change info for symbol %s - %s", key, err)
 		}
 
@@ -218,62 +213,5 @@ func (b *binanceClient) GetDaySummaries() ([]DaySummary, error) {
 		days[i].At = time.Unix(stats.CloseTime, 0)
 		days[i].Exchange = b.GetExchange()
 	}
-
-	// // concat all error into one
-	// if len(errors) > 0 {
-	// 	errString := ""
-	// 	for i, err := range errors {
-	// 		errString += fmt.Sprintf("ERROR: (%d) - %s\n", i, err.Error())
-	// 	}
-	// 	return days, fmt.Errorf(errString)
-	// }
-
 	return days, nil
 }
-
-// func (b *binanceClient) GetPriceChange24(base, as string) (PriceChange24, error) {
-
-// 	tp := base + as
-
-// 	res, err := b.client.NewPriceChangeStatsService().Symbol(tp).Do(context.Background())
-// 	if err != nil {
-// 		return PriceChange24{}, err
-// 	}
-
-// 	priceChange := PriceChange24{
-// 		Price: Price{
-// 			Base:     base,
-// 			As:       as,
-// 			At:       time.Unix(0, res.CloseTime*1000000),
-// 			Exchange: BINANCE_EXCHANGE,
-// 		},
-// 		OpenTime:  time.Unix(0, res.OpenTime*1000000),
-// 		CloseTime: time.Unix(0, res.CloseTime*1000000),
-// 	}
-
-// 	lastPrice, err := strconv.ParseFloat(res.LastPrice, 64)
-// 	if err != nil {
-// 		return PriceChange24{}, fmt.Errorf("Failed to parse last price: %s - %s. %s", tp, err, res.LastPrice)
-// 	}
-// 	priceChange.Price.Price = lastPrice
-
-// 	openPrice, err := strconv.ParseFloat(res.OpenPrice, 64)
-// 	if err != nil {
-// 		return PriceChange24{}, fmt.Errorf("Failed to parse open price: %s - %s. %s", tp, err, res.OpenPrice)
-// 	}
-// 	priceChange.OpenPrice = openPrice
-
-// 	changeAmount, err := strconv.ParseFloat(res.PriceChange, 64)
-// 	if err != nil {
-// 		return PriceChange24{}, fmt.Errorf("Failed to parse price change: %s - %s. %s", tp, err, res.PriceChange)
-// 	}
-// 	priceChange.ChangeAmount = changeAmount
-
-// 	changePercent, err := strconv.ParseFloat(res.PriceChangePercent, 64)
-// 	if err != nil {
-// 		return PriceChange24{}, fmt.Errorf("Failed to parse price change percent: %s - %s. %s", tp, err, res.PriceChange)
-// 	}
-// 	priceChange.ChangePercent = changePercent
-
-// 	return priceChange, nil
-// }

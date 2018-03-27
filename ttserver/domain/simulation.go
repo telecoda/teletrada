@@ -53,6 +53,10 @@ func (s *server) NewSimulation(simName string) (*simulation, error) {
 		portfolio: clonedPort,
 	}
 
+	if sim.balances == nil {
+		return nil, fmt.Errorf("Cannot create simulation %s as live portfolio has no balances", simName)
+	}
+
 	symbol := SymbolType("ETH")
 	as := SymbolType("BTC")
 	sellStrat, err := NewPriceAboveStrategy("sell-eth", symbol, as, 0.0545, 100.00)

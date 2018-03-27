@@ -82,7 +82,7 @@ func printBalances(balances []*proto.Balance) error {
 	}
 
 	// Print total
-	writeRow(tw, formatColRow(total.Symbol, total.As, "", "", "", priceField(total.Value), priceField(total.Value24H), "", priceField(total.Change24H), priceField(total.ChangePct24H), ""))
+	writeRow(tw, formatColRow(total.Symbol, total.As, "", "", "", priceField(total.Value), priceField(total.Value24H), "", priceField(total.Change24H), percentField(total.ChangePct24H), ""))
 
 	tw.Flush()
 	fmt.Printf("%s", buf.String())

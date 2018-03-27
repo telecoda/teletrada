@@ -2,6 +2,7 @@ package domain
 
 import (
 	"fmt"
+	"log"
 	"sync"
 	"time"
 
@@ -95,12 +96,14 @@ func (s *server) Init() error {
 	s.startScheduler()
 
 	if err := s.initPortfolios(); err != nil {
-		return fmt.Errorf("Failed to initialise portfolio: %s", err)
+		log.Printf("Failed to initialise portfolio: %s\n", err)
+		s.log(fmt.Sprintf("Failed to initialise portfolio: %s", err))
 	}
 
 	// TEMP code create simulation
 	if _, err := s.NewSimulation("test-sim"); err != nil {
-		return fmt.Errorf("Failed to create simulation: %s", err)
+		log.Printf("Failed to create simulation: %s\n", err)
+		s.log(fmt.Sprintf("Failed to create simulation: %s", err))
 	}
 
 	return nil

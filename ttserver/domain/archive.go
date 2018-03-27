@@ -272,11 +272,11 @@ func (sa *symbolsArchive) UpdateDaySummaries() error {
 	if err != nil {
 		return err
 	}
-
 	for _, exSummary := range summaries {
 		symbol, err := sa.GetSymbol(SymbolType(exSummary.Base))
 		if err != nil {
-			return fmt.Errorf("ERROR: [UpdateDaySummaries] failed getting symbol %s - %s", exSummary.Base, err)
+			log.Printf("ERROR: [UpdateDaySummaries] failed getting symbol %s - %s", exSummary.Base, err)
+			continue
 		}
 
 		summary := DaySummary{
