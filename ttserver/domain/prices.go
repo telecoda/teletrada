@@ -100,6 +100,8 @@ func (s *server) GetPrices(ctx context.Context, req *proto.GetPricesRequest) (*p
 			if pp.ChangeToday != 0 {
 				pp.ChangePctToday = (pp.ChangeToday / pp.Closing) * 100.00
 			}
+		} else {
+			fmt.Printf("Failed to get day summary %s as %s - %s\n", symbolType, req.As, err)
 		}
 
 		resp.Prices[i] = pp

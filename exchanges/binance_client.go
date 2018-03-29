@@ -156,6 +156,8 @@ func (b *binanceClient) GetDaySummaries() ([]DaySummary, error) {
 
 	days := make([]DaySummary, len(info.Symbols))
 
+	fmt.Printf("Exchange currently supports %d different symbols\n", len(info.Symbols))
+
 	for i, symbol := range info.Symbols {
 		key := symbol.Symbol
 		stats, err := b.client.NewPriceChangeStatsService().Symbol(key).Do(context.Background())
@@ -163,9 +165,32 @@ func (b *binanceClient) GetDaySummaries() ([]DaySummary, error) {
 			return nil, fmt.Errorf("Failed to get price change info for symbol %s - %s", key, err)
 		}
 
+		var as string
+		if strings.HasSuffix(symbol.Symbol, BTC) {
+			// Bitcoin price
+			as = BTC
+		} else if strings.HasSuffix(symbol.Symbol, BNB) {
+			// Binance coin price
+			as = BNB
+		} else if strings.HasSuffix(symbol.Symbol, ETH) {
+			// Ether price
+			as = ETH
+		} else if strings.HasSuffix(symbol.Symbol, LTC) {
+			// Litecoin price
+			as = LTC
+		} else if strings.HasSuffix(symbol.Symbol, USDT) {
+			// US Dollar price
+			as = USDT
+		}
+
+		if as == "" {
+			fmt.Printf("Unexpected symbol type %s - %#v", symbol.Symbol, symbol)
+			continue
+		}
+
 		days[i] = DaySummary{
 			Base: symbol.BaseAsset,
-			As:   symbol.Symbol,
+			As:   as,
 		}
 
 		openPrice, err := strconv.ParseFloat(stats.OpenPrice, 64)

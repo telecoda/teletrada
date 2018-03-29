@@ -272,6 +272,7 @@ func (sa *symbolsArchive) UpdateDaySummaries() error {
 	if err != nil {
 		return err
 	}
+	fmt.Printf("Starting update daily summaries %d\n", len(summaries))
 	for _, exSummary := range summaries {
 		symbol, err := sa.GetSymbol(SymbolType(exSummary.Base))
 		if err != nil {

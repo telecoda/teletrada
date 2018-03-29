@@ -69,6 +69,10 @@ func (s *server) NewSimulation(simName string) (*simulation, error) {
 		return nil, err
 	}
 
+	if _, ok := sim.balances[symbol]; !ok {
+		return nil, fmt.Errorf("Cannot create simulation as is does not have a balance for %s", symbol)
+	}
+
 	sim.balances[symbol].SellStrategy = sellStrat
 	sim.balances[symbol].SellStrategy = buyStrat
 
