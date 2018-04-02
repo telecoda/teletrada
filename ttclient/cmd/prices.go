@@ -3,6 +3,7 @@ package cmd
 import (
 	"bytes"
 	"fmt"
+	"sort"
 	"strings"
 	"text/tabwriter"
 
@@ -55,6 +56,9 @@ func listPrices(c *grumble.Context) error {
 	// Header
 	header := []string{"sym", "as", "at", "current", "today chg", "today pct", "24h chg", "24h pct", "open", "close", "highest", "lowest", ""}
 	writeHeading(tw, header)
+
+	// sort prices by 24 hour percentage
+	sort.Slice(resp.Prices, func(i, j int) bool { return resp.Prices[i].ChangePct24H < resp.Prices[j].ChangePct24H })
 
 	for _, price := range resp.Prices {
 		at, err := tspb.Timestamp(price.At)

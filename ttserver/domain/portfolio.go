@@ -151,12 +151,14 @@ func (p *portfolio) refreshCoinBalances() error {
 		symbol := SymbolType(coinBalance.Symbol)
 		if balance, ok := p.balances[symbol]; ok {
 			balance.CoinBalance = coinBalance
+			balance.Total = coinBalance.Free + coinBalance.Locked
 		} else {
 			// new balance
 			newBalance := &BalanceAs{
 				CoinBalance: coinBalance,
 				As:          DEFAULT_SYMBOL,
 				At:          time.Now(),
+				Total:       coinBalance.Free + coinBalance.Locked,
 			}
 			p.balances[symbol] = newBalance
 		}
