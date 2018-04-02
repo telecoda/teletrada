@@ -41,6 +41,9 @@ func (s *server) GetPortfolio(ctx context.Context, req *proto.GetPortfolioReques
 		i++
 	}
 
+	// All balances returned in BTC
+	// Calc conversion rate BTC -> as currency
+
 	// convert balances to a different symbol if necessary
 	for _, protoBalance := range resp.Balances {
 		if protoBalance.As != req.As {
@@ -85,18 +88,23 @@ func (s *server) initPortfolios() error {
 	}
 
 	s.simulations = make(map[string]*simulation, 0)
+	s.log("Initialised portfolios")
 	return nil
 }
 
 // updatePortfolios - fetches latest balances and reprices
 func (s *server) updatePortfolios() error {
+	s.log("Updating portfolios")
 	if err := s.livePortfolio.refreshCoinBalances(); err != nil {
 		return err
 	}
 
+	s.log("Coin balances refreshed")
+
 	if err := s.livePortfolio.repriceBalances(); err != nil {
 		return err
 	}
+	s.log("Coin balances reprices")
 
 	for _, simulation := range s.simulations {
 		if simulation.useRealtimeData {
@@ -105,6 +113,7 @@ func (s *server) updatePortfolios() error {
 			}
 		}
 	}
+	s.log("Simulations repriced")
 
 	return nil
 }
