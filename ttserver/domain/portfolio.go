@@ -121,9 +121,7 @@ func (s *server) updatePortfolios() error {
 // updateMetrics - sends metrics about portfolios to Influx
 func (s *server) saveMetrics() error {
 
-	s.RLock()
-	defer s.RUnlock()
-
+	s.log("Save portfolio metrics")
 	// live metrics
 	if err := DefaultMetrics.SavePortfolioMetrics(s.livePortfolio); err != nil {
 		return err
