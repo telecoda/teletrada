@@ -75,20 +75,17 @@ func (s *server) scheduledUpdate() {
 	if err := DefaultArchive.UpdatePrices(); err != nil {
 		// log error
 		s.log(fmt.Sprintf("ERROR: updating prices - %s", err))
-		return
 	}
 
 	// update portfolios
 	if err := s.updatePortfolios(); err != nil {
 		// log error
 		s.log(fmt.Sprintf("ERROR: updating portfolios - %s", err))
-		return
 	}
 
 	if err := s.saveMetrics(); err != nil {
 		// log error
 		s.log(fmt.Sprintf("ERROR: saving portfolios - %s", err))
-		return
 	}
 
 }
