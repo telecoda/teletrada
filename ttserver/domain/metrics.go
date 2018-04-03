@@ -134,7 +134,7 @@ func (m *metricsClient) SavePortfolioMetrics(p *portfolio) error {
 
 		for _, toSym := range toSymbols {
 			if symPrice, err := DefaultArchive.GetLatestPriceAs(SymbolType(balance.Symbol), toSym); err != nil {
-				log.Printf("No %s price for %s symbol - %s", toSym, balance.Symbol, err)
+				log.Printf("Error saving portfolio metrics: No %s price for %s symbol - %s", toSym, balance.Symbol, err)
 			} else {
 				fields[fmt.Sprintf("price.%s", toSym)] = symPrice.Price
 				// calc current value = total * price

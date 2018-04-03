@@ -159,6 +159,7 @@ func (p *portfolio) refreshCoinBalances() error {
 		if balance, ok := p.balances[symbol]; ok {
 			balance.CoinBalance = coinBalance
 			balance.Total = coinBalance.Free + coinBalance.Locked
+			balance.At = time.Now()
 		} else {
 			// new balance
 			newBalance := &BalanceAs{
