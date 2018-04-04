@@ -94,17 +94,13 @@ func (s *server) initPortfolios() error {
 
 // updatePortfolios - fetches latest balances and reprices
 func (s *server) updatePortfolios() error {
-	s.log("Updating portfolios")
 	if err := s.livePortfolio.refreshCoinBalances(); err != nil {
 		return err
 	}
 
-	s.log("Coin balances refreshed")
-
 	if err := s.livePortfolio.repriceBalances(); err != nil {
 		return err
 	}
-	s.log("Coin balances reprices")
 
 	for _, simulation := range s.simulations {
 		if simulation.useRealtimeData {
@@ -113,7 +109,6 @@ func (s *server) updatePortfolios() error {
 			}
 		}
 	}
-	s.log("Simulations repriced")
 
 	return nil
 }
