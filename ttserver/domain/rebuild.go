@@ -3,7 +3,6 @@ package domain
 import (
 	"context"
 	"fmt"
-	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -17,7 +16,7 @@ func (s *server) Rebuild(ctx context.Context, req *proto.RebuildRequest) (*proto
 
 	resp := &proto.RebuildResponse{}
 
-	log.Printf("Rebuilding ttserver")
+	s.log("Rebuilding ttserver")
 	// change dir
 	goPath := os.Getenv("GOPATH")
 	if goPath == "" {
@@ -31,23 +30,23 @@ func (s *server) Rebuild(ctx context.Context, req *proto.RebuildRequest) (*proto
 	}
 
 	// pull code
-	log.Printf("Pulling latest code...")
+	s.log("Pulling latest code...")
 
 	cmd := exec.Command("git", "pull", "origin", "master")
 	cmd.Dir = path
+	output, _ := cmd.CombinedOutput()
 	if err := cmd.Run(); err != nil {
-		output, _ := cmd.Output()
+		s.log(fmt.Sprintf("Failed fetch latest code %s - %s", err, string(output)))
 		return nil, fmt.Errorf("Failed fetch latest code %s - %s", err, string(output))
 	}
-	output, _ := cmd.Output()
 	s.log(fmt.Sprintf("Fetched latest code... %s", string(output)))
 
 	// recompile
 	s.log("Compiling code...")
-	cmd = exec.Command("go", "install", "github.com/telecoda/teletrada/ttserver", "-a")
+	cmd = exec.Command("go", "install", "-a", "github.com/telecoda/teletrada/ttserver")
 	cmd.Dir = path
+	output, _ = cmd.CombinedOutput()
 	if err := cmd.Run(); err != nil {
-		output, _ := cmd.Output()
 		s.log(fmt.Sprintf("Failed compile latest code %s - %s", err, string(output)))
 		return nil, fmt.Errorf("Failed compile latest code %s - %s", err, string(output))
 	}
