@@ -2,7 +2,6 @@ package domain
 
 import (
 	"fmt"
-	"log"
 	"sync"
 	"time"
 
@@ -96,14 +95,45 @@ func (s *server) Init() error {
 	s.startScheduler()
 
 	if err := s.initPortfolios(); err != nil {
-		log.Printf("Failed to initialise portfolio: %s\n", err)
 		s.log(fmt.Sprintf("Failed to initialise portfolio: %s", err))
 	}
 
 	// TEMP code create simulation
-	if _, err := s.NewSimulation("test-sim"); err != nil {
-		log.Printf("Failed to create simulation: %s\n", err)
-		s.log(fmt.Sprintf("Failed to create simulation: %s", err))
+
+	// clone live portfolio for sim
+	if clonedPort, err := s.livePortfolio.clone(); err != nil {
+		s.log(fmt.Sprintf("Failed to clone live portfolio: %s", err))
+		return nil
+	} else {
+
+		testSim, err := s.NewSimulation("test-sim", clonedPort)
+		if err != nil {
+			s.log(fmt.Sprintf("Failed to create simulation: %s", err))
+			return nil
+		}
+
+		// Set Buy/Sell strategies on some symbols
+		ethBuy, err := NewPriceAboveStrategy("buy-eth", SymbolType("ETH"), SymbolType("USDT"), 20.00, 100.0)
+		if err != nil {
+			s.log(fmt.Sprintf("Failed to create buy strategy: %s", err))
+			return nil
+		}
+		ethSell, err := NewPriceBelowStrategy("sell-eth", SymbolType("ETH"), SymbolType("USDT"), 10.00, 100.0)
+		if err != nil {
+			s.log(fmt.Sprintf("Failed to create sell strategy: %s", err))
+			return nil
+		}
+
+		if err := testSim.setBuyStrategy(ethBuy); err != nil {
+			s.log(fmt.Sprintf("Failed to set buy strategy: %s", err))
+			return nil
+		}
+
+		if err := testSim.setSellStrategy(ethSell); err != nil {
+			s.log(fmt.Sprintf("Failed to set buy strategy: %s", err))
+			return nil
+		}
+
 	}
 
 	return nil

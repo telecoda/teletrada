@@ -46,4 +46,13 @@ func init() {
 		Help:    "list simulations",
 		Run:     listSimulations,
 	})
+
+	// list strategies
+	listCommand.AddCommand(&grumble.Command{
+		Name:    "strategies",
+		Aliases: []string{"st"},
+		Help:    "list strategies",
+		Run:     listStrategies,
+	})
+
 }

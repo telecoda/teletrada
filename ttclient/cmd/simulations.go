@@ -25,7 +25,7 @@ func listSimulations(c *grumble.Context) error {
 	for _, simulation := range r.Simulations {
 		if simulation.Portfolio != nil {
 			// Print simulation header details
-			printHeading(fmt.Sprintf("Name: %s", simulation.Portfolio.Name))
+			printHeading(fmt.Sprintf("Name: %s", simulation.Name))
 
 			printBalances(simulation.Portfolio.Balances)
 		}

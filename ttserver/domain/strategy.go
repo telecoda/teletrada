@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"sync"
 	"time"
-
-	"github.com/telecoda/teletrada/proto"
 )
 
 type Strategy interface {
@@ -18,7 +16,6 @@ type Strategy interface {
 	Start()
 	Stop()
 	IsRunning() bool
-	toProto() (*proto.Strategy, error)
 }
 
 /*
@@ -175,7 +172,7 @@ func NewPriceAboveStrategy(id string, symbol, as SymbolType, abovePrice, coinPer
 
 // Description - returns a description of the strategy
 func (p *priceAboveStrategy) Description() string {
-	return fmt.Sprintf("Price Above Strategy\nTriggered when %s price above %f %s - %f percent of coins committed\n", p.symbol, p.abovePrice, p.as, p.coinPercent)
+	return fmt.Sprintf("Price Above Strategy\nTriggered when %s price above %f %s - %3.2f%% of coins committed\n", p.symbol, p.abovePrice, p.as, p.coinPercent)
 }
 
 // ConditionMet - triggers when price is above
@@ -224,7 +221,7 @@ func NewPriceBelowStrategy(id string, symbol, as SymbolType, belowPrice, coinPer
 
 // Description - returns a description of the strategy
 func (p *priceBelowStrategy) Description() string {
-	return fmt.Sprintf("Price Below Strategy\nTriggered when %s price below %f %s - %f percent of coins committed\n", p.symbol, p.belowPrice, p.as, p.coinPercent)
+	return fmt.Sprintf("Price Below Strategy\nTriggered when %s price below %f %s - %3.2f%% of coins committed\n", p.symbol, p.belowPrice, p.as, p.coinPercent)
 }
 
 // ConditionMet - triggers when price is above

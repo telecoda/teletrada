@@ -31,13 +31,13 @@ func (b *BalanceAs) toProto() (*proto.Balance, error) {
 	}
 
 	if b.BuyStrategy != nil {
-		if pb.BuyStrategy, err = b.BuyStrategy.toProto(); err != nil {
+		if pb.BuyStrategy, err = strategyToProto(b.BuyStrategy); err != nil {
 			return nil, err
 		}
 	}
 
 	if b.SellStrategy != nil {
-		if pb.SellStrategy, err = b.SellStrategy.toProto(); err != nil {
+		if pb.SellStrategy, err = strategyToProto(b.SellStrategy); err != nil {
 			return nil, err
 		}
 	}
@@ -94,7 +94,8 @@ func (p *Price) toProto() (*proto.Price, error) {
 
 func (s *simulation) toProto() (*proto.Simulation, error) {
 	ps := &proto.Simulation{
-		UseHistoricalData: s.useHistoricData,
+		Name:              s.name,
+		UseHistoricalData: s.useHistoricalData,
 		DataFrequency:     int32(s.dataFrequency.Seconds()),
 		UseRealtimeData:   s.useRealtimeData,
 	}
@@ -124,14 +125,26 @@ func (s *simulation) toProto() (*proto.Simulation, error) {
 	return ps, nil
 }
 
-func (b *baseStrategy) toProto() (*proto.Strategy, error) {
+// func (b *baseStrategy) toProto() (*proto.Strategy, error) {
+// 	ps := &proto.Strategy{
+// 		Id:          b.ID(),
+// 		Description: b.Description(),
+// 		CoinPercent: float32(b.CoinPercent()),
+// 		Symbol:      string(b.Symbol()),
+// 		As:          string(b.As()),
+// 		IsRunning:   b.IsRunning(),
+// 	}
+// 	return ps, nil
+// }
+
+func strategyToProto(s Strategy) (*proto.Strategy, error) {
 	ps := &proto.Strategy{
-		Id:          b.ID(),
-		Description: b.Description(),
-		CoinPercent: float32(b.CoinPercent()),
-		Symbol:      string(b.Symbol()),
-		As:          string(b.As()),
-		IsRunning:   b.IsRunning(),
+		Id:          s.ID(),
+		Description: s.Description(),
+		CoinPercent: float32(s.CoinPercent()),
+		Symbol:      string(s.Symbol()),
+		As:          string(s.As()),
+		IsRunning:   s.IsRunning(),
 	}
 	return ps, nil
 }

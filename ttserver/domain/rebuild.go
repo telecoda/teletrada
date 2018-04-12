@@ -40,14 +40,15 @@ func (s *server) Rebuild(ctx context.Context, req *proto.RebuildRequest) (*proto
 		return nil, fmt.Errorf("Failed fetch latest code %s - %s", err, string(output))
 	}
 	output, _ := cmd.Output()
-	log.Printf("Fetched latest code... %s", string(output))
+	s.log(fmt.Sprintf("Fetched latest code... %s", string(output)))
 
 	// recompile
-	log.Printf("Compiling code...")
+	s.log("Compiling code...")
 	cmd = exec.Command("go", "install", "github.com/telecoda/teletrada/ttserver", "-a")
 	cmd.Dir = path
 	if err := cmd.Run(); err != nil {
 		output, _ := cmd.Output()
+		s.log(fmt.Sprintf("Failed compile latest code %s - %s", err, string(output)))
 		return nil, fmt.Errorf("Failed compile latest code %s - %s", err, string(output))
 	}
 

@@ -211,10 +211,10 @@ func (b *BalanceAs) reprice() error {
 }
 
 // clone - creates a clone of portfolio for simulations
-func (p *portfolio) clone(newName string) (*portfolio, error) {
+func (p *portfolio) clone() (*portfolio, error) {
 
 	c := &portfolio{
-		name:     newName,
+		name:     p.name + "[cloned]",
 		isLive:   false, // clones are never live
 		balances: make(map[SymbolType]*BalanceAs, 0),
 	}

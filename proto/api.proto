@@ -128,12 +128,13 @@ message RebuildResponse {
 }
 
 message Simulation {
-  bool useHistoricalData = 1;
-  google.protobuf.Timestamp fromTime = 2;
-  google.protobuf.Timestamp toTime = 3;
-  int32 dataFrequency = 4; // in seconds
-  bool useRealtimeData = 5;
-  Portfolio portfolio = 6;
+  string name = 1;
+  bool useHistoricalData = 2;
+  google.protobuf.Timestamp fromTime = 3;
+  google.protobuf.Timestamp toTime = 4;
+  int32 dataFrequency = 5; // in seconds
+  bool useRealtimeData = 6;
+  Portfolio portfolio = 7;
 }
 
 

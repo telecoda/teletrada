@@ -200,11 +200,12 @@ func TestMarshalSimulation(t *testing.T) {
 	}{
 		{
 			simulation: &simulation{
-				useHistoricData: true,
-				dataFrequency:   time.Duration(1 * time.Minute),
-				useRealtimeData: true,
-				simFromTime:     &from,
-				simToTime:       &to,
+				name:              "sim-name",
+				useHistoricalData: true,
+				dataFrequency:     time.Duration(1 * time.Minute),
+				useRealtimeData:   true,
+				simFromTime:       &from,
+				simToTime:         &to,
 				portfolio: &portfolio{
 					name:   "portfolio-name",
 					isLive: true,
@@ -229,6 +230,7 @@ func TestMarshalSimulation(t *testing.T) {
 				},
 			},
 			expProto: &proto.Simulation{
+				Name:              "sim-name",
 				UseHistoricalData: true,
 				DataFrequency:     60,
 				UseRealtimeData:   true,
@@ -290,7 +292,7 @@ func TestMarshalStrategy(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		s, err := test.strategy.toProto()
+		s, err := strategyToProto(test.strategy)
 		assert.NoError(t, err)
 		assert.Equal(t, test.expProto, s)
 	}

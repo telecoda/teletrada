@@ -56,11 +56,11 @@ func TestClone(t *testing.T) {
 	originalPortfolio.balances["symbol1"] = balance1
 	originalPortfolio.balances["symbol2"] = balance2
 
-	clonedPortfolio, err := originalPortfolio.clone("Cloned portfolio")
+	clonedPortfolio, err := originalPortfolio.clone()
 	assert.NoError(t, err)
 
 	assert.Equal(t, len(originalPortfolio.balances), len(clonedPortfolio.balances))
-	assert.Equal(t, "Cloned portfolio", clonedPortfolio.name)
+	assert.Equal(t, "Live[cloned]", clonedPortfolio.name)
 	assert.False(t, clonedPortfolio.isLive)
 
 	for symbol, balance := range originalPortfolio.balances {
