@@ -10,6 +10,7 @@ import (
 
 var symbolTypes map[string][]string
 var symbols []string
+var simIds []string
 
 func initSymbolTypes() {
 	resp, err := getClient().GetSymbolTypes(context.Background(), &proto.GetSymbolTypesRequest{})
@@ -63,4 +64,27 @@ func symbolCompleter(prefix string, args []string) []string {
 		return as
 	}
 	return []string{}
+}
+
+func initSimIds() {
+	resp, err := getClient().GetSimulations(context.Background(), &proto.GetSimulationsRequest{})
+	if err != nil {
+		return
+	}
+
+	// save simulation id's
+	simIds = make([]string, len(resp.Simulations))
+	for i, simulation := range resp.Simulations {
+		simIds[i] = simulation.Id
+	}
+	sort.Strings(simIds)
+}
+
+func simIdCompleter(prefix string, args []string) []string {
+
+	if len(simIds) == 0 {
+		initSimIds()
+	}
+
+	return simIds
 }

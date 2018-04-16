@@ -34,7 +34,7 @@ func (s *server) Rebuild(ctx context.Context, req *proto.RebuildRequest) (*proto
 
 	cmd := exec.Command("git", "pull", "origin", "master")
 	cmd.Dir = path
-	output, _ := cmd.CombinedOutput()
+	output, _ := cmd.Output()
 	if err := cmd.Run(); err != nil {
 		s.log(fmt.Sprintf("Failed fetch latest code %s - %s", err, string(output)))
 		return nil, fmt.Errorf("Failed fetch latest code %s - %s", err, string(output))
@@ -45,7 +45,7 @@ func (s *server) Rebuild(ctx context.Context, req *proto.RebuildRequest) (*proto
 	s.log("Compiling code...")
 	cmd = exec.Command("go", "install", "-a", "github.com/telecoda/teletrada/ttserver")
 	cmd.Dir = path
-	output, _ = cmd.CombinedOutput()
+	output, _ = cmd.Output()
 	if err := cmd.Run(); err != nil {
 		s.log(fmt.Sprintf("Failed compile latest code %s - %s", err, string(output)))
 		return nil, fmt.Errorf("Failed compile latest code %s - %s", err, string(output))

@@ -6,6 +6,8 @@ import (
 	"strings"
 
 	"github.com/fatih/color"
+	tspb "github.com/golang/protobuf/ptypes"
+	google_protobuf "github.com/golang/protobuf/ptypes/timestamp"
 )
 
 type Color string
@@ -165,4 +167,15 @@ func writeRow(writer io.Writer, line []string) {
 
 func printErr(err error) string {
 	return printColStr(BrightRedBackground+BrightWhiteText, "ERROR: "+err.Error())
+}
+
+func formatProtoTimestamp(ts *google_protobuf.Timestamp) string {
+	if ts == nil {
+		return ""
+	}
+	if tt, err := tspb.Timestamp(ts); err != nil {
+		return fmt.Sprintf("Invalid timestamp: %s", err)
+	} else {
+		return tt.Format(DATE_FORMAT)
+	}
 }

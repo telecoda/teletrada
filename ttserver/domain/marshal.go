@@ -94,10 +94,28 @@ func (p *Price) toProto() (*proto.Price, error) {
 
 func (s *simulation) toProto() (*proto.Simulation, error) {
 	ps := &proto.Simulation{
+		Id:                s.id,
 		Name:              s.name,
+		IsRunning:         s.isRunning,
 		UseHistoricalData: s.useHistoricalData,
 		DataFrequency:     int32(s.dataFrequency.Seconds()),
 		UseRealtimeData:   s.useRealtimeData,
+	}
+
+	if s.startedTime != nil {
+		startedTime, err := tspb.TimestampProto(*s.startedTime)
+		if err != nil {
+			return nil, err
+		}
+		ps.StartedTime = startedTime
+	}
+
+	if s.stoppedTime != nil {
+		stoppedTime, err := tspb.TimestampProto(*s.stoppedTime)
+		if err != nil {
+			return nil, err
+		}
+		ps.StoppedTime = stoppedTime
 	}
 
 	if s.simFromTime != nil {
@@ -124,18 +142,6 @@ func (s *simulation) toProto() (*proto.Simulation, error) {
 
 	return ps, nil
 }
-
-// func (b *baseStrategy) toProto() (*proto.Strategy, error) {
-// 	ps := &proto.Strategy{
-// 		Id:          b.ID(),
-// 		Description: b.Description(),
-// 		CoinPercent: float32(b.CoinPercent()),
-// 		Symbol:      string(b.Symbol()),
-// 		As:          string(b.As()),
-// 		IsRunning:   b.IsRunning(),
-// 	}
-// 	return ps, nil
-// }
 
 func strategyToProto(s Strategy) (*proto.Strategy, error) {
 	ps := &proto.Strategy{

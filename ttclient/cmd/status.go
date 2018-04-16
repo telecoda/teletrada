@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"time"
 
 	tspb "github.com/golang/protobuf/ptypes"
 	"github.com/telecoda/teletrada/proto"
@@ -10,20 +9,6 @@ import (
 
 	"github.com/desertbit/grumble"
 )
-
-func init() {
-	App.AddCommand(&grumble.Command{
-		Name:      "status",
-		Help:      "show server status",
-		Aliases:   []string{"st"},
-		Usage:     "status",
-		AllowArgs: true,
-		Flags: func(f *grumble.Flags) {
-			f.Duration("t", "timeout", time.Second, "timeout duration")
-		},
-		Run: getStatus,
-	})
-}
 
 func getStatus(c *grumble.Context) error {
 	printHeading("Status")

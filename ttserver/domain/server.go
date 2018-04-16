@@ -106,7 +106,7 @@ func (s *server) Init() error {
 		return nil
 	} else {
 
-		testSim, err := s.NewSimulation("test-sim", clonedPort)
+		testSim, err := s.NewSimulation("test-sim-id", "test-sim", clonedPort)
 		if err != nil {
 			s.log(fmt.Sprintf("Failed to create simulation: %s", err))
 			return nil

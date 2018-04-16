@@ -200,7 +200,11 @@ func TestMarshalSimulation(t *testing.T) {
 	}{
 		{
 			simulation: &simulation{
+				id:                "sim-id",
 				name:              "sim-name",
+				isRunning:         true,
+				startedTime:       &from,
+				stoppedTime:       &to,
 				useHistoricalData: true,
 				dataFrequency:     time.Duration(1 * time.Minute),
 				useRealtimeData:   true,
@@ -230,7 +234,11 @@ func TestMarshalSimulation(t *testing.T) {
 				},
 			},
 			expProto: &proto.Simulation{
+				Id:                "sim-id",
 				Name:              "sim-name",
+				IsRunning:         true,
+				StartedTime:       pbFrom,
+				StoppedTime:       pbTo,
 				UseHistoricalData: true,
 				DataFrequency:     60,
 				UseRealtimeData:   true,

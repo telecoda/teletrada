@@ -25,7 +25,12 @@ apply Strategy to all coin balances
 */
 
 type simulation struct {
-	name       string
+	id          string
+	name        string
+	isRunning   bool
+	startedTime *time.Time // time simulation started
+	stoppedTime *time.Time // time simulation stopped
+
 	*portfolio // original portfolio
 
 	// Simulation specific stuff here
@@ -39,10 +44,101 @@ type simulation struct {
 	useRealtimeData bool
 }
 
-func (s *server) NewSimulation(simName string, portfolio *portfolio) (*simulation, error) {
+func (s *server) getSimulation(id string) (*simulation, error) {
+	// lookup simulation
+	s.RLock()
+	defer s.RUnlock()
 
-	if _, ok := s.simulations[simName]; ok {
-		return nil, fmt.Errorf("Cannot create simulation %s as it already exists", simName)
+	if sim, ok := s.simulations[id]; !ok {
+		return nil, fmt.Errorf("Simulation Id: %s not found", id)
+	} else {
+		return sim, nil
+	}
+}
+
+func (s *server) setSimulation(sim *simulation) {
+	// lookup simulation
+	s.Lock()
+	defer s.Unlock()
+
+	s.simulations[sim.id] = sim
+}
+
+// CreateSimulation creates a new simulation
+func (s *server) CreateSimulation(ctx context.Context, in *proto.CreateSimulationRequest) (*proto.CreateSimulationResponse, error) {
+	resp := &proto.CreateSimulationResponse{}
+
+	return resp, nil
+}
+
+// StartSimulation starts a simulation running
+func (s *server) StartSimulation(ctx context.Context, req *proto.StartSimulationRequest) (*proto.StartSimulationResponse, error) {
+
+	if req.Id == "" {
+		return nil, fmt.Errorf("You must provide a simulation Id")
+	}
+
+	sim, err := s.getSimulation(req.Id)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to get simulation - %s", err)
+	}
+
+	sim.Lock()
+	defer sim.Unlock()
+
+	if sim.isRunning {
+		return nil, fmt.Errorf("Simulation Id: %s is already started", req.Id)
+	}
+
+	sim.isRunning = true
+	now := time.Now().UTC()
+	sim.startedTime = &now
+
+	s.setSimulation(sim)
+
+	s.log(fmt.Sprintf("Simulation: %s started running", sim.id))
+	go sim.run()
+
+	resp := &proto.StartSimulationResponse{}
+
+	return resp, nil
+}
+
+// StopSimulation stops a simulation running
+func (s *server) StopSimulation(ctx context.Context, req *proto.StopSimulationRequest) (*proto.StopSimulationResponse, error) {
+	resp := &proto.StopSimulationResponse{}
+
+	if req.Id == "" {
+		return nil, fmt.Errorf("You must provide a simulation Id")
+	}
+
+	sim, err := s.getSimulation(req.Id)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to get simulation - %s", err)
+	}
+
+	sim.Lock()
+	defer sim.Unlock()
+
+	if !sim.isRunning {
+		return nil, fmt.Errorf("Simulation Id: %s is not running", req.Id)
+	}
+
+	sim.isRunning = false
+	now := time.Now().UTC()
+	sim.stoppedTime = &now
+
+	s.setSimulation(sim)
+
+	s.log(fmt.Sprintf("Simulation: %s stop requested", sim.id))
+
+	return resp, nil
+}
+
+func (s *server) NewSimulation(id, simName string, portfolio *portfolio) (*simulation, error) {
+
+	if _, ok := s.simulations[id]; ok {
+		return nil, fmt.Errorf("Cannot create simulation %s as it already exists", id)
 	}
 
 	if portfolio == nil {
@@ -54,6 +150,7 @@ func (s *server) NewSimulation(simName string, portfolio *portfolio) (*simulatio
 	}
 
 	sim := &simulation{
+		id:        id,
 		name:      simName,
 		portfolio: portfolio,
 	}
@@ -77,7 +174,7 @@ func (s *server) NewSimulation(simName string, portfolio *portfolio) (*simulatio
 	sim.balances[symbol].SellStrategy = sellStrat
 	sim.balances[symbol].BuyStrategy = buyStrat
 
-	s.simulations[simName] = sim
+	s.simulations[id] = sim
 
 	// setup simulation parameters
 
@@ -147,8 +244,7 @@ func (s *simulation) runOverHistory(from time.Time, to time.Time, frequency time
 
 }
 
-func (s *simulation) run() error {
-	return nil
+func (s *simulation) run() {
 }
 
 // GetSimulations returns current simulations

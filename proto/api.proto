@@ -18,6 +18,15 @@ service teletrada {
   rpc GetStatus (GetStatusRequest) returns (GetStatusResponse) {}
   rpc GetSymbolTypes (GetSymbolTypesRequest) returns (GetSymbolTypesResponse) {}
 
+  // Create requests
+  rpc CreateSimulation (CreateSimulationRequest) returns (CreateSimulationResponse) {}
+
+  // Start requests
+  rpc StartSimulation (StartSimulationRequest) returns (StartSimulationResponse) {}
+
+  // Stop requests
+  rpc StopSimulation (StopSimulationRequest) returns (StopSimulationResponse) {}
+
   // Rebuild server
   rpc Rebuild (RebuildRequest) returns (RebuildResponse) {}
 }
@@ -38,6 +47,14 @@ message Balance {
   float changePct24h   = 13;
   Strategy buyStrategy  = 14;
   Strategy sellStrategy = 15;
+}
+
+message CreateSimulationRequest {
+  Simulation simulation  = 1;
+}
+
+message CreateSimulationResponse {
+  Simulation simulation  = 1;
 }
 
 message GetLogRequest {
@@ -128,13 +145,31 @@ message RebuildResponse {
 }
 
 message Simulation {
-  string name = 1;
-  bool useHistoricalData = 2;
-  google.protobuf.Timestamp fromTime = 3;
-  google.protobuf.Timestamp toTime = 4;
-  int32 dataFrequency = 5; // in seconds
-  bool useRealtimeData = 6;
-  Portfolio portfolio = 7;
+  string id = 1;
+  string name = 2;
+  bool isRunning = 3;
+  google.protobuf.Timestamp startedTime = 4;
+  google.protobuf.Timestamp stoppedTime = 5;
+  bool useHistoricalData = 6;
+  google.protobuf.Timestamp fromTime = 7;
+  google.protobuf.Timestamp toTime = 8;
+  int32 dataFrequency = 9; // in seconds
+  bool useRealtimeData = 10;
+  Portfolio portfolio = 11;
+}
+
+message StartSimulationRequest {
+  string id  = 1;
+}
+
+message StartSimulationResponse {
+}
+
+message StopSimulationRequest {
+  string id  = 1;
+}
+
+message StopSimulationResponse {
 }
 
 

@@ -25,11 +25,70 @@ func listSimulations(c *grumble.Context) error {
 	for _, simulation := range r.Simulations {
 		if simulation.Portfolio != nil {
 			// Print simulation header details
-			printHeading(fmt.Sprintf("Name: %s", simulation.Name))
+			printHeading(fmt.Sprintf("Id: %s", simulation.Id))
+			fmt.Print(formatAttrString("Name",
+				simulation.Name+"\n"))
+			fmt.Print(formatAttrString("IsRunning",
+				fmt.Sprintf("%t", simulation.IsRunning)+"\n"))
+			fmt.Print(formatAttrString("Started", formatProtoTimestamp(simulation.StartedTime)+"\n"))
+			fmt.Print(formatAttrString("Stopped", formatProtoTimestamp(simulation.StoppedTime)+"\n"))
 
 			printBalances(simulation.Portfolio.Balances)
 		}
 	}
 
+	return nil
+}
+
+func createSimulation(c *grumble.Context) error {
+
+	printHeading("Create simulation")
+	req := &proto.CreateSimulationRequest{}
+
+	r, err := getClient().CreateSimulation(context.Background(), req)
+	if err != nil {
+		return fmt.Errorf("failed to create simulation: %v\n", err)
+	}
+
+	fmt.Printf("Resp: %#v\n", r)
+	return nil
+}
+
+func startSimulation(c *grumble.Context) error {
+
+	printHeading("Start simulation")
+
+	if len(c.Args) != 1 {
+		return fmt.Errorf("you must provide a simulation id")
+	}
+	req := &proto.StartSimulationRequest{
+		Id: c.Args[0],
+	}
+
+	_, err := getClient().StartSimulation(context.Background(), req)
+	if err != nil {
+		return fmt.Errorf("failed to start simulation: %v\n", err)
+	}
+
+	fmt.Printf("Simulation started\n")
+	return nil
+}
+
+func stopSimulation(c *grumble.Context) error {
+
+	printHeading("Stop simulation")
+	if len(c.Args) != 1 {
+		return fmt.Errorf("you must provide a simulation id")
+	}
+	req := &proto.StopSimulationRequest{
+		Id: c.Args[0],
+	}
+
+	_, err := getClient().StopSimulation(context.Background(), req)
+	if err != nil {
+		return fmt.Errorf("failed to stop simulation: %v\n", err)
+	}
+
+	fmt.Printf("Simulation stopped\n")
 	return nil
 }

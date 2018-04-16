@@ -14,10 +14,20 @@ func init() {
 
 	// list logs
 	listCommand.AddCommand(&grumble.Command{
-		Name: "logs",
-		Help: "list logs",
-		Run:  listLogs,
+		Name:    "logs",
+		Aliases: []string{"lo"},
+		Help:    "list logs",
+		Run:     listLogs,
 	})
+
+	// list status
+	listCommand.AddCommand(&grumble.Command{
+		Name:    "status",
+		Aliases: []string{"sts"},
+		Help:    "show server status",
+		Run:     getStatus,
+	})
+
 	// list portfolio
 	listCommand.AddCommand(&grumble.Command{
 		Name:      "portfolio",
