@@ -96,7 +96,7 @@ func (s *server) StartSimulation(ctx context.Context, req *proto.StartSimulation
 
 	s.setSimulation(sim)
 
-	s.log(fmt.Sprintf("Simulation: %s started running", sim.id))
+	DefaultLogger.log(fmt.Sprintf("Simulation: %s started running", sim.id))
 	go sim.run()
 
 	resp := &proto.StartSimulationResponse{}
@@ -130,7 +130,7 @@ func (s *server) StopSimulation(ctx context.Context, req *proto.StopSimulationRe
 
 	s.setSimulation(sim)
 
-	s.log(fmt.Sprintf("Simulation: %s stop requested", sim.id))
+	DefaultLogger.log(fmt.Sprintf("Simulation: %s stop requested", sim.id))
 
 	return resp, nil
 }
@@ -215,6 +215,33 @@ func (s *simulation) setSellStrategy(strategy Strategy) error {
 	return nil
 }
 
+func (s *simulation) run() {
+
+	if s.useHistoricalData {
+		// TEMP: use some default dates for running simulation
+
+		to := time.Now().UTC()
+		from := to.AddDate(0, 0, -1)
+		frequency := time.Duration(5 * time.Minute)
+
+		err := s.runOverHistory(from, to, frequency)
+		if err != nil {
+			DefaultLogger.log(fmt.Sprintf("Error running historic simulation: %s - %s", s.id, err))
+			return
+		}
+
+	}
+
+	if s.useRealtimeData {
+		err := s.runRealtime()
+		if err != nil {
+			DefaultLogger.log(fmt.Sprintf("Error running realtime simulation: %s - %s", s.id, err))
+			return
+		}
+
+	}
+}
+
 func (s *simulation) runOverHistory(from time.Time, to time.Time, frequency time.Duration) error {
 
 	// validate params
@@ -240,11 +267,17 @@ func (s *simulation) runOverHistory(from time.Time, to time.Time, frequency time
 	s.dataFrequency = frequency
 	s.useHistoricalData = true
 
-	return nil
+	DefaultLogger.log(fmt.Sprintf("Historical simulation: %s started", s.id))
 
+	DefaultLogger.log(fmt.Sprintf("Historical simulation: %s ended", s.id))
+	return nil
 }
 
-func (s *simulation) run() {
+func (s *simulation) runRealtime() error {
+	DefaultLogger.log(fmt.Sprintf("Realtime simulation: %s started", s.id))
+
+	DefaultLogger.log(fmt.Sprintf("Realtime simulation: %s ended", s.id))
+	return nil
 }
 
 // GetSimulations returns current simulations

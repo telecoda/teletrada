@@ -16,7 +16,7 @@ func (s *server) Rebuild(ctx context.Context, req *proto.RebuildRequest) (*proto
 
 	resp := &proto.RebuildResponse{}
 
-	s.log("Rebuilding ttserver")
+	DefaultLogger.log("Rebuilding ttserver")
 	// change dir
 	goPath := os.Getenv("GOPATH")
 	if goPath == "" {
@@ -30,24 +30,24 @@ func (s *server) Rebuild(ctx context.Context, req *proto.RebuildRequest) (*proto
 	}
 
 	// pull code
-	s.log("Pulling latest code...")
+	DefaultLogger.log("Pulling latest code...")
 
 	cmd := exec.Command("git", "pull", "origin", "master")
 	cmd.Dir = path
 	output, err := cmd.CombinedOutput()
 	if err != nil {
-		s.log(fmt.Sprintf("Failed fetch latest code %s - %s", err, string(output)))
+		DefaultLogger.log(fmt.Sprintf("Failed fetch latest code %s - %s", err, string(output)))
 		return nil, fmt.Errorf("Failed fetch latest code %s - %s", err, string(output))
 	}
-	s.log(fmt.Sprintf("Fetched latest code... %s", string(output)))
+	DefaultLogger.log(fmt.Sprintf("Fetched latest code... %s", string(output)))
 
 	// recompile
-	s.log("Compiling code...")
+	DefaultLogger.log("Compiling code...")
 	cmd = exec.Command("go", "install", "-a", "github.com/telecoda/teletrada/ttserver")
 	cmd.Dir = path
 	output, err = cmd.CombinedOutput()
 	if err != nil {
-		s.log(fmt.Sprintf("Failed compile latest code %s - %s", err, string(output)))
+		DefaultLogger.log(fmt.Sprintf("Failed compile latest code %s - %s", err, string(output)))
 		return nil, fmt.Errorf("Failed compile latest code %s - %s", err, string(output))
 	}
 

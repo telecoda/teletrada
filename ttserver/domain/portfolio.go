@@ -59,7 +59,7 @@ func (s *server) GetPortfolio(ctx context.Context, req *proto.GetPortfolioReques
 // initPortfolios - fetches latest balances from exchange
 func (s *server) initPortfolios() error {
 
-	s.log("Initialising portfolios")
+	DefaultLogger.log("Initialising portfolios")
 	s.livePortfolio = &portfolio{
 		name:     "LIVE",
 		isLive:   true,
@@ -88,7 +88,7 @@ func (s *server) initPortfolios() error {
 	}
 
 	s.simulations = make(map[string]*simulation, 0)
-	s.log("Initialised portfolios")
+	DefaultLogger.log("Initialised portfolios")
 	return nil
 }
 
@@ -116,7 +116,7 @@ func (s *server) updatePortfolios() error {
 // updateMetrics - sends metrics about portfolios to Influx
 func (s *server) saveMetrics() error {
 
-	s.log("Save portfolio metrics")
+	DefaultLogger.log("Save portfolio metrics")
 	// live metrics
 	if err := DefaultMetrics.SavePortfolioMetrics(s.livePortfolio); err != nil {
 		return err

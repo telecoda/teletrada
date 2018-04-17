@@ -34,7 +34,7 @@ func (s *server) startScheduler() {
 		now := time.Now()
 		next := now.Truncate(time.Hour*24).AddDate(0, 0, 1)
 		delay := next.Sub(now)
-		s.log(fmt.Sprintf("Next daily update in %s", delay.String()))
+		DefaultLogger.log(fmt.Sprintf("Next daily update in %s", delay.String()))
 
 		timer := time.NewTimer(delay)
 
@@ -74,33 +74,33 @@ func (s *server) scheduledUpdate() {
 	// Update latest prices
 	if err := DefaultArchive.UpdatePrices(); err != nil {
 		// log error
-		s.log(fmt.Sprintf("ERROR: updating prices - %s", err))
+		DefaultLogger.log(fmt.Sprintf("ERROR: updating prices - %s", err))
 	}
 
 	// update portfolios
 	if err := s.updatePortfolios(); err != nil {
 		// log error
-		s.log(fmt.Sprintf("ERROR: updating portfolios - %s", err))
+		DefaultLogger.log(fmt.Sprintf("ERROR: updating portfolios - %s", err))
 	}
 
 	if err := s.saveMetrics(); err != nil {
 		// log error
-		s.log(fmt.Sprintf("ERROR: saving portfolios - %s", err))
+		DefaultLogger.log(fmt.Sprintf("ERROR: saving portfolios - %s", err))
 	}
 
 }
 
 // dailyUpdate - runs daily
 func (s *server) dailyUpdate() {
-	s.log("started Daily update")
+	DefaultLogger.log("started Daily update")
 	if err := DefaultArchive.UpdatePrices(); err != nil {
 		// log error
-		s.log(fmt.Sprintf("ERROR: updating prices - %s", err))
+		DefaultLogger.log(fmt.Sprintf("ERROR: updating prices - %s", err))
 		return
 	}
 	if err := DefaultArchive.UpdateDaySummaries(); err != nil {
-		s.log(fmt.Sprintf("ERROR: updating closing prices - %s", err))
+		DefaultLogger.log(fmt.Sprintf("ERROR: updating closing prices - %s", err))
 	}
-	s.log("ended Daily update")
+	DefaultLogger.log("ended Daily update")
 
 }
