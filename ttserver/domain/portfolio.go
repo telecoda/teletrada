@@ -6,6 +6,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/telecoda/teletrada/exchanges"
 	"github.com/telecoda/teletrada/proto"
 )
 
@@ -228,4 +229,53 @@ func (p *portfolio) clone() (*portfolio, error) {
 	}
 
 	return c, nil
+}
+
+// diff - compares the difference between two portfolios
+func (p *portfolio) diff(before *portfolio) (*portfolio, error) {
+
+	d := &portfolio{
+		name:     p.name + "[diff]",
+		isLive:   false, // diffs are never live
+		balances: make(map[SymbolType]*BalanceAs, 0),
+	}
+
+	for symbol, balanceNow := range p.balances {
+
+		// fetch before balance
+		if balanceBefore, ok := before.balances[symbol]; ok {
+			// calc diff
+			d.balances[symbol] = &BalanceAs{
+				CoinBalance: exchanges.CoinBalance{
+					Symbol:   balanceNow.Symbol,
+					Exchange: balanceNow.Exchange,
+					Free:     balanceNow.Free - balanceBefore.Free,
+					Locked:   balanceNow.Locked - balanceBefore.Locked,
+				},
+				Total:        balanceNow.Total - balanceBefore.Total,
+				At:           balanceNow.At,
+				As:           balanceNow.As,
+				Price:        balanceNow.Price - balanceBefore.Price,
+				Value:        balanceNow.Value - balanceBefore.Value,
+				Price24H:     balanceNow.Price24H - balanceBefore.Price24H,
+				Value24H:     balanceNow.Value24H - balanceBefore.Value24H,
+				Change24H:    balanceNow.Change24H - balanceBefore.Change24H,
+				ChangePct24H: balanceNow.ChangePct24H - balanceBefore.ChangePct24H,
+			}
+
+		} else {
+			return nil, fmt.Errorf("Before portfolio did not contain a balance for %s", symbol)
+		}
+	}
+
+	return d, nil
+}
+
+func (p *portfolio) print() {
+	fmt.Printf("Portfolio: %s\n", p.name)
+
+	for symbol, balance := range p.balances {
+		fmt.Printf("Symbol: %s\n", symbol)
+		fmt.Printf("Balance: %#v\n", balance)
+	}
 }

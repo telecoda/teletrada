@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/desertbit/grumble"
 	"github.com/telecoda/teletrada/proto"
@@ -28,6 +29,17 @@ func listSimulations(c *grumble.Context) error {
 			printHeading(fmt.Sprintf("Id: %s", simulation.Id))
 			fmt.Print(formatAttrString("Name",
 				simulation.Name+"\n"))
+			fmt.Print(formatAttrString("Data freq",
+				(time.Duration(int64(simulation.DataFrequency))*time.Second).String()+"\n"))
+			fmt.Print(formatAttrString("Use historical",
+				fmt.Sprintf("%t", simulation.UseHistoricalData)+"\n"))
+			if simulation.UseHistoricalData {
+				// show times as well
+				fmt.Print(formatAttrString("Hist From", formatProtoTimestamp(simulation.FromTime)+"\n"))
+				fmt.Print(formatAttrString("Hist To  ", formatProtoTimestamp(simulation.ToTime)+"\n"))
+			}
+			fmt.Print(formatAttrString("Use realtime",
+				fmt.Sprintf("%t", simulation.UseRealtimeData)+"\n"))
 			fmt.Print(formatAttrString("IsRunning",
 				fmt.Sprintf("%t", simulation.IsRunning)+"\n"))
 			fmt.Print(formatAttrString("Started", formatProtoTimestamp(simulation.StartedTime)+"\n"))

@@ -6,6 +6,8 @@ import (
 	"time"
 
 	"github.com/telecoda/teletrada/proto"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 /*
@@ -90,13 +92,14 @@ func (s *server) StartSimulation(ctx context.Context, req *proto.StartSimulation
 		return nil, fmt.Errorf("Simulation Id: %s is already started", req.Id)
 	}
 
-	sim.isRunning = true
-	now := time.Now().UTC()
-	sim.startedTime = &now
+	if !sim.useHistoricalData && !sim.useRealtimeData {
+		return nil, status.Newf(codes.Unavailable, "Must enable either historical or realtime data").Err()
+	}
 
-	s.setSimulation(sim)
+	if sim.useHistoricalData && sim.useRealtimeData {
+		return nil, status.Newf(codes.Unavailable, "Simulation cannot be run in historical and realtime mode simultaneously").Err()
+	}
 
-	DefaultLogger.log(fmt.Sprintf("Simulation: %s started running", sim.id))
 	go sim.run()
 
 	resp := &proto.StartSimulationResponse{}
@@ -109,19 +112,19 @@ func (s *server) StopSimulation(ctx context.Context, req *proto.StopSimulationRe
 	resp := &proto.StopSimulationResponse{}
 
 	if req.Id == "" {
-		return nil, fmt.Errorf("You must provide a simulation Id")
+		return nil, status.Newf(codes.InvalidArgument, "You must provide a simulation Id").Err()
 	}
 
 	sim, err := s.getSimulation(req.Id)
 	if err != nil {
-		return nil, fmt.Errorf("Failed to get simulation - %s", err)
+		return nil, status.Newf(codes.NotFound, "Failed to get simulation - %s", err).Err()
 	}
 
 	sim.Lock()
 	defer sim.Unlock()
 
 	if !sim.isRunning {
-		return nil, fmt.Errorf("Simulation Id: %s is not running", req.Id)
+		return nil, status.Newf(codes.Unavailable, "Simulation Id: %s is not running", req.Id).Err()
 	}
 
 	sim.isRunning = false
@@ -149,10 +152,19 @@ func (s *server) NewSimulation(id, simName string, portfolio *portfolio) (*simul
 		return nil, fmt.Errorf("Cannot use a portfolio with no balances for a simulation")
 	}
 
+	now := time.Now().UTC()
+	yesterday := now.AddDate(0, 0, -1)
+
 	sim := &simulation{
 		id:        id,
 		name:      simName,
 		portfolio: portfolio,
+		// TEMP (move this to create method)
+		useHistoricalData: true,
+		simFromTime:       &yesterday,
+		simToTime:         &now,
+		dataFrequency:     time.Duration(5 * time.Minute),
+		// TEMP (move this to create method)
 	}
 
 	symbol := SymbolType("ETH")
@@ -217,6 +229,24 @@ func (s *simulation) setSellStrategy(strategy Strategy) error {
 
 func (s *simulation) run() {
 
+	s.Lock()
+	s.isRunning = true
+	now := time.Now().UTC()
+	s.startedTime = &now
+	s.Unlock()
+
+	defer func() {
+		s.Lock()
+		s.isRunning = false
+		s.Unlock()
+	}()
+	defer func() {
+		s.Lock()
+		now := time.Now().UTC()
+		s.stoppedTime = &now
+		s.Unlock()
+	}()
+
 	if s.useHistoricalData {
 		// TEMP: use some default dates for running simulation
 
@@ -256,7 +286,7 @@ func (s *simulation) runOverHistory(from time.Time, to time.Time, frequency time
 		return fmt.Errorf("From time cannot be after to time")
 	}
 
-	if frequency.Seconds() != 0 {
+	if frequency.Seconds() == 0 {
 		return fmt.Errorf("Frequency cannot be zero")
 	}
 	s.Lock()
@@ -268,6 +298,33 @@ func (s *simulation) runOverHistory(from time.Time, to time.Time, frequency time
 	s.useHistoricalData = true
 
 	DefaultLogger.log(fmt.Sprintf("Historical simulation: %s started", s.id))
+
+	// Save a before version of the portfolio
+	before, err := s.portfolio.clone()
+	if err != nil {
+		return fmt.Errorf("Error cloning portfolio during historical simulation: %s - %s", s.id, err)
+
+	}
+	// Replay all prices between dates
+	toTime := *s.simToTime
+
+	for priceTime := *s.simFromTime; priceTime.Before(toTime); priceTime = priceTime.Add(s.dataFrequency) {
+
+		// DefaultLogger.log(fmt.Sprintf("Reading prices for %s", priceTime))
+
+		// process all symbols in portfolio
+		//for s.portfolio
+
+	}
+
+	// Compare portfolio afterwards
+	diff, err := s.portfolio.diff(before)
+	if err != nil {
+		return fmt.Errorf("Error comparing portfolio differences - %s", err)
+	}
+
+	// print portfolio diffs
+	diff.print()
 
 	DefaultLogger.log(fmt.Sprintf("Historical simulation: %s ended", s.id))
 	return nil
