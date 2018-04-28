@@ -75,7 +75,7 @@ func NewTradaServer(config Config) (Server, error) {
 
 	server := &server{
 		config:     config,
-		startTime:  time.Now(),
+		startTime:  ServerTime(),
 		stopUpdate: make(chan bool),
 	}
 
@@ -86,7 +86,7 @@ func (s *server) Init() error {
 	s.Lock()
 	defer s.Unlock()
 
-	s.startTime = time.Now().UTC()
+	s.startTime = ServerTime()
 
 	// scheduler will do a price update immediately
 	s.startScheduler()
@@ -97,39 +97,32 @@ func (s *server) Init() error {
 
 	// TEMP code create simulation
 
-	// clone live portfolio for sim
-	if clonedPort, err := s.livePortfolio.clone(); err != nil {
-		DefaultLogger.log(fmt.Sprintf("Failed to clone live portfolio: %s", err))
+	testSim, err := s.NewSimulation("dummy-init-sim-id", "dummy-init-sim", s.livePortfolio)
+	if err != nil {
+		DefaultLogger.log(fmt.Sprintf("Failed to create simulation: %s", err))
 		return nil
-	} else {
+	}
 
-		testSim, err := s.NewSimulation("test-sim-id", "test-sim", clonedPort)
-		if err != nil {
-			DefaultLogger.log(fmt.Sprintf("Failed to create simulation: %s", err))
-			return nil
-		}
+	// Set Buy/Sell strategies on some symbols
+	ethBuy, err := NewPriceAboveStrategy("buy-eth", SymbolType("ETH"), SymbolType("USDT"), 20.00, 100.0)
+	if err != nil {
+		DefaultLogger.log(fmt.Sprintf("Failed to create buy strategy: %s", err))
+		return nil
+	}
+	ethSell, err := NewPriceBelowStrategy("sell-eth", SymbolType("ETH"), SymbolType("USDT"), 10.00, 100.0)
+	if err != nil {
+		DefaultLogger.log(fmt.Sprintf("Failed to create sell strategy: %s", err))
+		return nil
+	}
 
-		// Set Buy/Sell strategies on some symbols
-		ethBuy, err := NewPriceAboveStrategy("buy-eth", SymbolType("ETH"), SymbolType("USDT"), 20.00, 100.0)
-		if err != nil {
-			DefaultLogger.log(fmt.Sprintf("Failed to create buy strategy: %s", err))
-			return nil
-		}
-		ethSell, err := NewPriceBelowStrategy("sell-eth", SymbolType("ETH"), SymbolType("USDT"), 10.00, 100.0)
-		if err != nil {
-			DefaultLogger.log(fmt.Sprintf("Failed to create sell strategy: %s", err))
-			return nil
-		}
+	if err := testSim.SetBuyStrategy(ethBuy); err != nil {
+		DefaultLogger.log(fmt.Sprintf("Failed to set buy strategy: %s", err))
+		return nil
+	}
 
-		if err := testSim.setBuyStrategy(ethBuy); err != nil {
-			DefaultLogger.log(fmt.Sprintf("Failed to set buy strategy: %s", err))
-			return nil
-		}
-
-		if err := testSim.setSellStrategy(ethSell); err != nil {
-			DefaultLogger.log(fmt.Sprintf("Failed to set buy strategy: %s", err))
-			return nil
-		}
+	if err := testSim.SetSellStrategy(ethSell); err != nil {
+		DefaultLogger.log(fmt.Sprintf("Failed to set buy strategy: %s", err))
+		return nil
 	}
 
 	return nil

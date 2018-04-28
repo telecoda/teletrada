@@ -26,6 +26,13 @@ apply Strategy to all coin balances
 
 */
 
+type Simulation interface {
+	GetID() string
+	GetName() string
+	SetBuyStrategy(strategy Strategy) error
+	SetSellStrategy(strategy Strategy) error
+}
+
 type simulation struct {
 	id          string
 	name        string
@@ -33,9 +40,17 @@ type simulation struct {
 	startedTime *time.Time // time simulation started
 	stoppedTime *time.Time // time simulation stopped
 
-	*portfolio // original portfolio
+	// simulation acts and behaves the same as a "normal" portfolio
+	// this is held in the *portfolio variable
+	*portfolio // current simulated
 
-	// Simulation specific stuff here
+	// realNow is a reference to the real portfolio now
+	// so any difference between the simulated value and real value can be compared
+	realNow *portfolio
+
+	// realStart is a cloned copy of the real portfolio
+	// at the beginning of the simulation
+	realAtStart *portfolio
 
 	// historical simulation attributes
 	useHistoricalData bool          // do we use historical data
@@ -92,6 +107,45 @@ func (s *server) StartSimulation(ctx context.Context, req *proto.StartSimulation
 		return nil, fmt.Errorf("Simulation Id: %s is already started", req.Id)
 	}
 
+	// validate when
+	if _, ok := proto.StartSimulationRequestWhenOptions_name[int32(req.When)]; !ok {
+		return nil, fmt.Errorf("When value %d is not valid", req.When)
+	}
+
+	now := ServerTime()
+
+	switch req.When {
+	case proto.StartSimulationRequest_LAST_DAY:
+		sim.simToTime = &now
+		from := now.AddDate(0, 0, -1)
+		sim.simFromTime = &from
+		sim.useHistoricalData = true
+	case proto.StartSimulationRequest_LAST_WEEK:
+		sim.simToTime = &now
+		from := now.AddDate(0, 0, -7)
+		sim.simFromTime = &from
+		sim.useHistoricalData = true
+	case proto.StartSimulationRequest_LAST_MONTH:
+		sim.simToTime = &now
+		from := now.AddDate(0, 0, -30)
+		sim.simFromTime = &from
+		sim.useHistoricalData = true
+	case proto.StartSimulationRequest_THE_LOT:
+		sim.simToTime = &now
+		from := now.AddDate(-10, 0, 0) // 10 year should be long enough..
+		sim.simFromTime = &from
+		sim.useHistoricalData = true
+	case proto.StartSimulationRequest_NOW_REALTIME:
+		sim.useRealtimeData = true
+	default:
+		return nil, fmt.Errorf("When value %d is not valid", req.When)
+	}
+
+	if req.When == proto.StartSimulationRequest_NOW_REALTIME {
+		sim.useRealtimeData = true
+		sim.useHistoricalData = false
+	}
+
 	if !sim.useHistoricalData && !sim.useRealtimeData {
 		return nil, status.Newf(codes.Unavailable, "Must enable either historical or realtime data").Err()
 	}
@@ -128,7 +182,7 @@ func (s *server) StopSimulation(ctx context.Context, req *proto.StopSimulationRe
 	}
 
 	sim.isRunning = false
-	now := time.Now().UTC()
+	now := ServerTime()
 	sim.stoppedTime = &now
 
 	s.setSimulation(sim)
@@ -138,62 +192,46 @@ func (s *server) StopSimulation(ctx context.Context, req *proto.StopSimulationRe
 	return resp, nil
 }
 
-func (s *server) NewSimulation(id, simName string, portfolio *portfolio) (*simulation, error) {
+func (s *server) NewSimulation(id, simName string, real *portfolio) (Simulation, error) {
 
 	if _, ok := s.simulations[id]; ok {
 		return nil, fmt.Errorf("Cannot create simulation %s as it already exists", id)
 	}
 
-	if portfolio == nil {
+	if real == nil {
 		return nil, fmt.Errorf("Portfolio cannot be nil")
 	}
 
-	if portfolio.balances == nil || len(portfolio.balances) == 0 {
+	if real.balances == nil || len(real.balances) == 0 {
 		return nil, fmt.Errorf("Cannot use a portfolio with no balances for a simulation")
 	}
 
-	now := time.Now().UTC()
-	yesterday := now.AddDate(0, 0, -1)
+	clonedPort, err := real.clone()
+	if err != nil {
+		return nil, fmt.Errorf("Failed to clone real portfolio: %s", err)
+	}
 
 	sim := &simulation{
 		id:        id,
 		name:      simName,
-		portfolio: portfolio,
-		// TEMP (move this to create method)
-		useHistoricalData: true,
-		simFromTime:       &yesterday,
-		simToTime:         &now,
-		dataFrequency:     time.Duration(5 * time.Minute),
-		// TEMP (move this to create method)
+		portfolio: clonedPort,
+		realNow:   real,
 	}
-
-	symbol := SymbolType("ETH")
-	as := SymbolType("BTC")
-	sellStrat, err := NewPriceAboveStrategy("sell-eth", symbol, as, 0.0545, 100.00)
-	if err != nil {
-		return nil, err
-	}
-
-	buyStrat, err := NewPriceBelowStrategy("buy-eth", symbol, as, 0.0500, 100.00)
-	if err != nil {
-		return nil, err
-	}
-
-	if _, ok := sim.balances[symbol]; !ok {
-		return nil, fmt.Errorf("Cannot create simulation as it does not have a balance for %s", symbol)
-	}
-
-	sim.balances[symbol].SellStrategy = sellStrat
-	sim.balances[symbol].BuyStrategy = buyStrat
 
 	s.simulations[id] = sim
-
-	// setup simulation parameters
 
 	return sim, nil
 }
 
-func (s *simulation) setBuyStrategy(strategy Strategy) error {
+func (s *simulation) GetID() string {
+	return s.id
+}
+
+func (s *simulation) GetName() string {
+	return s.name
+}
+
+func (s *simulation) SetBuyStrategy(strategy Strategy) error {
 	if strategy == nil {
 		return fmt.Errorf("Cannot set buy strategy for simulation %q, strategy cannot be nil", s.name)
 	}
@@ -210,7 +248,7 @@ func (s *simulation) setBuyStrategy(strategy Strategy) error {
 	return nil
 }
 
-func (s *simulation) setSellStrategy(strategy Strategy) error {
+func (s *simulation) SetSellStrategy(strategy Strategy) error {
 	if strategy == nil {
 		return fmt.Errorf("Cannot set sell strategy for simulation %q, strategy cannot be nil", s.name)
 	}
@@ -231,7 +269,7 @@ func (s *simulation) run() {
 
 	s.Lock()
 	s.isRunning = true
-	now := time.Now().UTC()
+	now := ServerTime()
 	s.startedTime = &now
 	s.Unlock()
 
@@ -242,7 +280,7 @@ func (s *simulation) run() {
 	}()
 	defer func() {
 		s.Lock()
-		now := time.Now().UTC()
+		now := ServerTime()
 		s.stoppedTime = &now
 		s.Unlock()
 	}()
@@ -250,11 +288,9 @@ func (s *simulation) run() {
 	if s.useHistoricalData {
 		// TEMP: use some default dates for running simulation
 
-		to := time.Now().UTC()
-		from := to.AddDate(0, 0, -1)
 		frequency := time.Duration(5 * time.Minute)
 
-		err := s.runOverHistory(from, to, frequency)
+		err := s.runOverHistory(frequency)
 		if err != nil {
 			DefaultLogger.log(fmt.Sprintf("Error running historic simulation: %s - %s", s.id, err))
 			return
@@ -272,17 +308,23 @@ func (s *simulation) run() {
 	}
 }
 
-func (s *simulation) runOverHistory(from time.Time, to time.Time, frequency time.Duration) error {
+func (s *simulation) runOverHistory(frequency time.Duration) error {
 
 	// validate params
-	if from.IsZero() {
+	if s.simFromTime == nil {
+		return fmt.Errorf("From time cannot be nil")
+	}
+	if s.simToTime == nil {
+		return fmt.Errorf("To time cannot be nil")
+	}
+	if s.simFromTime.IsZero() {
 		return fmt.Errorf("From time cannot be zero")
 	}
-	if to.IsZero() {
+	if s.simToTime.IsZero() {
 		return fmt.Errorf("To time cannot be zero")
 	}
 
-	if from.After(to) {
+	if s.simFromTime.After(*s.simToTime) {
 		return fmt.Errorf("From time cannot be after to time")
 	}
 
@@ -292,8 +334,6 @@ func (s *simulation) runOverHistory(from time.Time, to time.Time, frequency time
 	s.Lock()
 	defer s.Unlock()
 
-	s.simFromTime = &from
-	s.simToTime = &to
 	s.dataFrequency = frequency
 	s.useHistoricalData = true
 

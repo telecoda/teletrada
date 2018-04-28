@@ -54,7 +54,7 @@ func TestSavePrice(t *testing.T) {
 	priceSymbol := SymbolType(USDT)
 	priceYest := 1234.56
 	priceToday := 2345.67
-	today := time.Now()
+	today := ServerTime()
 	yesterday := today.AddDate(0, 0, -1)
 
 	archive := setupArchive()
@@ -185,7 +185,7 @@ func TestMultiCurrencyPrices(t *testing.T) {
 	ethSymbol := SymbolType("ETH")
 	usdtSymbol := SymbolType("USDT")
 
-	today := time.Now()
+	today := ServerTime()
 
 	// add LTC -> BTC price
 	LtcBtcPrice := Price{
@@ -313,8 +313,8 @@ func TestMultiCurrencyPricesAt(t *testing.T) {
 	ethSymbol := SymbolType("ETH")
 	usdtSymbol := SymbolType("USDT")
 
-	today := time.Now()
-	yesterday := time.Now().AddDate(0, 0, -1)
+	today := ServerTime()
+	yesterday := today.AddDate(0, 0, -1)
 
 	// add LTC -> BTC price
 	LtcBtcPrice := Price{

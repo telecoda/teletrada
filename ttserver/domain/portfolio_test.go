@@ -2,7 +2,6 @@ package domain
 
 import (
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/telecoda/teletrada/exchanges"
@@ -16,7 +15,7 @@ func TestClone(t *testing.T) {
 		balances: make(map[SymbolType]*BalanceAs),
 	}
 
-	now := time.Now()
+	now := ServerTime()
 	// add some balances
 	balance1 := &BalanceAs{
 		CoinBalance: exchanges.CoinBalance{
@@ -84,7 +83,7 @@ func TestDiffNoDifferences(t *testing.T) {
 		balances: make(map[SymbolType]*BalanceAs),
 	}
 
-	now := time.Now()
+	now := ServerTime()
 	// add some balances
 	balance1 := &BalanceAs{
 		CoinBalance: exchanges.CoinBalance{
@@ -168,7 +167,7 @@ func TestDiffWithDifferences(t *testing.T) {
 		balances: make(map[SymbolType]*BalanceAs),
 	}
 
-	now := time.Now()
+	now := ServerTime()
 	// add some balances
 	balance1 := &BalanceAs{
 		CoinBalance: exchanges.CoinBalance{

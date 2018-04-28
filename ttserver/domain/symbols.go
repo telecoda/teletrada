@@ -200,7 +200,7 @@ func (s *symbol) GetLatestPriceAs(as SymbolType) (Price, error) {
 			Base:  s.SymbolType,
 			As:    as,
 			Price: 1.0,
-			At:    time.Now().UTC(),
+			At:    ServerTime(),
 		}, nil
 	}
 	if prices, ok := s.priceAs[as]; !ok || len(prices) == 0 {

@@ -11,7 +11,7 @@ func TestSymbolPrices(t *testing.T) {
 	testSymbol := SymbolType("tester")
 	symbol := NewSymbol(testSymbol)
 
-	today := time.Now()
+	today := ServerTime()
 	yesterday := today.AddDate(0, 0, -1)
 
 	// add today's USD price

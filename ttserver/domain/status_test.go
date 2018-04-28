@@ -13,7 +13,13 @@ import (
 
 var TEST_GRPC_PORT = 9999
 
+
+
 func setupTestServer() (Server, error) {
+
+	// override server time func
+	ServerTime = fakeServerTime
+
 	var err error
 	// Use mock metrics client to fetch price info
 	DefaultMetrics, err = newMockMetricsClient(TEST_INFLUX_DATABASE)

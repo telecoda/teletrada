@@ -38,7 +38,7 @@ func NewLogger(isVerbose bool) Logger {
 
 func (l *logger) log(msg string) {
 	entry := LogEntry{
-		Timestamp: time.Now().UTC(),
+		Timestamp: ServerTime(),
 		Message:   msg,
 	}
 	l.statusLog = append(l.statusLog, entry)

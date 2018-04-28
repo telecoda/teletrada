@@ -18,7 +18,7 @@ func init() {
 		Help:      "stop simulation",
 		Usage:     "stop simulation [id]",
 		AllowArgs: true,
-		Completer: simIdCompleter,
+		Completer: simStopCompleter,
 		Run:       stopSimulation,
 	})
 }

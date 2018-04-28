@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"sync"
-	"time"
 
 	"github.com/telecoda/teletrada/exchanges"
 	"github.com/telecoda/teletrada/proto"
@@ -155,13 +154,13 @@ func (p *portfolio) refreshCoinBalances() error {
 		if balance, ok := p.balances[symbol]; ok {
 			balance.CoinBalance = coinBalance
 			balance.Total = coinBalance.Free + coinBalance.Locked
-			balance.At = time.Now()
+			balance.At = ServerTime()
 		} else {
 			// new balance
 			newBalance := &BalanceAs{
 				CoinBalance: coinBalance,
 				As:          DEFAULT_SYMBOL,
-				At:          time.Now(),
+				At:          ServerTime(),
 				Total:       coinBalance.Free + coinBalance.Locked,
 			}
 			p.balances[symbol] = newBalance

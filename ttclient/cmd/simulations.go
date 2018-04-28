@@ -70,11 +70,22 @@ func startSimulation(c *grumble.Context) error {
 
 	printHeading("Start simulation")
 
-	if len(c.Args) != 1 {
-		return fmt.Errorf("you must provide a simulation id")
+	if len(c.Args) != 2 {
+		return fmt.Errorf("you must provide a simulation id and timescale")
 	}
+
+	when, ok := proto.StartSimulationRequestWhenOptions_value[c.Args[1]]
+	if !ok {
+		whens := make([]string, 0, len(proto.StartSimulationRequestWhenOptions_value))
+		for k := range proto.StartSimulationRequestWhenOptions_value {
+			whens = append(whens, k)
+		}
+		return fmt.Errorf("When value is not valid %#v\n", whens)
+	}
+
 	req := &proto.StartSimulationRequest{
-		Id: c.Args[0],
+		Id:   c.Args[0],
+		When: proto.StartSimulationRequestWhenOptions(when),
 	}
 
 	_, err := getClient().StartSimulation(context.Background(), req)

@@ -2,7 +2,6 @@ package domain
 
 import (
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/telecoda/teletrada/exchanges"
@@ -34,7 +33,7 @@ func TestBaseStrategy(t *testing.T) {
 	strat.Stop()
 	assert.False(t, strat.IsRunning())
 
-	now := time.Now()
+	now := ServerTime()
 
 	met, err := strat.ConditionMet(now)
 	assert.False(t, met)
@@ -54,7 +53,7 @@ func TestDoNothingStrategy(t *testing.T) {
 	strat.Stop()
 	assert.False(t, strat.IsRunning())
 
-	now := time.Now()
+	now := ServerTime()
 
 	met, err := strat.ConditionMet(now)
 	assert.False(t, met)
@@ -64,9 +63,12 @@ func TestDoNothingStrategy(t *testing.T) {
 
 func TestPriceAboveStrategy(t *testing.T) {
 
+	UseFakeTime()
+	defer UseRealTime()
+
 	strategySetup(t)
 
-	today := time.Now()
+	today := ServerTime()
 	tomorrow := today.AddDate(0, 0, 1)
 	yesterday := today.AddDate(0, 0, -1)
 
@@ -128,7 +130,7 @@ func TestPriceBelowStrategy(t *testing.T) {
 
 	strategySetup(t)
 
-	today := time.Now()
+	today := ServerTime()
 	tomorrow := today.AddDate(0, 0, 1)
 	yesterday := today.AddDate(0, 0, -1)
 

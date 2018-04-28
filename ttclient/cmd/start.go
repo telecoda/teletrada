@@ -16,9 +16,9 @@ func init() {
 		Name:      "simulation",
 		Aliases:   []string{"si"},
 		Help:      "start simulation",
-		Usage:     "start simulation [id]",
+		Usage:     "start simulation [id] [timescale]",
 		AllowArgs: true,
-		Completer: simIdCompleter,
+		Completer: simStartCompleter,
 		Run:       startSimulation,
 	})
 }

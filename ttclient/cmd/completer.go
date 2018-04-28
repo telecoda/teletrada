@@ -11,6 +11,15 @@ import (
 var symbolTypes map[string][]string
 var symbols []string
 var simIds []string
+var whens []string
+
+func init() {
+	// convert enums to list of strings
+	whens = make([]string, 0)
+	for k, _ := range proto.StartSimulationRequestWhenOptions_value {
+		whens = append(whens, k)
+	}
+}
 
 func initSymbolTypes() {
 	resp, err := getClient().GetSymbolTypes(context.Background(), &proto.GetSymbolTypesRequest{})
@@ -80,7 +89,24 @@ func initSimIds() {
 	sort.Strings(simIds)
 }
 
-func simIdCompleter(prefix string, args []string) []string {
+func simStartCompleter(prefix string, args []string) []string {
+
+	if len(simIds) == 0 {
+		initSimIds()
+	}
+
+	if len(args) == 0 {
+		return simIds
+	}
+
+	if len(args) == 1 {
+		return whens
+	}
+
+	return []string{"invalid number of args"}
+}
+
+func simStopCompleter(prefix string, args []string) []string {
 
 	if len(simIds) == 0 {
 		initSimIds()

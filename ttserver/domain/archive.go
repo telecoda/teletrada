@@ -258,7 +258,7 @@ func (sa *symbolsArchive) UpdatePrices() error {
 
 	sa.Lock()
 	sa.updateCount++
-	sa.lastUpdated = time.Now()
+	sa.lastUpdated = ServerTime()
 	sa.Unlock()
 	return nil
 }
@@ -367,7 +367,7 @@ func (sa *symbolsArchive) LoadPrices(dir string) error {
 	}
 
 	fmt.Printf("Loading prices from %d files\n", len(files))
-	t := time.Now()
+	t := time.Now() // just used for load timing
 	// read all files
 	for _, file := range files {
 		// only load from .json files
@@ -377,7 +377,7 @@ func (sa *symbolsArchive) LoadPrices(dir string) error {
 			}
 		}
 	}
-	fmt.Printf("Loaded in %s\n", time.Now().Sub(t).String())
+	fmt.Printf("Loaded in %s\n", time.Since(t).String())
 
 	return nil
 }

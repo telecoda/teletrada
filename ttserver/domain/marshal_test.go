@@ -12,7 +12,7 @@ import (
 )
 
 func TestMarshalBalanceAs(t *testing.T) {
-	now := time.Now()
+	now := ServerTime()
 	pbNow, _ := tspb.TimestampProto(now)
 
 	tests := []struct {
@@ -62,7 +62,7 @@ func TestMarshalBalanceAs(t *testing.T) {
 
 func TestMarshalLogEntry(t *testing.T) {
 
-	now := time.Now()
+	now := ServerTime()
 	pbNow, _ := tspb.TimestampProto(now)
 
 	tests := []struct {
@@ -90,7 +90,7 @@ func TestMarshalLogEntry(t *testing.T) {
 
 func TestMarshalPortfolio(t *testing.T) {
 
-	now := time.Now()
+	now := ServerTime()
 	pbNow, _ := tspb.TimestampProto(now)
 
 	tests := []struct {
@@ -151,7 +151,7 @@ func TestMarshalPortfolio(t *testing.T) {
 
 func TestMarshalPrice(t *testing.T) {
 
-	now := time.Now()
+	now := ServerTime()
 	pbNow, _ := tspb.TimestampProto(now)
 
 	tests := []struct {
@@ -185,7 +185,7 @@ func TestMarshalPrice(t *testing.T) {
 
 func TestMarshalSimulation(t *testing.T) {
 
-	now := time.Now()
+	now := ServerTime()
 	pbNow, _ := tspb.TimestampProto(now)
 
 	from := now
