@@ -14,9 +14,11 @@ func init() {
 
 	// create simulation
 	createCommand.AddCommand(&grumble.Command{
-		Name:    "simulation",
-		Aliases: []string{"si"},
-		Help:    "create simulation",
-		Run:     createSimulation,
+		Name:      "simulation",
+		Aliases:   []string{"si"},
+		Help:      "create simulation",
+		Usage:     "create simulation [id] [name]",
+		AllowArgs: true,
+		Run:       createSimulation,
 	})
 }

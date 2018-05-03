@@ -26,13 +26,6 @@ apply Strategy to all coin balances
 
 */
 
-type Simulation interface {
-	GetID() string
-	GetName() string
-	SetBuyStrategy(strategy Strategy) error
-	SetSellStrategy(strategy Strategy) error
-}
-
 type simulation struct {
 	id          string
 	name        string
@@ -82,8 +75,31 @@ func (s *server) setSimulation(sim *simulation) {
 }
 
 // CreateSimulation creates a new simulation
-func (s *server) CreateSimulation(ctx context.Context, in *proto.CreateSimulationRequest) (*proto.CreateSimulationResponse, error) {
-	resp := &proto.CreateSimulationResponse{}
+func (s *server) CreateSimulation(ctx context.Context, req *proto.CreateSimulationRequest) (*proto.CreateSimulationResponse, error) {
+	// validate request
+	if req.Id == "" {
+		// if no id is provided generate one
+		req.Id = randSeq(10)
+	}
+
+	if req.Name == "" {
+		// if no name is provided generate one
+		req.Name = "Created simulation"
+	}
+
+	sim, err := s.newSimulation(req.Id, req.Name)
+	if err != nil {
+		return nil, err
+	}
+
+	pSim, err := sim.toProto()
+	if err != nil {
+		return nil, err
+	}
+
+	resp := &proto.CreateSimulationResponse{
+		Simulation: pSim,
+	}
 
 	return resp, nil
 }
@@ -92,24 +108,24 @@ func (s *server) CreateSimulation(ctx context.Context, in *proto.CreateSimulatio
 func (s *server) StartSimulation(ctx context.Context, req *proto.StartSimulationRequest) (*proto.StartSimulationResponse, error) {
 
 	if req.Id == "" {
-		return nil, fmt.Errorf("You must provide a simulation Id")
+		return nil, status.Errorf(codes.InvalidArgument, "You must provide a simulation Id")
 	}
 
 	sim, err := s.getSimulation(req.Id)
 	if err != nil {
-		return nil, fmt.Errorf("Failed to get simulation - %s", err)
+		return nil, status.Errorf(codes.NotFound, "Failed to get simulation - %s", err)
 	}
 
 	sim.Lock()
 	defer sim.Unlock()
 
 	if sim.isRunning {
-		return nil, fmt.Errorf("Simulation Id: %s is already started", req.Id)
+		return nil, status.Errorf(codes.Unavailable, "Simulation Id: %s is already started", req.Id)
 	}
 
 	// validate when
 	if _, ok := proto.StartSimulationRequestWhenOptions_name[int32(req.When)]; !ok {
-		return nil, fmt.Errorf("When value %d is not valid", req.When)
+		return nil, status.Errorf(codes.InvalidArgument, "When value %d is not valid", req.When)
 	}
 
 	now := ServerTime()
@@ -138,7 +154,7 @@ func (s *server) StartSimulation(ctx context.Context, req *proto.StartSimulation
 	case proto.StartSimulationRequest_NOW_REALTIME:
 		sim.useRealtimeData = true
 	default:
-		return nil, fmt.Errorf("When value %d is not valid", req.When)
+		return nil, status.Errorf(codes.InvalidArgument, "When value %d is not valid", req.When)
 	}
 
 	if req.When == proto.StartSimulationRequest_NOW_REALTIME {
@@ -147,11 +163,11 @@ func (s *server) StartSimulation(ctx context.Context, req *proto.StartSimulation
 	}
 
 	if !sim.useHistoricalData && !sim.useRealtimeData {
-		return nil, status.Newf(codes.Unavailable, "Must enable either historical or realtime data").Err()
+		return nil, status.Errorf(codes.Unavailable, "Must enable either historical or realtime data")
 	}
 
 	if sim.useHistoricalData && sim.useRealtimeData {
-		return nil, status.Newf(codes.Unavailable, "Simulation cannot be run in historical and realtime mode simultaneously").Err()
+		return nil, status.Errorf(codes.Unavailable, "Simulation cannot be run in historical and realtime mode simultaneously")
 	}
 
 	go sim.run()
@@ -166,19 +182,19 @@ func (s *server) StopSimulation(ctx context.Context, req *proto.StopSimulationRe
 	resp := &proto.StopSimulationResponse{}
 
 	if req.Id == "" {
-		return nil, status.Newf(codes.InvalidArgument, "You must provide a simulation Id").Err()
+		return nil, status.Errorf(codes.InvalidArgument, "You must provide a simulation Id")
 	}
 
 	sim, err := s.getSimulation(req.Id)
 	if err != nil {
-		return nil, status.Newf(codes.NotFound, "Failed to get simulation - %s", err).Err()
+		return nil, status.Errorf(codes.NotFound, "Failed to get simulation - %s", err)
 	}
 
 	sim.Lock()
 	defer sim.Unlock()
 
 	if !sim.isRunning {
-		return nil, status.Newf(codes.Unavailable, "Simulation Id: %s is not running", req.Id).Err()
+		return nil, status.Errorf(codes.Unavailable, "Simulation Id: %s is not running", req.Id)
 	}
 
 	sim.isRunning = false
@@ -192,11 +208,13 @@ func (s *server) StopSimulation(ctx context.Context, req *proto.StopSimulationRe
 	return resp, nil
 }
 
-func (s *server) NewSimulation(id, simName string, real *portfolio) (Simulation, error) {
+func (s *server) newSimulation(id, simName string) (*simulation, error) {
 
 	if _, ok := s.simulations[id]; ok {
 		return nil, fmt.Errorf("Cannot create simulation %s as it already exists", id)
 	}
+
+	real := s.livePortfolio
 
 	if real == nil {
 		return nil, fmt.Errorf("Portfolio cannot be nil")
@@ -221,14 +239,6 @@ func (s *server) NewSimulation(id, simName string, real *portfolio) (Simulation,
 	s.simulations[id] = sim
 
 	return sim, nil
-}
-
-func (s *simulation) GetID() string {
-	return s.id
-}
-
-func (s *simulation) GetName() string {
-	return s.name
 }
 
 func (s *simulation) SetBuyStrategy(strategy Strategy) error {
@@ -273,20 +283,19 @@ func (s *simulation) run() {
 	s.startedTime = &now
 	s.Unlock()
 
+	// sleep a little at the start
+	// just to help the tests do little check...
+	time.Sleep(500 * time.Millisecond)
+
 	defer func() {
 		s.Lock()
 		s.isRunning = false
-		s.Unlock()
-	}()
-	defer func() {
-		s.Lock()
 		now := ServerTime()
 		s.stoppedTime = &now
 		s.Unlock()
 	}()
 
 	if s.useHistoricalData {
-		// TEMP: use some default dates for running simulation
 
 		frequency := time.Duration(5 * time.Minute)
 
@@ -351,7 +360,6 @@ func (s *simulation) runOverHistory(frequency time.Duration) error {
 	for priceTime := *s.simFromTime; priceTime.Before(toTime); priceTime = priceTime.Add(s.dataFrequency) {
 
 		// DefaultLogger.log(fmt.Sprintf("Reading prices for %s", priceTime))
-
 		// process all symbols in portfolio
 		//for s.portfolio
 

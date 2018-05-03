@@ -24,45 +24,61 @@ func listSimulations(c *grumble.Context) error {
 	}
 
 	for _, simulation := range r.Simulations {
-		if simulation.Portfolio != nil {
-			// Print simulation header details
-			printHeading(fmt.Sprintf("Id: %s", simulation.Id))
-			fmt.Print(formatAttrString("Name",
-				simulation.Name+"\n"))
-			fmt.Print(formatAttrString("Data freq",
-				(time.Duration(int64(simulation.DataFrequency))*time.Second).String()+"\n"))
-			fmt.Print(formatAttrString("Use historical",
-				fmt.Sprintf("%t", simulation.UseHistoricalData)+"\n"))
-			if simulation.UseHistoricalData {
-				// show times as well
-				fmt.Print(formatAttrString("Hist From", formatProtoTimestamp(simulation.FromTime)+"\n"))
-				fmt.Print(formatAttrString("Hist To  ", formatProtoTimestamp(simulation.ToTime)+"\n"))
-			}
-			fmt.Print(formatAttrString("Use realtime",
-				fmt.Sprintf("%t", simulation.UseRealtimeData)+"\n"))
-			fmt.Print(formatAttrString("IsRunning",
-				fmt.Sprintf("%t", simulation.IsRunning)+"\n"))
-			fmt.Print(formatAttrString("Started", formatProtoTimestamp(simulation.StartedTime)+"\n"))
-			fmt.Print(formatAttrString("Stopped", formatProtoTimestamp(simulation.StoppedTime)+"\n"))
-
-			printBalances(simulation.Portfolio.Balances)
-		}
+		printSimulation(simulation)
 	}
 
 	return nil
 }
 
-func createSimulation(c *grumble.Context) error {
+func printSimulation(simulation *proto.Simulation) {
+	if simulation.Portfolio != nil {
+		// Print simulation header details
+		printHeading(fmt.Sprintf("Id: %s", simulation.Id))
+		fmt.Print(formatAttrString("Name",
+			simulation.Name+"\n"))
+		fmt.Print(formatAttrString("Data freq",
+			(time.Duration(int64(simulation.DataFrequency))*time.Second).String()+"\n"))
+		fmt.Print(formatAttrString("Use historical",
+			fmt.Sprintf("%t", simulation.UseHistoricalData)+"\n"))
+		if simulation.UseHistoricalData {
+			// show times as well
+			fmt.Print(formatAttrString("Hist From", formatProtoTimestamp(simulation.FromTime)+"\n"))
+			fmt.Print(formatAttrString("Hist To  ", formatProtoTimestamp(simulation.ToTime)+"\n"))
+		}
+		fmt.Print(formatAttrString("Use realtime",
+			fmt.Sprintf("%t", simulation.UseRealtimeData)+"\n"))
+		fmt.Print(formatAttrString("IsRunning",
+			fmt.Sprintf("%t", simulation.IsRunning)+"\n"))
+		fmt.Print(formatAttrString("Started", formatProtoTimestamp(simulation.StartedTime)+"\n"))
+		fmt.Print(formatAttrString("Stopped", formatProtoTimestamp(simulation.StoppedTime)+"\n"))
 
-	printHeading("Create simulation")
-	req := &proto.CreateSimulationRequest{}
+		printBalances(simulation.Portfolio.Balances)
+	}
+}
+
+func createSimulation(c *grumble.Context) error {
+	id := ""
+	name := ""
+	if len(c.Args) >= 1 {
+		id = c.Args[0]
+	}
+	if len(c.Args) == 2 {
+		name = c.Args[1]
+	}
+
+	req := &proto.CreateSimulationRequest{
+		Id:   id,
+		Name: name,
+	}
 
 	r, err := getClient().CreateSimulation(context.Background(), req)
 	if err != nil {
 		return fmt.Errorf("failed to create simulation: %v\n", err)
 	}
 
-	fmt.Printf("Resp: %#v\n", r)
+	printHeading("Created simulation")
+	printSimulation(r.Simulation)
+
 	return nil
 }
 

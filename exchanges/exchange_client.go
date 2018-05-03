@@ -5,7 +5,7 @@ import "time"
 type ExchangeClient interface {
 	GetCoinBalances() ([]CoinBalance, error)
 	GetLatestPrices() ([]Price, error)
-	GetHistoricPrices() ([]Price, error)
+	//GetHistoricPrices() ([]Price, error)
 	GetDaySummaries() ([]DaySummary, error)
 	GetExchange() string
 }

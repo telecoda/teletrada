@@ -50,7 +50,8 @@ message Balance {
 }
 
 message CreateSimulationRequest {
-  Simulation simulation  = 1;
+  string id  = 1;
+  string name = 2;
 }
 
 message CreateSimulationResponse {

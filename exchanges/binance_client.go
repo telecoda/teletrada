@@ -138,11 +138,11 @@ func (b *binanceClient) GetLatestPrices() ([]Price, error) {
 	return prices, nil
 }
 
-func (b *binanceClient) GetHistoricPrices() ([]Price, error) {
-	// TODO - get some old price data
-	prices := make([]Price, 0)
-	return prices, nil
-}
+// func (b *binanceClient) GetHistoricPrices() ([]Price, error) {
+// 	// TODO - get some old price data
+// 	prices := make([]Price, 0)
+// 	return prices, nil
+// }
 
 func (b *binanceClient) GetDaySummaries() ([]DaySummary, error) {
 
