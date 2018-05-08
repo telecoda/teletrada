@@ -7,6 +7,7 @@ import (
 
 	"github.com/telecoda/teletrada/exchanges"
 	"github.com/telecoda/teletrada/proto"
+	"github.com/telecoda/teletrada/ttserver/servertime"
 )
 
 const (
@@ -38,7 +39,6 @@ type server struct {
 
 type Config struct {
 	UseMock        bool
-	LoadPricesDir  string
 	InfluxDBName   string
 	InfluxUsername string
 	InfluxPassword string
@@ -51,13 +51,16 @@ func NewTradaServer(config Config) (Server, error) {
 
 	DefaultLogger = NewLogger(config.Verbose)
 
+	DefaultArchive = NewSymbolsArchive()
+
 	var err error
 	if config.UseMock {
-		DefaultClient, err = exchanges.NewMockClient()
+		latestPrices, err := initMockPriceHistory(proto.StartSimulationRequest_LAST_DAY)
 		if err != nil {
 			return nil, err
 		}
-		DefaultMetrics, err = newMockMetricsClient("MockMetricsDB")
+
+		err = initMockClients(latestPrices)
 		if err != nil {
 			return nil, err
 		}
@@ -75,7 +78,7 @@ func NewTradaServer(config Config) (Server, error) {
 
 	server := &server{
 		config:     config,
-		startTime:  ServerTime(),
+		startTime:  servertime.Now(),
 		stopUpdate: make(chan bool),
 	}
 
@@ -86,7 +89,7 @@ func (s *server) Init() error {
 	s.Lock()
 	defer s.Unlock()
 
-	s.startTime = ServerTime()
+	s.startTime = servertime.Now()
 
 	// scheduler will do a price update immediately
 	s.startScheduler()

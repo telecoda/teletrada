@@ -1,11 +1,11 @@
-package domain
+package servertime
 
 import (
 	"sync"
 	"time"
 )
 
-var ServerTime = realTime
+var Now = realTime
 
 var fakeTimeLock sync.RWMutex
 var fakeTime time.Time = time.Now().UTC() // default to a reasonable value
@@ -21,12 +21,12 @@ func fakeServerTime() time.Time {
 
 // UseRealTime - reset ServerTime func to use the real time
 func UseRealTime() {
-	ServerTime = realTime
+	Now = realTime
 }
 
 // UseFakeTime - return value of fakeTime variable
 func UseFakeTime() {
-	ServerTime = fakeServerTime
+	Now = fakeServerTime
 }
 
 func TickFakeTime(d time.Duration) {

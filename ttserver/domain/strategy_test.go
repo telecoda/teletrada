@@ -4,22 +4,12 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/telecoda/teletrada/exchanges"
+	"github.com/telecoda/teletrada/ttserver/servertime"
 )
 
 func strategySetup(t *testing.T) {
-	var err error
-	// Use mock metrics client to fetch price info
-	DefaultMetrics, err = newMockMetricsClient(TEST_INFLUX_DATABASE)
+	err := initMockClients(nil)
 	assert.NoError(t, err)
-
-	mc, err := exchanges.NewMockClient()
-	assert.NoError(t, err)
-
-	// run test with mocked data
-	DefaultClient = mc
-
-	DefaultArchive = NewSymbolsArchive()
 }
 func TestBaseStrategy(t *testing.T) {
 	symbol := SymbolType("test-symbol")
@@ -33,7 +23,7 @@ func TestBaseStrategy(t *testing.T) {
 	strat.Stop()
 	assert.False(t, strat.IsRunning())
 
-	now := ServerTime()
+	now := servertime.Now()
 
 	met, err := strat.ConditionMet(now)
 	assert.False(t, met)
@@ -53,7 +43,7 @@ func TestDoNothingStrategy(t *testing.T) {
 	strat.Stop()
 	assert.False(t, strat.IsRunning())
 
-	now := ServerTime()
+	now := servertime.Now()
 
 	met, err := strat.ConditionMet(now)
 	assert.False(t, met)
@@ -63,12 +53,12 @@ func TestDoNothingStrategy(t *testing.T) {
 
 func TestPriceAboveStrategy(t *testing.T) {
 
-	UseFakeTime()
-	defer UseRealTime()
+	servertime.UseFakeTime()
+	defer servertime.UseRealTime()
 
 	strategySetup(t)
 
-	today := ServerTime()
+	today := servertime.Now()
 	tomorrow := today.AddDate(0, 0, 1)
 	yesterday := today.AddDate(0, 0, -1)
 
@@ -130,7 +120,7 @@ func TestPriceBelowStrategy(t *testing.T) {
 
 	strategySetup(t)
 
-	today := ServerTime()
+	today := servertime.Now()
 	tomorrow := today.AddDate(0, 0, 1)
 	yesterday := today.AddDate(0, 0, -1)
 

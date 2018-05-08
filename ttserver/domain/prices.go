@@ -41,8 +41,14 @@ func (p Price) Validate() error {
 	if p.Price == 0 {
 		return fmt.Errorf("Price invalid: Price cannot be zero")
 	}
+	if p.Price < 0 {
+		return fmt.Errorf("Price invalid: Price cannot be negative")
+	}
 	if p.At.IsZero() {
 		return fmt.Errorf("Price invalid: At cannot be zero")
+	}
+	if p.Base == p.As && p.Price != 1.0 {
+		return fmt.Errorf("Price invalid: %s as %s MUST equal 1.0", p.Base, p.As)
 	}
 
 	return nil

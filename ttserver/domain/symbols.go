@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/telecoda/teletrada/proto"
+	"github.com/telecoda/teletrada/ttserver/servertime"
 )
 
 type SymbolType string
@@ -107,6 +108,10 @@ func (s *symbol) GetPriceAs(as SymbolType, at time.Time) (Price, error) {
 	if prices, ok := s.priceAs[as]; !ok || len(prices) == 0 {
 		return Price{}, fmt.Errorf("Symbol: %s has no price information for: %s", s.SymbolType, as)
 	} else {
+
+		// for _, price := range prices {
+		// 	fmt.Printf("TEMP: price sym: %s as: %s at: %s price: %f\n", price.Base, price.As, price.At.String(), price.Price)
+		// }
 		// return search for price with nearest date
 		var priceBefore Price
 		var priceAfter Price
@@ -200,7 +205,7 @@ func (s *symbol) GetLatestPriceAs(as SymbolType) (Price, error) {
 			Base:  s.SymbolType,
 			As:    as,
 			Price: 1.0,
-			At:    ServerTime(),
+			At:    servertime.Now(),
 		}, nil
 	}
 	if prices, ok := s.priceAs[as]; !ok || len(prices) == 0 {

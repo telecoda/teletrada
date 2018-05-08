@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/telecoda/teletrada/proto"
+	"github.com/telecoda/teletrada/ttserver/servertime"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -128,7 +129,7 @@ func (s *server) StartSimulation(ctx context.Context, req *proto.StartSimulation
 		return nil, status.Errorf(codes.InvalidArgument, "When value %d is not valid", req.When)
 	}
 
-	now := ServerTime()
+	now := servertime.Now()
 
 	switch req.When {
 	case proto.StartSimulationRequest_LAST_DAY:
@@ -170,6 +171,16 @@ func (s *server) StartSimulation(ctx context.Context, req *proto.StartSimulation
 		return nil, status.Errorf(codes.Unavailable, "Simulation cannot be run in historical and realtime mode simultaneously")
 	}
 
+	// make a copy of the real portfolio before starting
+	// so we can use it to compare results against
+
+	realAtStart, err := sim.realNow.clone()
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "Failed to clone portfolio - %s", err)
+	}
+
+	sim.realAtStart = realAtStart
+
 	go sim.run()
 
 	resp := &proto.StartSimulationResponse{}
@@ -198,7 +209,7 @@ func (s *server) StopSimulation(ctx context.Context, req *proto.StopSimulationRe
 	}
 
 	sim.isRunning = false
-	now := ServerTime()
+	now := servertime.Now()
 	sim.stoppedTime = &now
 
 	s.setSimulation(sim)
@@ -279,8 +290,9 @@ func (s *simulation) run() {
 
 	s.Lock()
 	s.isRunning = true
-	now := ServerTime()
+	now := servertime.Now()
 	s.startedTime = &now
+	// take a copy of portfolio at start
 	s.Unlock()
 
 	// sleep a little at the start
@@ -290,7 +302,7 @@ func (s *simulation) run() {
 	defer func() {
 		s.Lock()
 		s.isRunning = false
-		now := ServerTime()
+		now := servertime.Now()
 		s.stoppedTime = &now
 		s.Unlock()
 	}()
@@ -372,7 +384,10 @@ func (s *simulation) runOverHistory(frequency time.Duration) error {
 	}
 
 	// print portfolio diffs
-	diff.print()
+	if true == false {
+		// TEMP: skip for now
+		diff.print()
+	}
 
 	DefaultLogger.log(fmt.Sprintf("Historical simulation: %s ended", s.id))
 	return nil

@@ -2,11 +2,13 @@ package domain
 
 import (
 	"context"
+	"fmt"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/telecoda/teletrada/proto"
+	"github.com/telecoda/teletrada/ttserver/servertime"
 	"google.golang.org/grpc/codes"
 	sts "google.golang.org/grpc/status"
 )
@@ -19,7 +21,7 @@ func TestCreateSimulation(t *testing.T) {
 
 	// test initialisation
 
-	s, err := setupTestServer()
+	s, err := initMockServer()
 	assert.NoError(t, err)
 	assert.NotNil(t, s)
 
@@ -66,9 +68,11 @@ func TestCreateSimulation(t *testing.T) {
 				}
 			} else {
 				// check result
-				assert.NotNil(t, resp)
-				assert.Equal(t, test.simName, resp.Simulation.Name)
-				assert.Equal(t, test.simID, resp.Simulation.Id)
+				if assert.NotNil(t, resp) {
+					assert.NotNil(t, resp.Simulation)
+					assert.Equal(t, test.simName, resp.Simulation.Name)
+					assert.Equal(t, test.simID, resp.Simulation.Id)
+				}
 			}
 		})
 	}
@@ -78,10 +82,10 @@ func TestCreateSimulation(t *testing.T) {
 func TestStartSimulationDates(t *testing.T) {
 
 	// This test mainly checks that different simulation types are initialised with the correct dates
-	UseFakeTime()
-	defer UseRealTime()
+	servertime.UseFakeTime()
+	defer servertime.UseRealTime()
 
-	now := ServerTime()
+	now := servertime.Now()
 
 	tests := []struct {
 		name              string
@@ -151,7 +155,7 @@ func TestStartSimulationDates(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 
-			s, err := setupTestServer()
+			s, err := initMockServer()
 			assert.NoError(t, err)
 			assert.NotNil(t, s)
 
@@ -192,10 +196,10 @@ func TestStartSimulationDates(t *testing.T) {
 }
 
 func TestSimulationStartStop(t *testing.T) {
-	UseFakeTime()
-	defer UseRealTime()
+	servertime.UseFakeTime()
+	defer servertime.UseRealTime()
 
-	s, err := setupTestServer()
+	s, err := initMockServer()
 	assert.NoError(t, err)
 	assert.NotNil(t, s)
 
@@ -271,5 +275,132 @@ func TestSimulationStartStop(t *testing.T) {
 	assert.Nil(t, stopResp2)
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "Simulation Id: test-sim-001 is not running")
+
+}
+
+func TestSimulationWithSimpleStrategy(t *testing.T) {
+	servertime.UseFakeTime()
+	defer servertime.UseRealTime()
+
+	s, err := initMockServer()
+	assert.NoError(t, err)
+	assert.NotNil(t, s)
+
+	// cast to internal type
+	server := s.(*server)
+
+	// setup 1 day of mock price changes
+	// _, _, err = setupMockPrices(proto.StartSimulationRequest_LAST_DAY)
+
+	assert.NoError(t, err)
+
+	// Create a sim
+	createReq := &proto.CreateSimulationRequest{
+		Id:   "test-sim-001",
+		Name: "test simulation number 1",
+	}
+
+	ctx := context.Background()
+	createResp, err := s.CreateSimulation(ctx, createReq)
+	assert.NotNil(t, createResp)
+	assert.NoError(t, err)
+
+	testId := "test-sim-001"
+	// Start a sim
+	startReq := &proto.StartSimulationRequest{
+		Id:   testId,
+		When: proto.StartSimulationRequest_LAST_DAY,
+	}
+
+	ctx = context.Background()
+	startResp, err := s.StartSimulation(ctx, startReq)
+	assert.NotNil(t, startResp)
+	assert.NoError(t, err)
+
+	isFinished := false
+
+	// keep checking until sim has finished running
+	for !isFinished {
+
+		req := &proto.GetSimulationsRequest{
+			Id: testId,
+		}
+
+		resp, err := s.GetSimulations(ctx, req)
+		assert.NoError(t, err)
+		if err != nil {
+			return
+		}
+		if len(resp.Simulations) != 1 {
+			assert.Fail(t, "returned wrong number of simulations")
+			return
+		}
+		sim := resp.Simulations[0]
+		if sim.Id != testId {
+			assert.Fail(t, "Id: %s does not match %s", testId, sim.Id)
+		}
+
+		if !sim.IsRunning && sim.StoppedTime != nil {
+			isFinished = true
+
+		} else {
+			// still running
+			// update fake time
+			servertime.TickFakeTime(1 * time.Hour)
+			// sleep for a bit
+			time.Sleep(500 * time.Millisecond)
+		}
+	}
+
+	// inspect results
+
+	sim, ok := server.simulations[testId]
+	if assert.True(t, ok, "Simulation %s not found", testId) {
+		// only check results if actually found
+		assert.Equal(t, testId, sim.id)
+		assert.NotNil(t, sim.portfolio)
+		assert.NotNil(t, sim.realAtStart)
+		assert.NotNil(t, sim.realNow)
+
+		assert.NotNil(t, sim.simFromTime)
+		assert.NotNil(t, sim.simToTime)
+		assert.NotNil(t, sim.startedTime)
+		assert.NotNil(t, sim.stoppedTime)
+
+		// 1 day test
+		simDur := sim.simToTime.Sub(*sim.simFromTime)
+		assert.Equal(t, time.Duration(24*time.Hour), simDur)
+		execDur := sim.stoppedTime.Sub(*sim.startedTime)
+		assert.Equal(t, time.Duration(1*time.Hour), execDur)
+
+		// reprice "now" portfolio
+		err := sim.realNow.repriceBalancesAt(servertime.Now())
+		assert.NoError(t, err)
+
+		// reprice simulated portfolio
+		err = sim.portfolio.repriceBalancesAt(servertime.Now())
+		assert.NoError(t, err)
+
+		// ETH price doubles over 24 hours
+
+		realEthStart, ok := sim.realAtStart.balances[ETH]
+		if !ok {
+			assert.Fail(t, "RealAtStart %s not found", ETH)
+		}
+
+		realEthNow, ok := sim.realNow.balances[ETH]
+		if !ok {
+			assert.Fail(t, "RealNow %s not found", ETH)
+		}
+
+		// should have same number of coins still
+		assert.Equal(t, realEthStart.Total, realEthNow.Total)
+		// should have same different prices
+		assert.NotEqual(t, realEthStart.Price, realEthNow.Price)
+
+		fmt.Printf("TEMP: start: %#v\n", realEthStart)
+		fmt.Printf("TEMP: now: %#v\n", realEthNow)
+
+	}
 
 }

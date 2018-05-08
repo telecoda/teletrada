@@ -10,7 +10,7 @@ import (
 
 func TestLogEndpoint(t *testing.T) {
 
-	server, err := setupTestServer()
+	server, err := initMockServer()
 	assert.NoError(t, err)
 
 	req := &proto.GetLogRequest{}
@@ -32,7 +32,7 @@ func TestLogEndpoint(t *testing.T) {
 
 func TestLogPurge(t *testing.T) {
 
-	server, err := setupTestServer()
+	server, err := initMockServer()
 	assert.NoError(t, err)
 
 	for i := 0; i < MAX_LOG; i++ {

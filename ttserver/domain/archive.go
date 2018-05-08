@@ -11,6 +11,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/telecoda/teletrada/ttserver/servertime"
 )
 
 var DefaultArchive = NewSymbolsArchive()
@@ -206,6 +208,7 @@ func (sa *symbolsArchive) getPriceAs(base SymbolType, as SymbolType, at time.Tim
 	if err != nil {
 		return Price{}, fmt.Errorf("unable to convert %q to %q as their is no %s/%s prices at %s", base, as, base, as, at.Format(DATE_FORMAT))
 	}
+	fmt.Printf("Getting symbol %s as %s at %s - price: %#v\n", base, as, at.String(), price)
 	return price, nil
 }
 
@@ -258,7 +261,7 @@ func (sa *symbolsArchive) UpdatePrices() error {
 
 	sa.Lock()
 	sa.updateCount++
-	sa.lastUpdated = ServerTime()
+	sa.lastUpdated = servertime.Now()
 	sa.Unlock()
 	return nil
 }

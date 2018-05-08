@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"log"
 	"time"
+
+	"github.com/telecoda/teletrada/ttserver/servertime"
 )
 
 func (s *server) startScheduler() {
@@ -31,7 +33,7 @@ func (s *server) startScheduler() {
 
 	// fetch end of day prices at end of day every 24 hours
 	go func() {
-		now := ServerTime()
+		now := servertime.Now()
 		next := now.Truncate(time.Hour*24).AddDate(0, 0, 1)
 		delay := next.Sub(now)
 		DefaultLogger.log(fmt.Sprintf("Next daily update in %s", delay.String()))

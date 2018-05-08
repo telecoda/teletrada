@@ -2,6 +2,7 @@ package domain
 
 import (
 	tspb "github.com/golang/protobuf/ptypes"
+	"github.com/telecoda/teletrada/exchanges"
 	"github.com/telecoda/teletrada/proto"
 )
 
@@ -153,4 +154,14 @@ func strategyToProto(s Strategy) (*proto.Strategy, error) {
 		IsRunning:   s.IsRunning(),
 	}
 	return ps, nil
+}
+
+func (p Price) toExchangePrice() exchanges.Price {
+	return exchanges.Price{
+		Base:     string(p.Base),
+		As:       string(p.As),
+		Price:    p.Price,
+		Exchange: p.Exchange,
+		At:       p.At,
+	}
 }

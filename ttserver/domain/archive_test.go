@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/telecoda/teletrada/exchanges"
+	"github.com/telecoda/teletrada/ttserver/servertime"
 )
 
 func setupArchive() *symbolsArchive {
@@ -54,7 +54,7 @@ func TestSavePrice(t *testing.T) {
 	priceSymbol := SymbolType(USDT)
 	priceYest := 1234.56
 	priceToday := 2345.67
-	today := ServerTime()
+	today := servertime.Now()
 	yesterday := today.AddDate(0, 0, -1)
 
 	archive := setupArchive()
@@ -107,24 +107,13 @@ func TestSavePrice(t *testing.T) {
 
 func TestUpdatePrices(t *testing.T) {
 
-	var err error
+	_, err := initMockServer()
+	assert.NoError(t, err)
 
 	archive := NewTestSymbolsArchive()
 
-	DefaultMetrics, err = newMetricsClient(TEST_INFLUX_DATABASE)
-	assert.NoError(t, err)
-
-	mc, err := exchanges.NewMockClient()
-	assert.NoError(t, err)
-	mtc, err := newMockMetricsClient("test")
-	assert.NoError(t, err)
-
-	// run test with mocked data
-	DefaultClient = mc
-	DefaultMetrics = mtc
-
-	testSymbol := SymbolType("BTC")
-	currency := SymbolType("USDT")
+	testSymbol := SymbolType(BTC)
+	currency := SymbolType(USDT)
 
 	_, err = archive.GetSymbol(testSymbol)
 	assert.Error(t, err, "Error expected no symbols loaded")
@@ -133,14 +122,15 @@ func TestUpdatePrices(t *testing.T) {
 	assert.NoError(t, err, "Should not return an error")
 
 	btc, err := archive.GetSymbol(testSymbol)
-	assert.NoError(t, err)
-	assert.Equal(t, btc.GetType(), testSymbol)
+	if assert.NoError(t, err) {
+		assert.Equal(t, btc.GetType(), testSymbol)
 
-	latestPrice, err := btc.GetLatestPriceAs(currency)
-	assert.NoError(t, err)
-	assert.Equal(t, testSymbol, latestPrice.Base)
-	assert.Equal(t, currency, latestPrice.As)
-	assert.Equal(t, 12000.12345, latestPrice.Price)
+		latestPrice, err := btc.GetLatestPriceAs(currency)
+		assert.NoError(t, err)
+		assert.Equal(t, testSymbol, latestPrice.Base)
+		assert.Equal(t, currency, latestPrice.As)
+		assert.Equal(t, _btcAsUsdt, latestPrice.Price)
+	}
 
 }
 
@@ -148,14 +138,8 @@ func TestPricePersistence(t *testing.T) {
 
 	archive := setupArchive()
 
-	mc, err := exchanges.NewMockClient()
+	_, err := initMockServer()
 	assert.NoError(t, err)
-	mtc, err := newMockMetricsClient("test")
-	assert.NoError(t, err)
-
-	// run test with mocked data
-	DefaultClient = mc
-	DefaultMetrics = mtc
 
 	err = archive.UpdatePrices()
 	assert.NoError(t, err)
@@ -174,18 +158,15 @@ func TestMultiCurrencyPrices(t *testing.T) {
 
 	archive := setupArchive()
 
-	mc, err := exchanges.NewMockClient()
+	_, err := initMockServer()
 	assert.NoError(t, err)
-
-	// run test with mocked data
-	DefaultClient = mc
 
 	ltcSymbol := SymbolType("LTC")
 	btcSymbol := SymbolType("BTC")
 	ethSymbol := SymbolType("ETH")
 	usdtSymbol := SymbolType("USDT")
 
-	today := ServerTime()
+	today := servertime.Now()
 
 	// add LTC -> BTC price
 	LtcBtcPrice := Price{
@@ -302,18 +283,15 @@ func TestMultiCurrencyPricesAt(t *testing.T) {
 
 	archive := setupArchive()
 
-	mc, err := exchanges.NewMockClient()
+	_, err := initMockServer()
 	assert.NoError(t, err)
-
-	// run test with mocked data
-	DefaultClient = mc
 
 	ltcSymbol := SymbolType("LTC")
 	btcSymbol := SymbolType("BTC")
 	ethSymbol := SymbolType("ETH")
 	usdtSymbol := SymbolType("USDT")
 
-	today := ServerTime()
+	today := servertime.Now()
 	yesterday := today.AddDate(0, 0, -1)
 
 	// add LTC -> BTC price

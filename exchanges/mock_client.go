@@ -1,21 +1,24 @@
 package exchanges
 
-import "time"
+import (
+	"time"
+)
 
 type mockClient struct {
 	balances     []CoinBalance
 	prices       []Price
 	daySummaries []DaySummary
+	serverTime   func() time.Time
 }
 
 const (
 	MOCK_EXCHANGE = "mockexchange"
 )
 
-func NewMockClient() (ExchangeClient, error) {
+func NewMockClient(coinBalances []CoinBalance, exchangePrices []Price) (ExchangeClient, error) {
 	mock := &mockClient{
-		balances: initMockBalances(),
-		prices:   initMockPrices(),
+		balances: coinBalances,
+		prices:   exchangePrices,
 	}
 
 	return mock, nil
@@ -25,67 +28,49 @@ func (m *mockClient) GetExchange() string {
 	return MOCK_EXCHANGE
 }
 
-// These are the mock balances used in all the simulation & portfolio tests. Be careful when you change them
-
-func initMockBalances() []CoinBalance {
-	return []CoinBalance{
-		CoinBalance{Symbol: "BTC", Free: 12.50, Locked: 12.50, Exchange: MOCK_EXCHANGE},
-		CoinBalance{Symbol: "ETH", Free: 122.50, Locked: 122.50, Exchange: MOCK_EXCHANGE},
-		CoinBalance{Symbol: "LTC", Free: 222.50, Locked: 222.50, Exchange: MOCK_EXCHANGE},
-	}
-}
-
-func initMockPrices() []Price {
-	return []Price{
-		Price{Base: "BTC", As: "USDT", Price: 12000.12345, At: time.Now()},
-		Price{Base: "ETH", As: "BTC", Price: 0.1, At: time.Now()},
-		Price{Base: "LTC", As: "BTC", Price: 0.12345, At: time.Now()},
-	}
-}
-
-func initMockDaySummaries() []DaySummary {
-	return []DaySummary{
-		DaySummary{
-			Base:             "BTC",
-			As:               "USDT",
-			OpenPrice:        10000.00,
-			ClosePrice:       11000.00,
-			WeightedAvgPrice: 10500.00,
-			HighestPrice:     11500.00,
-			LowestPrice:      9500.00,
-			ChangePrice:      1000.00,
-			ChangePercent:    10.00,
-			At:               time.Now(),
-			Exchange:         MOCK_EXCHANGE,
-		},
-		DaySummary{
-			Base:             "ETH",
-			As:               "USDT",
-			OpenPrice:        1100.00,
-			ClosePrice:       1000.00,
-			WeightedAvgPrice: 1050.00,
-			HighestPrice:     1150.00,
-			LowestPrice:      950.00,
-			ChangePrice:      -100.00,
-			ChangePercent:    -10.00,
-			At:               time.Now(),
-			Exchange:         MOCK_EXCHANGE,
-		},
-		DaySummary{
-			Base:             "LTC",
-			As:               "USDT",
-			OpenPrice:        110.00,
-			ClosePrice:       100.00,
-			WeightedAvgPrice: 150.00,
-			HighestPrice:     150.00,
-			LowestPrice:      90.00,
-			ChangePrice:      -10.00,
-			ChangePercent:    -99.1234,
-			At:               time.Now(),
-			Exchange:         MOCK_EXCHANGE,
-		},
-	}
-}
+// func initMockDaySummaries() []DaySummary {
+// 	return []DaySummary{
+// 		DaySummary{
+// 			Base:             "BTC",
+// 			As:               "USDT",
+// 			OpenPrice:        10000.00,
+// 			ClosePrice:       11000.00,
+// 			WeightedAvgPrice: 10500.00,
+// 			HighestPrice:     11500.00,
+// 			LowestPrice:      9500.00,
+// 			ChangePrice:      1000.00,
+// 			ChangePercent:    10.00,
+// 			At:               servertime.Now(),
+// 			Exchange:         MOCK_EXCHANGE,
+// 		},
+// 		DaySummary{
+// 			Base:             "ETH",
+// 			As:               "USDT",
+// 			OpenPrice:        1100.00,
+// 			ClosePrice:       1000.00,
+// 			WeightedAvgPrice: 1050.00,
+// 			HighestPrice:     1150.00,
+// 			LowestPrice:      950.00,
+// 			ChangePrice:      -100.00,
+// 			ChangePercent:    -10.00,
+// 			At:               servertime.Now(),
+// 			Exchange:         MOCK_EXCHANGE,
+// 		},
+// 		DaySummary{
+// 			Base:             "LTC",
+// 			As:               "USDT",
+// 			OpenPrice:        110.00,
+// 			ClosePrice:       100.00,
+// 			WeightedAvgPrice: 150.00,
+// 			HighestPrice:     150.00,
+// 			LowestPrice:      90.00,
+// 			ChangePrice:      -10.00,
+// 			ChangePercent:    -99.1234,
+// 			At:               servertime.Now(),
+// 			Exchange:         MOCK_EXCHANGE,
+// 		},
+// 	}
+// }
 
 func (m *mockClient) GetCoinBalances() ([]CoinBalance, error) {
 	return m.balances, nil

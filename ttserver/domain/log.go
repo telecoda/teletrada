@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/telecoda/teletrada/proto"
+	"github.com/telecoda/teletrada/ttserver/servertime"
 )
 
 var MAX_LOG = 1000
@@ -38,7 +39,7 @@ func NewLogger(isVerbose bool) Logger {
 
 func (l *logger) log(msg string) {
 	entry := LogEntry{
-		Timestamp: ServerTime(),
+		Timestamp: servertime.Now(),
 		Message:   msg,
 	}
 	l.statusLog = append(l.statusLog, entry)

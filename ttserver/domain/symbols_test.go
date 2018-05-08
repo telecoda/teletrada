@@ -5,13 +5,14 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/telecoda/teletrada/ttserver/servertime"
 )
 
 func TestSymbolPrices(t *testing.T) {
 	testSymbol := SymbolType("tester")
 	symbol := NewSymbol(testSymbol)
 
-	today := ServerTime()
+	today := servertime.Now()
 	yesterday := today.AddDate(0, 0, -1)
 
 	// add today's USD price

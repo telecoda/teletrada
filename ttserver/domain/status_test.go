@@ -10,7 +10,7 @@ import (
 
 func TestStatusEndpoint(t *testing.T) {
 
-	server, err := setupTestServer()
+	server, err := initMockServer()
 	assert.NoError(t, err)
 
 	req := &proto.GetStatusRequest{}

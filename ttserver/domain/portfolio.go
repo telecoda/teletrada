@@ -4,9 +4,11 @@ import (
 	"context"
 	"fmt"
 	"sync"
+	"time"
 
 	"github.com/telecoda/teletrada/exchanges"
 	"github.com/telecoda/teletrada/proto"
+	"github.com/telecoda/teletrada/ttserver/servertime"
 )
 
 type portfolio struct {
@@ -154,13 +156,13 @@ func (p *portfolio) refreshCoinBalances() error {
 		if balance, ok := p.balances[symbol]; ok {
 			balance.CoinBalance = coinBalance
 			balance.Total = coinBalance.Free + coinBalance.Locked
-			balance.At = ServerTime()
+			balance.At = servertime.Now()
 		} else {
 			// new balance
 			newBalance := &BalanceAs{
 				CoinBalance: coinBalance,
 				As:          DEFAULT_SYMBOL,
-				At:          ServerTime(),
+				At:          servertime.Now(),
 				Total:       coinBalance.Free + coinBalance.Locked,
 			}
 			p.balances[symbol] = newBalance
@@ -170,6 +172,7 @@ func (p *portfolio) refreshCoinBalances() error {
 	return nil
 }
 
+// repriceBalances - will reprice all balances based upon latest prices
 func (p *portfolio) repriceBalances() error {
 	// convert exchange balances to trada balances
 	for _, balance := range p.balances {
@@ -177,12 +180,34 @@ func (p *portfolio) repriceBalances() error {
 		if err := balance.reprice(); err != nil {
 			return fmt.Errorf("failed reprice balance: %#v - %s", balance, err)
 		}
-
 	}
-
 	return nil
 }
 
+// repriceBalancesT - will reprice all balances based upon prices at a specific time
+func (p *portfolio) repriceBalancesAt(at time.Time) error {
+	// convert exchange balances to trada balances
+	for _, balance := range p.balances {
+
+		if err := balance.repriceAt(at); err != nil {
+			return fmt.Errorf("failed reprice balance: %#v - %s", balance, err)
+		}
+
+	}
+	return nil
+}
+
+// repriceAt will reprice balances based upon prices at a specific time
+func (b *BalanceAs) repriceAt(at time.Time) error {
+	// find latest price for trading pair
+	priceAs, err := DefaultArchive.GetPriceAs(SymbolType(b.Symbol), b.As, at)
+	if err != nil {
+		return fmt.Errorf("failed to get latest price for: %s as %s - %s", b.Symbol, b.As, err)
+	}
+	return b.repriceUsing(priceAs)
+}
+
+// reprice will reprice balances based upon latest prices
 func (b *BalanceAs) reprice() error {
 	// find latest price for trading pair
 	priceAs, err := DefaultArchive.GetLatestPriceAs(SymbolType(b.Symbol), b.As)
@@ -190,6 +215,10 @@ func (b *BalanceAs) reprice() error {
 		return fmt.Errorf("failed to get latest price for: %s as %s - %s", b.Symbol, b.As, err)
 	}
 
+	return b.repriceUsing(priceAs)
+}
+
+func (b *BalanceAs) repriceUsing(priceAs Price) error {
 	// reprice balance
 	b.Price = priceAs.Price
 	b.Value = priceAs.Price * b.Total

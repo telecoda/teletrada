@@ -37,7 +37,6 @@ type params struct {
 func (p *params) setup() {
 	flag.BoolVar(&p.useMock, "usemock", false, "Use mock exchange client")
 	flag.BoolVar(&p.verbose, "v", false, "Verbose logging")
-	flag.StringVar(&p.loadPricesDir, "loadpricesdir", "priceHistory", "Dir to load historic prices from")
 	flag.DurationVar(&p.updateFreq, "updatefreq", time.Duration(60*time.Second), "Update frequency")
 	flag.IntVar(&p.port, "port", 13370, "Port for server to listen on")
 }
@@ -49,7 +48,6 @@ func main() {
 
 	config := domain.Config{
 		UseMock:        p.useMock,
-		LoadPricesDir:  p.loadPricesDir,
 		InfluxDBName:   os.Getenv(INFLUX_DB_NAME),
 		InfluxUsername: os.Getenv(INFLUX_USERNAME),
 		InfluxPassword: os.Getenv(INFLUX_PASSWORD),

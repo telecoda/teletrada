@@ -5,6 +5,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/telecoda/teletrada/exchanges"
+	"github.com/telecoda/teletrada/ttserver/servertime"
 )
 
 func TestClone(t *testing.T) {
@@ -15,7 +16,7 @@ func TestClone(t *testing.T) {
 		balances: make(map[SymbolType]*BalanceAs),
 	}
 
-	now := ServerTime()
+	now := servertime.Now()
 	// add some balances
 	balance1 := &BalanceAs{
 		CoinBalance: exchanges.CoinBalance{
@@ -83,7 +84,7 @@ func TestDiffNoDifferences(t *testing.T) {
 		balances: make(map[SymbolType]*BalanceAs),
 	}
 
-	now := ServerTime()
+	now := servertime.Now()
 	// add some balances
 	balance1 := &BalanceAs{
 		CoinBalance: exchanges.CoinBalance{
@@ -167,7 +168,7 @@ func TestDiffWithDifferences(t *testing.T) {
 		balances: make(map[SymbolType]*BalanceAs),
 	}
 
-	now := ServerTime()
+	now := servertime.Now()
 	// add some balances
 	balance1 := &BalanceAs{
 		CoinBalance: exchanges.CoinBalance{
