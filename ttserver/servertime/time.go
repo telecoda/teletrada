@@ -5,10 +5,14 @@ import (
 	"time"
 )
 
+func init() {
+	InitFakeTime()
+}
+
 var Now = realTime
 
 var fakeTimeLock sync.RWMutex
-var fakeTime time.Time = time.Now().UTC() // default to a reasonable value
+var fakeTime time.Time // default to a reasonable value
 
 var realTime = func() time.Time { return time.Now().UTC() }
 

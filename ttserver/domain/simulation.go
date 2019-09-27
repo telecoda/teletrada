@@ -369,7 +369,30 @@ func (s *simulation) runOverHistory(frequency time.Duration) error {
 	// Replay all prices between dates
 	toTime := *s.simToTime
 
-	for priceTime := *s.simFromTime; priceTime.Before(toTime); priceTime = priceTime.Add(s.dataFrequency) {
+	for priceTime := *s.simFromTime; priceTime.Before(toTime) || priceTime.Equal(toTime); priceTime = priceTime.Add(s.dataFrequency) {
+		// reprice current portfolio at this time
+		if err := s.portfolio.repriceAt(priceTime); err != nil {
+			return fmt.Errorf("Error repriced simulated portfolio at: %s - %s", priceTime.String(), err)
+		}
+
+		// now coins have correct price for time
+		// execute strategies
+
+		for symbol, balance := range s.portfolio.balances {
+			if balance.SellStrategy != nil {
+				// exec Sell strat
+				sell, err := balance.SellStrategy.ConditionMet(priceTime)
+				if err != nil {
+					return fmt.Errorf("Error executing sell strategy for symbol: %s - %s", symbol, err)
+				}
+				if sell {
+					// sell, Sell, SELL!
+				}
+			}
+			if balance.BuyStrategy != nil {
+				// exec Buy strat
+			}
+		}
 
 		// DefaultLogger.log(fmt.Sprintf("Reading prices for %s", priceTime))
 		// process all symbols in portfolio

@@ -109,10 +109,6 @@ func (s *symbol) GetPriceAs(as SymbolType, at time.Time) (Price, error) {
 		return Price{}, fmt.Errorf("Symbol: %s has no price information for: %s", s.SymbolType, as)
 	} else {
 
-		// for _, price := range prices {
-		// 	fmt.Printf("TEMP: price sym: %s as: %s at: %s price: %f\n", price.Base, price.As, price.At.String(), price.Price)
-		// }
-		// return search for price with nearest date
 		var priceBefore Price
 		var priceAfter Price
 

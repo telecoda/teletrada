@@ -279,6 +279,7 @@ func TestSimulationStartStop(t *testing.T) {
 }
 
 func TestSimulationWithSimpleStrategy(t *testing.T) {
+
 	servertime.UseFakeTime()
 	defer servertime.UseRealTime()
 
@@ -288,9 +289,6 @@ func TestSimulationWithSimpleStrategy(t *testing.T) {
 
 	// cast to internal type
 	server := s.(*server)
-
-	// setup 1 day of mock price changes
-	// _, _, err = setupMockPrices(proto.StartSimulationRequest_LAST_DAY)
 
 	assert.NoError(t, err)
 
@@ -373,33 +371,99 @@ func TestSimulationWithSimpleStrategy(t *testing.T) {
 		execDur := sim.stoppedTime.Sub(*sim.startedTime)
 		assert.Equal(t, time.Duration(1*time.Hour), execDur)
 
+		// reprice "start" portfolio
+		err := sim.realAtStart.repriceAt(*sim.simFromTime)
+		assert.NoError(t, err)
+
 		// reprice "now" portfolio
-		err := sim.realNow.repriceBalancesAt(servertime.Now())
+		err = sim.realNow.repriceAt(servertime.Now())
 		assert.NoError(t, err)
 
 		// reprice simulated portfolio
-		err = sim.portfolio.repriceBalancesAt(servertime.Now())
-		assert.NoError(t, err)
+		//err = sim.portfolio.repriceAt(servertime.Now())
+		//assert.NoError(t, err)
 
-		// ETH price doubles over 24 hours
+		// LTC as ETH goes up and down..
+
+		// all balances are stored as BTC
+		// need to convert prices to correct symbol
+		// to do any real comparisons
 
 		realEthStart, ok := sim.realAtStart.balances[ETH]
 		if !ok {
 			assert.Fail(t, "RealAtStart %s not found", ETH)
 		}
-
 		realEthNow, ok := sim.realNow.balances[ETH]
 		if !ok {
 			assert.Fail(t, "RealNow %s not found", ETH)
 		}
+		portEthNow, ok := sim.portfolio.balances[ETH]
+		if !ok {
+			assert.Fail(t, "Portfolio Now %s not found", ETH)
+		}
+
+		realBtcStart, ok := sim.realAtStart.balances[BTC]
+		if !ok {
+			assert.Fail(t, "RealAtStart %s not found", BTC)
+		}
+		realBtcNow, ok := sim.realNow.balances[BTC]
+		if !ok {
+			assert.Fail(t, "RealNow %s not found", BTC)
+		}
+		portBtcNow, ok := sim.portfolio.balances[BTC]
+		if !ok {
+			assert.Fail(t, "Portfolio Now %s not found", BTC)
+		}
 
 		// should have same number of coins still
 		assert.Equal(t, realEthStart.Total, realEthNow.Total)
-		// should have same different prices
-		assert.NotEqual(t, realEthStart.Price, realEthNow.Price)
+		assert.Equal(t, realBtcStart.Total, realBtcNow.Total)
+		assert.Equal(t, realEthStart.Total, portEthNow.Total)
+		assert.Equal(t, realBtcStart.Total, portBtcNow.Total)
 
-		fmt.Printf("TEMP: start: %#v\n", realEthStart)
-		fmt.Printf("TEMP: now: %#v\n", realEthNow)
+		// should have different prices
+		// ETH as BTC goes down
+		if realEthStart.Price <= realEthNow.Price {
+			fmt.Printf("ETH Start: %s - %#v\n", realEthStart.At.String(), realEthStart)
+			fmt.Printf("ETH Now: %s - %#v\n", realEthNow.At.String(), realEthNow)
+			assert.Fail(t, "ETH price didn't go down")
+		}
+		if realEthStart.Price <= portEthNow.Price {
+			fmt.Printf("ServerTime: %s\n", servertime.Now().String())
+			fmt.Printf("Sim From: %s\n", sim.simFromTime.String())
+			fmt.Printf("Sim To: %s\n", sim.simToTime.String())
+			fmt.Printf("Sim Started: %s\n", sim.startedTime.String())
+			fmt.Printf("Sim Stopped: %s\n", sim.stoppedTime.String())
+			fmt.Printf("ETH Start: %s - %f\n", realEthStart.At.String(), realEthStart.Price)
+			fmt.Printf("ETH Now: %s - %f\n", realEthNow.At.String(), realEthNow.Price)
+			fmt.Printf("ETH Port Now: %s - %f\n", portEthNow.At.String(), portEthNow.Price)
+			assert.Fail(t, "ETH price didn't go down")
+		}
+		// should have different prices
+		// BTC as ETH goes up
+
+		// convert BTC as BTC to BTC as ETH
+		realBtcStartAsEth, err := realBtcStart.convertTo(ETH)
+		assert.NoError(t, err)
+
+		realBtcNowAsEth, err := realBtcNow.convertTo(ETH)
+		assert.NoError(t, err)
+
+		portBtcNowAsEth, err := portBtcNow.convertTo(ETH)
+		assert.NoError(t, err)
+
+		if realBtcStartAsEth.Price >= realBtcNowAsEth.Price {
+			fmt.Printf("BTC Start: %s - %#v\n", realBtcStartAsEth.At.String(), realBtcStartAsEth)
+			fmt.Printf("BTC Now: %s - %#v\n", realBtcNowAsEth.At.String(), realBtcNowAsEth)
+			assert.Fail(t, "BTC price didn't go up")
+		}
+		if realBtcStartAsEth.Price >= portBtcNowAsEth.Price {
+			fmt.Printf("BTC Start: %s - %#v\n", realBtcStartAsEth.At.String(), realBtcStartAsEth)
+			fmt.Printf("BTC Now: %s - %#v\n", realBtcNowAsEth.At.String(), realBtcNowAsEth)
+			fmt.Printf("BTC Port Now: %s - %#v\n", portBtcNowAsEth.At.String(), portBtcNowAsEth)
+			assert.Fail(t, "BTC price didn't go up")
+		}
+		// check if strategy has ever triggered
 
 	}
 

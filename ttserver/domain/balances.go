@@ -23,3 +23,19 @@ type BalanceAs struct {
 	BuyStrategy  Strategy
 	SellStrategy Strategy
 }
+
+// convertTo will convert a balance from its original symbol type to another symbol type
+func (b *BalanceAs) convertTo(as SymbolType) (*BalanceAs, error) {
+
+	newB := BalanceAs(*b)
+	newB.RWMutex = sync.RWMutex{}
+
+	newB.As = as
+
+	err := newB.repriceAt(newB.At)
+	if err != nil {
+		return nil, err
+	}
+
+	return &newB, nil
+}

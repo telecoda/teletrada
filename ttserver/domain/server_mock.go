@@ -32,10 +32,12 @@ var _ltcAsUsdt = 180.00 // $180
 
 func initMockServer() (Server, error) {
 
+	servertime.InitFakeTime()
 	// override server time func
 	servertime.UseFakeTime()
 
 	now := servertime.Now()
+
 	// reset time
 	// fakeTime gets bumped during setting up mock historical prices
 	defer servertime.SetFakeTime(now)
@@ -171,19 +173,15 @@ func initMockPriceHistory(when proto.StartSimulationRequestWhenOptions) ([]excha
 			price := Price{
 				Base:     priceType.base,
 				As:       priceType.as,
-				At:       servertime.Now(),
+				At:       priceTime,
 				Price:    priceType.price(),
 				Exchange: "test-exchange",
 			}
 			err := DefaultArchive.AddPrice(price)
-			fmt.Printf("TEMP: adding price %s - %s at %s as %f\n", price.Base, price.As, price.At.String(), price.Price)
 			if err != nil {
 				return nil, err
 			}
 		}
-
-		// bump time
-		servertime.TickFakeTime(dataFrequency)
 	}
 
 	// type priceFunc func() float64

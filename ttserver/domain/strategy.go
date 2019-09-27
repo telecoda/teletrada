@@ -16,6 +16,8 @@ type Strategy interface {
 	Start()
 	Stop()
 	IsRunning() bool
+	TriggerCount() int
+	IncCount()
 }
 
 /*
@@ -33,11 +35,12 @@ Buy/Sell Strategies
 
 type baseStrategy struct {
 	sync.RWMutex
-	id          string
-	symbol      SymbolType
-	as          SymbolType
-	coinPercent float64
-	isRunning   bool
+	id           string
+	symbol       SymbolType
+	as           SymbolType
+	coinPercent  float64
+	isRunning    bool
+	triggerCount int
 }
 
 // NewBaseStrategy - creates a Base Strategy
@@ -107,6 +110,14 @@ func (b *baseStrategy) IsRunning() bool {
 	b.RLock()
 	defer b.RUnlock()
 	return b.isRunning
+}
+
+func (b *baseStrategy) TriggerCount() int {
+	return b.triggerCount
+}
+
+func (b *baseStrategy) IncCount() {
+	b.triggerCount++
 }
 
 // Start - start the strategy running
@@ -192,6 +203,7 @@ func (p *priceAboveStrategy) ConditionMet(at time.Time) (bool, error) {
 	}
 
 	if price.Price > p.abovePrice {
+		p.IncCount()
 		return true, nil
 	}
 
@@ -241,6 +253,7 @@ func (p *priceBelowStrategy) ConditionMet(at time.Time) (bool, error) {
 	}
 
 	if price.Price < p.belowPrice {
+		p.IncCount()
 		return true, nil
 	}
 

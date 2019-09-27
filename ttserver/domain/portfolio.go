@@ -85,7 +85,7 @@ func (s *server) initPortfolios() error {
 		}
 	}
 
-	if err := s.livePortfolio.repriceBalances(); err != nil {
+	if err := s.livePortfolio.reprice(); err != nil {
 		return err
 	}
 
@@ -100,13 +100,13 @@ func (s *server) updatePortfolios() error {
 		return err
 	}
 
-	if err := s.livePortfolio.repriceBalances(); err != nil {
+	if err := s.livePortfolio.reprice(); err != nil {
 		return err
 	}
 
 	for _, simulation := range s.simulations {
 		if simulation.useRealtimeData {
-			if err := simulation.repriceBalances(); err != nil {
+			if err := simulation.reprice(); err != nil {
 				return err
 			}
 		}
@@ -172,8 +172,8 @@ func (p *portfolio) refreshCoinBalances() error {
 	return nil
 }
 
-// repriceBalances - will reprice all balances based upon latest prices
-func (p *portfolio) repriceBalances() error {
+// reprice - will reprice all balances based upon latest prices
+func (p *portfolio) reprice() error {
 	// convert exchange balances to trada balances
 	for _, balance := range p.balances {
 
@@ -184,8 +184,8 @@ func (p *portfolio) repriceBalances() error {
 	return nil
 }
 
-// repriceBalancesT - will reprice all balances based upon prices at a specific time
-func (p *portfolio) repriceBalancesAt(at time.Time) error {
+// repriceAt - will reprice all balances based upon prices at a specific time
+func (p *portfolio) repriceAt(at time.Time) error {
 	// convert exchange balances to trada balances
 	for _, balance := range p.balances {
 
@@ -219,10 +219,15 @@ func (b *BalanceAs) reprice() error {
 }
 
 func (b *BalanceAs) repriceUsing(priceAs Price) error {
+
+	if b.Symbol != string(priceAs.Base) {
+		return fmt.Errorf("Cannot reprice symbol: %s with price: %s", b.Symbol, priceAs.Base)
+	}
 	// reprice balance
 	b.Price = priceAs.Price
 	b.Value = priceAs.Price * b.Total
-
+	b.At = priceAs.At
+	b.As = priceAs.As
 	// get 24h price
 
 	daySummary, err := DefaultArchive.GetDaySummaryAs(SymbolType(b.Symbol), b.As)
